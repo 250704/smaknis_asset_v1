@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -13,32 +14,48 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'Admin Sarpras',
-            'email' => 'admin@smk.com',
-            'password' => Hash::make('12345678'),
-            'role' => 'admin',
-        ]);
+        $users = [
+            [
+                'name' => 'Admin Sarpras',
+                'email' => 'admin@smk.com',
+                'role' => 'admin',
+            ],
+            [
+                'name' => 'Guru SMK',
+                'email' => 'guru@smk.com',
+                'role' => 'guru',
+            ],
+            [
+                'name' => 'Kepala Sarana',
+                'email' => 'sarpras@smk.com',
+                'role' => 'kepala_sarana',
+            ],
+            [
+                'name' => 'Bendahara SMK',
+                'email' => 'bendahara@smk.com',
+                'role' => 'bendahara',
+            ],
+            [
+                'name' => 'Kepala Sekolah',
+                'email' => 'kepsek@smk.com',
+                'role' => 'kepala_sekolah',
+            ],
+        ];
 
-        User::create([
-            'name' => 'Guru SMK',
-            'email' => 'guru@smk.com',
-            'password' => Hash::make('12345678'),
-            'role' => 'guru',
-        ]);
+        foreach ($users as $userData) {
+            $role = Role::query()->where('nama_role', $userData['role'])->first();
 
-        User::create([
-            'name' => 'Kepala Sarana',
-            'email' => 'sarpras@smk.com',
-            'password' => Hash::make('12345678'),
-            'role' => 'kepala_sarana',
-        ]);
-
-        User::create([
-            'name' => 'Kepala Sekolah',
-            'email' => 'kepsek@smk.com',
-            'password' => Hash::make('12345678'),
-            'role' => 'kepala_sekolah',
-        ]);
+            User::query()->updateOrCreate(
+                ['email' => $userData['email']],
+                [
+                    'name' => $userData['name'],
+                    'nama' => $userData['name'],
+                    'password' => Hash::make('12345678'),
+                    'role' => $userData['role'],
+                    'role_id' => $role?->id,
+                    'status_akun' => 'AKTIF',
+                ],
+            );
+        }
     }
 }

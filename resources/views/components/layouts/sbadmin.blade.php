@@ -1,344 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id" class="h-full">
 
 <head>
-
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ config('app.name', 'SARPRAS SMKNIS') }}</title>
 
-    <title>SB Admin 2 - Dashboard</title>
-
-    <!-- Custom fonts for this template-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('sbadmin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
-
-    <!-- Custom styles for this template-->
-    <link href="{{ asset('sbadmin/css/sb-admin-2.min.css') }}" rel="stylesheet">
-
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+            document.documentElement.classList.toggle('dark', isDark);
+        })();
+    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body id="page-top">
+<body class="font-sans antialiased bg-slate-100 text-slate-800 transition-colors dark:bg-[#090d1a] dark:text-slate-200">
+    @php
+        $user = auth()->user();
+        $roleCode = $user?->role_code;
+        $roleLabel = match ($roleCode) {
+            'admin' => 'Admin Sarpras',
+            'guru' => 'Guru / Staf',
+            'kepala_sarana' => 'Kepala Sarana',
+            'bendahara' => 'Bendahara',
+            'kepala_sekolah' => 'Kepala Sekolah',
+            default => 'Pengguna',
+        };
+    @endphp
 
-    <!-- Page Wrapper -->
-    <div id="wrapper">
+    <div
+        x-data="{
+            sidebarOpen: false,
+            profileOpen: false,
+            theme: 'light',
+            init() {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                this.theme = savedTheme ?? (prefersDark ? 'dark' : 'light');
+                this.applyTheme();
+            },
+            applyTheme() {
+                document.documentElement.classList.toggle('dark', this.theme === 'dark');
+                localStorage.setItem('theme', this.theme);
+            },
+            toggleTheme() {
+                this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                this.applyTheme();
+            }
+        }"
+        x-init="init()"
+        class="app-shell"
+    >
+        <div class="soft-dot left-[-120px] top-[-120px] h-72 w-72 bg-cyan-400/25"></div>
+        <div class="soft-dot right-[-120px] top-[80px] h-72 w-72 bg-blue-500/20 [animation-delay:1s]"></div>
+        <div class="soft-dot bottom-[-160px] left-[30%] h-80 w-80 bg-emerald-400/20 [animation-delay:2s]"></div>
 
-        <!-- Sidebar -->
-        {{-- SIDEBAR DINAMIS BERDASARKAN ROLE --}}
-@if(Auth::user()->role === 'admin')
-    @include('partials.sidebar.sidebar_admin')
-@elseif(Auth::user()->role === 'guru')
-    @include('partials.sidebar.sidebar_guru')
-@elseif(Auth::user()->role === 'kepala_sarana')
-    @include('partials.sidebar.sidebar_kepsar')
-@elseif(Auth::user()->role === 'kepala_sekolah')
-    @include('partials.sidebar.sidebar_kepsek')
-@endif
+        <div
+            x-show="sidebarOpen"
+            x-transition.opacity
+            @click="sidebarOpen = false"
+            class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
+            style="display: none;"
+        ></div>
 
-        <!-- End of Sidebar -->
+        <aside
+            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+            class="sidebar-shell fixed inset-y-0 left-0 z-40 w-72 transform overflow-y-auto px-4 pb-6 pt-5 transition-transform duration-200 lg:translate-x-0 lg:shadow-none"
+        >
+            <div class="mb-6 flex items-center gap-3 px-2">
+                <div class="app-float flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/20">
+                    <i class="fas fa-shield-alt text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Sistem Inventaris</p>
+                    <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $roleLabel }}</p>
+                </div>
+            </div>
 
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
+            @if($user?->hasRole('admin'))
+                @include('partials.sidebar.sidebar_admin')
+            @elseif($user?->hasRole('guru'))
+                @include('partials.sidebar.sidebar_guru')
+            @elseif($user?->hasRole('kepala_sarana'))
+                @include('partials.sidebar.sidebar_kepsar')
+            @elseif($user?->hasRole('bendahara'))
+                @include('partials.sidebar.sidebar_bendahara')
+            @elseif($user?->hasRole('kepala_sekolah'))
+                @include('partials.sidebar.sidebar_kepsek')
+            @endif
+        </aside>
 
-            <!-- Main Content -->
-            <div id="content">
+        <div class="lg:pl-72">
+            <header class="sticky top-0 z-20 px-4 pt-4 sm:px-6">
+                <div class="topbar-shell mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 sm:px-5">
+                    <div class="flex items-center gap-3">
+                        <button
+                            @click="sidebarOpen = true"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 lg:hidden dark:border-white/15 dark:bg-white/5 dark:text-slate-200"
+                            type="button"
+                        >
+                            <i class="fas fa-bars"></i>
+                        </button>
 
-                <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-                    <!-- Sidebar Toggle (Topbar) -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-
-                    <!-- Topbar Search -->
-                    <form
-                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
-                                aria-label="Search" aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
+                        <div class="hidden sm:block">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Panel</p>
+                            <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $roleLabel }}</p>
                         </div>
-                    </form>
+                    </div>
 
-                    <!-- Topbar Navbar -->
-                    <ul class="navbar-nav ml-auto">
+                    <div class="flex items-center gap-3">
+                        <div class="hidden items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 md:flex dark:border-white/10 dark:bg-white/[0.04]">
+                            <i class="fas fa-search text-xs text-slate-400 dark:text-slate-500"></i>
+                            <input
+                                type="text"
+                                placeholder="Cari menu atau data..."
+                                class="w-56 border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
+                            >
+                        </div>
 
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-                        <li class="nav-item dropdown no-arrow d-sm-none">
-                            <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-search fa-fw"></i>
-                            </a>
-                            <!-- Dropdown - Messages -->
-                            <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                                aria-labelledby="searchDropdown">
-                                <form class="form-inline mr-auto w-100 navbar-search">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control bg-light border-0 small"
-                                            placeholder="Search for..." aria-label="Search"
-                                            aria-describedby="basic-addon2">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="button">
-                                                <i class="fas fa-search fa-sm"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                        <button
+                            type="button"
+                            @click="toggleTheme()"
+                            class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.07]"
+                        >
+                            <i class="fas fa-sun text-[11px] text-amber-500 dark:hidden"></i>
+                            <i class="fas fa-moon text-[11px] text-cyan-300 hidden dark:inline"></i>
+                            <span x-text="theme === 'dark' ? 'Dark' : 'Light'"></span>
+                        </button>
+
+                        <div class="relative">
+                            <button
+                                @click="profileOpen = !profileOpen"
+                                type="button"
+                                class="inline-flex items-center gap-3 rounded-xl border border-slate-300 bg-white px-3 py-2 text-left dark:border-white/15 dark:bg-white/[0.03]"
+                            >
+                                <span class="hidden text-sm font-medium text-slate-700 dark:text-slate-200 sm:block">{{ $user?->display_name }}</span>
+                                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
+                                    {{ strtoupper(substr((string) $user?->display_name, 0, 1)) }}
+                                </span>
+                            </button>
+
+                            <div
+                                x-show="profileOpen"
+                                @click.outside="profileOpen = false"
+                                x-transition
+                                class="glass-surface absolute right-0 mt-2 w-56 rounded-xl p-2"
+                                style="display: none;"
+                            >
+                                <div class="px-3 py-2">
+                                    <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $user?->display_name }}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ $user?->email }}</p>
+                                </div>
+                                <div class="my-1 h-px bg-slate-200 dark:bg-white/10"></div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button
+                                        type="submit"
+                                        class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-500/15 dark:text-rose-300"
+                                    >
+                                        <i class="fas fa-sign-out-alt text-xs"></i>
+                                        Logout
+                                    </button>
                                 </form>
                             </div>
-                        </li>
-
-                        <!-- Nav Item - Alerts -->
-                        <li class="nav-item dropdown no-arrow mx-1">
-                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-bell fa-fw"></i>
-                                <!-- Counter - Alerts -->
-                                <span class="badge badge-danger badge-counter">3+</span>
-                            </a>
-                            <!-- Dropdown - Alerts -->
-                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="alertsDropdown">
-                                <h6 class="dropdown-header">
-                                    Alerts Center
-                                </h6>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-primary">
-                                            <i class="fas fa-file-alt text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 12, 2019</div>
-                                        <span class="font-weight-bold">A new monthly report is ready to download!</span>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-success">
-                                            <i class="fas fa-donate text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 7, 2019</div>
-                                        $290.29 has been deposited into your account!
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-warning">
-                                            <i class="fas fa-exclamation-triangle text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 2, 2019</div>
-                                        Spending Alert: We've noticed unusually high spending for your account.
-                                    </div>
-                                </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
-                            </div>
-                        </li>
-
-                        <!-- Nav Item - Messages -->
-                        <li class="nav-item dropdown no-arrow mx-1">
-                            <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-envelope fa-fw"></i>
-                                <!-- Counter - Messages -->
-                                <span class="badge badge-danger badge-counter">7</span>
-                            </a>
-                            <!-- Dropdown - Messages -->
-                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="messagesDropdown">
-                                <h6 class="dropdown-header">
-                                    Message Center
-                                </h6>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_1.svg"
-                                            alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div class="font-weight-bold">
-                                        <div class="text-truncate">Hi there! I am wondering if you can help me with a
-                                            problem I've been having.</div>
-                                        <div class="small text-gray-500">Emily Fowler · 58m</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_2.svg"
-                                            alt="...">
-                                        <div class="status-indicator"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">I have the photos that you ordered last month, how
-                                            would you like them sent to you?</div>
-                                        <div class="small text-gray-500">Jae Chun · 1d</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_3.svg"
-                                            alt="...">
-                                        <div class="status-indicator bg-warning"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">Last month's report looks great, I am very happy with
-                                            the progress so far, keep up the good work!</div>
-                                        <div class="small text-gray-500">Morgan Alvarez · 2d</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="https://source.unsplash.com/Mv9hjnEUHR4/60x60"
-                                            alt="...">
-                                        <div class="status-indicator bg-success"></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-truncate">Am I a good boy? The reason I ask is because someone
-                                            told me that people say this to all dogs, even if they aren't good...</div>
-                                        <div class="small text-gray-500">Chicken the Dog · 2w</div>
-                                    </div>
-                                </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Read More Messages</a>
-                            </div>
-                        </li>
-
-                        <div class="topbar-divider d-none d-sm-block"></div>
-
-                        <!-- Nav Item - User Information -->
-                       <li class="nav-item dropdown no-arrow">
-    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        
-        {{-- Nama User Login --}}
-        <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-            {{ Auth::user()->name }}
-        </span>
-
-        {{-- Foto default --}}
-        <img class="img-profile rounded-circle"
-            src="{{ asset('sbadmin/img/undraw_profile.svg') }}">
-    </a>
-
-    <!-- Dropdown - User Information -->
-    <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-        aria-labelledby="userDropdown">
-
-        <a class="dropdown-item" href="#">
-            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-            Profile
-        </a>
-
-        <a class="dropdown-item" href="#">
-            <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-            Settings
-        </a>
-
-        <a class="dropdown-item" href="#">
-            <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-            Activity Log
-        </a>
-
-        <div class="dropdown-divider"></div>
-
-        {{-- LOGOUT --}}
-        <a class="dropdown-item" href="#"
-           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-            Logout
-        </a>
-
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-            @csrf
-        </form>
-
-    </div>
-</li>
-
-
-                    </ul>
-
-                </nav>
-                <!-- End of Topbar -->
-
-                <!-- Begin Page Content -->
-               <div class="container-fluid">
-    {{ $slot }}
-</div>
-
-                <!-- /.container-fluid -->
-
-            </div>
-            <!-- End of Main Content -->
-
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Your Website 2021</span>
+                        </div>
                     </div>
                 </div>
-            </footer>
-            <!-- End of Footer -->
+            </header>
 
-        </div>
-        <!-- End of Content Wrapper -->
-
-    </div>
-    <!-- End of Page Wrapper -->
-
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
+            <main class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 sm:py-8">
+                <div class="app-fade-up space-y-6">
+                    {{ $slot }}
                 </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="login.html">Logout</a>
-                </div>
-            </div>
+            </main>
         </div>
     </div>
-
-    <!-- Bootstrap core JavaScript-->
-    <script src="{{ asset('sbadmin/vendor/jquery/jquery.min.js') }}"></script>
-    <script src="{{ asset('sbadmin/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-
-    <!-- Core plugin JavaScript-->
-    <script src="{{ asset('sbadmin/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-
-    <!-- Custom scripts for all pages-->
-    <script src="{{ asset('sbadmin/js/sb-admin-2.min.js') }}"></script>
-
-    <!-- Page level plugins -->
-    <script src="{{ asset('sbadmin/vendor/chart.js/Chart.min.js') }}"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="{{ asset('sbadmin/js/demo/chart-area-demo.js') }}"></script>
-    <script src="{{ asset('sbadmin/js/demo/chart-pie-demo.js') }}"></script>
-
 </body>
 
 </html>

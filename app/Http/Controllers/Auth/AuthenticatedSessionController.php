@@ -30,23 +30,31 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
 
-        if ($user->role === 'admin') {
+        if (!$user->isActive()) {
+            auth()->logout();
+            return redirect()->route('login');
+        }
+
+        if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
         }
 
-        if ($user->role === 'guru') {
+        if ($user->hasRole('guru')) {
             return redirect()->route('guru.dashboard');
         }
 
-        if ($user->role === 'kepala_sarana') {
+        if ($user->hasRole('kepala_sarana')) {
             return redirect()->route('kepala_sarana.dashboard');
         }
 
-        if ($user->role === 'kepala_sekolah') {
+        if ($user->hasRole('bendahara')) {
+            return redirect()->route('bendahara.dashboard');
+        }
+
+        if ($user->hasRole('kepala_sekolah')) {
             return redirect()->route('kepala_sekolah.dashboard');
         }
 
-        // Jika role tidak dikenali
         auth()->logout();
         return redirect()->route('login');
     }

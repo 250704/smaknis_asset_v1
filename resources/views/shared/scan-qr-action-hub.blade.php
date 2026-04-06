@@ -67,7 +67,8 @@
 
     </section>
 
-    <section class="panel" id="qr-camera-panel">
+    @if ($kodeAset === '')
+        <section class="panel" id="qr-camera-panel">
         <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Scan Langsung Kamera</h2>
             <div class="flex flex-wrap gap-2">
@@ -81,7 +82,7 @@
             <div class="relative">
                 <video id="qr-video" class="h-[280px] w-full bg-slate-950 object-cover sm:h-[360px]" autoplay muted playsinline></video>
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div id="scan-frame" class="relative h-28 w-28 rounded-lg border border-cyan-300/70 shadow-[0_0_0_9999px_rgba(2,6,23,.4)] transition-all duration-300 sm:h-32 sm:w-32">
+                    <div id="scan-frame" class="relative h-36 w-36 rounded-lg border border-cyan-300/70 shadow-[0_0_0_9999px_rgba(2,6,23,.4)] transition-all duration-300 sm:h-40 sm:w-40">
                         <span class="absolute -left-0.5 -top-0.5 h-5 w-5 border-l-2 border-t-2 border-cyan-300"></span>
                         <span class="absolute -right-0.5 -top-0.5 h-5 w-5 border-r-2 border-t-2 border-cyan-300"></span>
                         <span class="absolute -bottom-0.5 -left-0.5 h-5 w-5 border-b-2 border-l-2 border-cyan-300"></span>
@@ -97,7 +98,8 @@
         <div id="camera-status" class="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
             Kamera belum aktif.
         </div>
-    </section>
+        </section>
+    @endif
 
     @if ($kodeAset !== '')
         <section class="panel mt-5">
@@ -214,38 +216,6 @@
         </div>
     @endif
 
-    <section class="panel mt-5">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Aset Terbaru</h2>
-        <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
-            <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
-                <thead class="bg-slate-50 dark:bg-white/[0.04]">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kode</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Nama</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Lokasi</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Scan</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                    @forelse ($recentAset as $item)
-                        <tr>
-                            <td class="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-200">{{ $item->kode_aset }}</td>
-                            <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ $item->nama_aset }}</td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $item->ruangan?->nama_ruangan }} - {{ $item->ruangan?->gedung?->nama_gedung }}</td>
-                            <td class="px-4 py-3">
-                                <a href="{{ $scanRoute . '?kode_aset=' . urlencode($item->kode_aset) }}" class="btn-secondary">Scan</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">Belum ada data aset.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </section>
-
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script>
         (function () {
@@ -336,15 +306,17 @@
 
                 isSubmitting = true;
                 input.value = code;
-                setStatus('QR terdeteksi: ' + code + '. Memuat detail aset...');
+                setStatus('QR terdeteksi: ' + code + '. Klik "Cari Aset" untuk melihat detail.');
                 scanFrameEl.classList.remove('border-cyan-300/70');
                 scanFrameEl.classList.add('border-emerald-400', 'scale-105');
                 scanSuccessBadge.classList.remove('hidden');
-
+                stopCamera();
                 window.setTimeout(function () {
-                    stopCamera();
-                    form.submit();
-                }, 450);
+                    isSubmitting = false;
+                    scanSuccessBadge.classList.add('hidden');
+                    scanFrameEl.classList.remove('border-emerald-400', 'scale-105');
+                    scanFrameEl.classList.add('border-cyan-300/70');
+                }, 1200);
             }
 
             async function detectFrame() {

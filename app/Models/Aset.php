@@ -12,7 +12,7 @@ class Aset extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const KONDISI_LIST = ['BAIK', 'KR1', 'KR2', 'KR3'];
+    public const KONDISI_LIST = ['BAIK', 'RINGAN', 'BERAT', 'TIDAK_LAYAK'];
     public const STATUS_LIST = ['AKTIF', 'NONAKTIF'];
 
     protected $table = 'aset';

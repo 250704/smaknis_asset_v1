@@ -256,7 +256,12 @@
                         paper: 'a4',
                         perSheet: 20,
                         columns: 5,
+                        rows: 4,
                         pageSize: '210mm 297mm',
+                        labelWidth: 37,
+                        labelHeight: 56,
+                        qrSize: 22,
+                        gap: 2.2,
                     };
                 }
 
@@ -264,7 +269,12 @@
                     paper: 'f4',
                     perSheet: 25,
                     columns: 5,
+                    rows: 5,
                     pageSize: '215.9mm 330.2mm',
+                    labelWidth: 37,
+                    labelHeight: 56,
+                    qrSize: 22,
+                    gap: 2.2,
                 };
             }
 
@@ -368,7 +378,7 @@
                             @page { size: ${options.pageSize}; margin: 8mm; }
                             body { margin: 0; color: #0f172a; font-family: Arial, sans-serif; }
                             .sheet-break { page-break-after: always; break-after: page; }
-                            .grid { display: grid; grid-template-columns: repeat(${options.columns}, minmax(0, 1fr)); gap: 2.2mm; }
+                            .grid { display: grid; grid-template-columns: repeat(${options.columns}, ${options.labelWidth}mm); gap: ${options.gap}mm; justify-content: center; }
                             .label {
                                 border: 1px solid #cbd5e1;
                                 border-radius: 3mm;
@@ -379,11 +389,12 @@
                                 justify-content: flex-start;
                                 text-align: center;
                                 gap: 1.4mm;
-                                min-height: ${options.paper === 'f4' ? '56mm' : '64mm'};
+                                width: ${options.labelWidth}mm;
+                                min-height: ${options.labelHeight}mm;
                                 page-break-inside: avoid;
                                 overflow: hidden;
                             }
-                            .label img { width: 22mm; height: 22mm; object-fit: contain; display: block; }
+                            .label img { width: ${options.qrSize}mm; height: ${options.qrSize}mm; object-fit: contain; display: block; }
                             .meta { width: 100%; line-height: 1.25; }
                             .meta p { margin: 0 0 0.8mm; overflow: hidden; text-overflow: ellipsis; }
                             .meta .code { font-family: monospace; font-size: 8px; font-weight: 700; white-space: nowrap; }

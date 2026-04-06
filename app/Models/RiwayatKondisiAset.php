@@ -21,6 +21,8 @@ class RiwayatKondisiAset extends Model
         'status',
         'validated_by',
         'validated_at',
+        'rekomendasi_tindakan',
+        'catatan_validasi',
     ];
 
     protected function casts(): array

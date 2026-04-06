@@ -34,6 +34,30 @@
             'kepala_sekolah' => 'Kepala Sekolah',
             default => 'Pengguna',
         };
+        $unreadCount = $user
+            ? \Illuminate\Support\Facades\Cache::remember(
+                'notif_unread_count:' . $user->id,
+                now()->addSeconds(20),
+                fn () => (int) $user->notifikasi()->where('is_read', false)->count()
+            )
+            : 0;
+        $notifikasiRoute = match ($roleCode) {
+            'admin' => 'admin.notifikasi.index',
+            'guru' => 'guru.notifikasi.index',
+            'kepala_sarana' => 'kepala_sarana.notifikasi.index',
+            'bendahara' => 'bendahara.notifikasi.index',
+            'kepala_sekolah' => 'kepala_sekolah.notifikasi.index',
+            default => null,
+        };
+        $flashType = null;
+        $flashMessage = null;
+        foreach (['success', 'error', 'warning', 'info'] as $key) {
+            if (session()->has($key)) {
+                $flashType = $key;
+                $flashMessage = (string) session($key);
+                break;
+            }
+        }
     @endphp
 
     <div
@@ -63,6 +87,39 @@
         <div class="soft-dot right-[-120px] top-[80px] h-72 w-72 bg-blue-500/20 [animation-delay:1s]"></div>
         <div class="soft-dot bottom-[-160px] left-[30%] h-80 w-80 bg-emerald-400/20 [animation-delay:2s]"></div>
 
+        @if ($flashMessage)
+            @php
+                $flashStyle = match ($flashType) {
+                    'success' => 'border-emerald-200/80 bg-emerald-50/95 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100',
+                    'error' => 'border-rose-200/80 bg-rose-50/95 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-100',
+                    'warning' => 'border-amber-200/80 bg-amber-50/95 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-100',
+                    default => 'border-blue-200/80 bg-blue-50/95 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/15 dark:text-blue-100',
+                };
+                $flashIcon = match ($flashType) {
+                    'success' => 'fa-check-circle',
+                    'error' => 'fa-times-circle',
+                    'warning' => 'fa-exclamation-triangle',
+                    default => 'fa-info-circle',
+                };
+            @endphp
+            <div
+                x-data="{ show: true }"
+                x-init="setTimeout(() => show = false, 3800)"
+                x-show="show"
+                x-transition.opacity.duration.200ms
+                class="fixed right-4 top-4 z-[80] w-[min(92vw,420px)]"
+                style="display:none;"
+            >
+                <div class="flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur {{ $flashStyle }}">
+                    <i class="fas {{ $flashIcon }} mt-0.5"></i>
+                    <p class="flex-1 text-sm font-medium leading-5">{{ $flashMessage }}</p>
+                    <button type="button" @click="show = false" class="text-current/70 transition hover:text-current" aria-label="Tutup notifikasi">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        @endif
+
         <div
             x-show="sidebarOpen"
             x-transition.opacity
@@ -73,38 +130,37 @@
 
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="sidebar-shell fixed inset-y-0 left-0 z-40 w-72 transform overflow-y-auto px-4 pb-6 pt-5 transition-transform duration-200 lg:translate-x-0 lg:shadow-none"
+            class="fixed inset-y-0 left-0 z-40 px-4 pt-5 pb-6 overflow-y-auto transition-transform duration-200 transform sidebar-shell w-72 lg:translate-x-0 lg:shadow-none"
         >
-            <div class="mb-6 flex items-center gap-3 px-2">
-                <div class="app-float flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/20">
-                    <i class="fas fa-shield-alt text-sm"></i>
+            <div class="flex items-center gap-3 px-2 mb-6">
+                <div class="flex items-center justify-center text-white shadow-lg app-float h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 shadow-cyan-500/20">
+                    <i class="text-sm fas fa-shield-alt"></i>
                 </div>
                 <div>
                     <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Sistem Inventaris</p>
-                    <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $roleLabel }}</p>
                 </div>
             </div>
 
-            @if($user?->hasRole('admin'))
+            @if($roleCode === 'admin')
                 @include('partials.sidebar.sidebar_admin')
-            @elseif($user?->hasRole('guru'))
+            @elseif($roleCode === 'guru')
                 @include('partials.sidebar.sidebar_guru')
-            @elseif($user?->hasRole('kepala_sarana'))
+            @elseif($roleCode === 'kepala_sarana')
                 @include('partials.sidebar.sidebar_kepsar')
-            @elseif($user?->hasRole('bendahara'))
+            @elseif($roleCode === 'bendahara')
                 @include('partials.sidebar.sidebar_bendahara')
-            @elseif($user?->hasRole('kepala_sekolah'))
+            @elseif($roleCode === 'kepala_sekolah')
                 @include('partials.sidebar.sidebar_kepsek')
             @endif
         </aside>
 
         <div class="lg:pl-72">
             <header class="sticky top-0 z-20 px-4 pt-4 sm:px-6">
-                <div class="topbar-shell mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 sm:px-5">
+                <div class="flex items-center justify-between h-16 px-4 mx-auto topbar-shell max-w-screen-2xl sm:px-5">
                     <div class="flex items-center gap-3">
                         <button
                             @click="sidebarOpen = true"
-                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 lg:hidden dark:border-white/15 dark:bg-white/5 dark:text-slate-200"
+                            class="btn-icon lg:hidden"
                             type="button"
                         >
                             <i class="fas fa-bars"></i>
@@ -117,34 +173,40 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <div class="hidden items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 md:flex dark:border-white/10 dark:bg-white/[0.04]">
-                            <i class="fas fa-search text-xs text-slate-400 dark:text-slate-500"></i>
-                            <input
-                                type="text"
-                                placeholder="Cari menu atau data..."
-                                class="w-56 border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
+                        @if ($notifikasiRoute && Route::has($notifikasiRoute))
+                            <a
+                                href="{{ route($notifikasiRoute) }}"
+                                class="relative btn-icon"
+                                aria-label="Notifikasi"
                             >
-                        </div>
+                                <i class="text-sm fas fa-bell"></i>
+                                @if ($unreadCount > 0)
+                                    <span class="absolute -right-1 -top-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
+                                        {{ $unreadCount }}
+                                    </span>
+                                @endif
+                            </a>
+                        @endif
 
                         <button
                             type="button"
                             @click="toggleTheme()"
-                            class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.07]"
+                            class="h-10 px-3 font-medium btn-secondary"
                         >
                             <i class="fas fa-sun text-[11px] text-amber-500 dark:hidden"></i>
                             <i class="fas fa-moon text-[11px] text-cyan-300 hidden dark:inline"></i>
-                            <span x-text="theme === 'dark' ? 'Dark' : 'Light'"></span>
+                            <span x-text="theme === 'dark' ? 'Light' : 'Dark'"></span>
                         </button>
 
                         <div class="relative">
                             <button
                                 @click="profileOpen = !profileOpen"
                                 type="button"
-                                class="inline-flex items-center gap-3 rounded-xl border border-slate-300 bg-white px-3 py-2 text-left dark:border-white/15 dark:bg-white/[0.03]"
+                                class="btn-icon"
+                                aria-label="Profil"
                             >
-                                <span class="hidden text-sm font-medium text-slate-700 dark:text-slate-200 sm:block">{{ $user?->display_name }}</span>
-                                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
-                                    {{ strtoupper(substr((string) $user?->display_name, 0, 1)) }}
+                                <span class="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-white rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400">
+                                    <i class="fas fa-user text-[11px]"></i>
                                 </span>
                             </button>
 
@@ -152,21 +214,21 @@
                                 x-show="profileOpen"
                                 @click.outside="profileOpen = false"
                                 x-transition
-                                class="glass-surface absolute right-0 mt-2 w-56 rounded-xl p-2"
+                                class="absolute right-0 w-56 p-2 mt-2 glass-surface rounded-xl"
                                 style="display: none;"
                             >
                                 <div class="px-3 py-2">
                                     <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $user?->display_name }}</p>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">{{ $user?->email }}</p>
                                 </div>
-                                <div class="my-1 h-px bg-slate-200 dark:bg-white/10"></div>
+                                <div class="h-px my-1 bg-slate-200 dark:bg-white/10"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button
                                         type="submit"
-                                        class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-500/15 dark:text-rose-300"
+                                        class="flex items-center w-full gap-2 px-3 py-2 text-sm font-medium rounded-lg text-rose-600 hover:bg-rose-500/15 dark:text-rose-300"
                                     >
-                                        <i class="fas fa-sign-out-alt text-xs"></i>
+                                        <i class="text-xs fas fa-sign-out-alt"></i>
                                         Logout
                                     </button>
                                 </form>
@@ -176,8 +238,8 @@
                 </div>
             </header>
 
-            <main class="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 sm:py-8">
-                <div class="app-fade-up space-y-6">
+            <main class="px-4 py-6 mx-auto max-w-screen-2xl sm:px-6 sm:py-8">
+                <div class="space-y-6 app-fade-up">
                     {{ $slot }}
                 </div>
             </main>

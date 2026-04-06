@@ -46,7 +46,8 @@ class ApprovalPengajuanService
         $nextStatus = match ($roleApproval) {
             ApprovalPengajuan::ROLE_KASARANA => Pengajuan::STATUS_DISETUJUI_KASARANA,
             ApprovalPengajuan::ROLE_BENDAHARA => Pengajuan::STATUS_DISETUJUI_BENDAHARA,
-            ApprovalPengajuan::ROLE_KEPSEK => Pengajuan::STATUS_DISETUJUI_KEPSEK,
+            // Final flow: setelah approval kepala sekolah, pengajuan masuk tahap realisasi.
+            ApprovalPengajuan::ROLE_KEPSEK => Pengajuan::STATUS_DIPROSES,
             default => throw new DomainException('Role approval tidak valid.'),
         };
 

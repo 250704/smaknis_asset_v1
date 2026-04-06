@@ -36,7 +36,7 @@ class CetakQrController extends Controller
             ->when($filters['gedung_id'], function ($query, $gedungId) {
                 $query->whereHas('ruangan', fn ($ruanganQuery) => $ruanganQuery->where('gedung_id', $gedungId));
             })
-            ->latest()
+            ->orderBy('kode_aset')
             ->paginate(24)
             ->withQueryString();
 

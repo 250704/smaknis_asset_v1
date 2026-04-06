@@ -15,6 +15,8 @@ class ApprovalPengajuan extends Model
     public const ROLE_KASARANA = 'KASARANA';
     public const ROLE_BENDAHARA = 'BENDAHARA';
     public const ROLE_KEPSEK = 'KEPSEK';
+    public const ROLE_KASARANA_VERIFIKASI = 'KASARANA_VERIFIKASI';
+    public const ROLE_BENDAHARA_VERIFIKASI = 'BENDAHARA_VERIFIKASI';
 
     public const STATUS_DISETUJUI = 'DISETUJUI';
     public const STATUS_DITOLAK = 'DITOLAK';

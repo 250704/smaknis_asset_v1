@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -90,20 +91,25 @@ class User extends Authenticatable
 
     public function getRoleCodeAttribute(): ?string
     {
-        if ($this->roleRelation?->nama_role) {
-            return $this->roleRelation->nama_role;
+        // Prioritaskan kolom role yang sudah tersimpan untuk menghindari lazy query roleRelation
+        if (is_string($this->role) && trim($this->role) !== '') {
+            return $this->role;
         }
 
-        return $this->role;
+        if ($this->relationLoaded('roleRelation')) {
+            return $this->roleRelation?->nama_role;
+        }
+
+        return $this->roleRelation()->value('nama_role');
     }
 
     public function hasRole(string $role): bool
     {
-        return $this->role_code === $role;
+        return Str::lower(trim((string) $this->role_code)) === Str::lower(trim($role));
     }
 
     public function isActive(): bool
     {
-        return $this->status_akun === 'AKTIF';
+        return $this->status_akun !== 'NONAKTIF';
     }
 }

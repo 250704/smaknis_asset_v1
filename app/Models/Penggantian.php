@@ -16,11 +16,16 @@ class Penggantian extends Model
         'pengajuan_id',
         'aset_lama_id',
         'aset_baru_id',
-        'foto_aset_lama',
         'foto_aset_baru',
+        'foto_bukti',
         'biaya_realisasi',
         'status_realisasi',
         'tanggal_penggantian',
+        'keterangan',
+        'nama_teknisi',
+        'kontak_teknisi',
+        'nama_vendor',
+        'kontak_vendor',
     ];
 
     protected function casts(): array

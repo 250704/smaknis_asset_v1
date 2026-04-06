@@ -1,7 +1,7 @@
 @php
     $feature = request()->route('feature');
     $inventarisOpen = request()->routeIs('admin.aset.*', 'admin.cetak-qr.*') || in_array($feature, ['mutasi-aset', 'cetak-qr'], true);
-    $sistemOpen = in_array($feature, ['manajemen-user', 'log-aktivitas'], true);
+    $sistemOpen = request()->routeIs('admin.users.*') || in_array($feature, ['manajemen-user', 'log-aktivitas'], true);
     $masterOpen = request()->routeIs('admin.master.*');
 @endphp
 
@@ -65,9 +65,8 @@
             <i class="fas fa-chevron-down text-[10px] text-slate-400 transition group-open:rotate-180"></i>
         </summary>
         <div class="space-y-1 pb-2 pl-9 pr-2">
-            <a href="{{ route('admin.feature', ['feature' => 'manajemen-user']) }}" class="side-sub-link {{ $feature === 'manajemen-user' ? 'active' : '' }}">Manajemen User</a>
+            <a href="{{ route('admin.users.index') }}" class="side-sub-link {{ request()->routeIs('admin.users.*') || $feature === 'manajemen-user' ? 'active' : '' }}">Manajemen User</a>
             <a href="{{ route('admin.feature', ['feature' => 'log-aktivitas']) }}" class="side-sub-link {{ $feature === 'log-aktivitas' ? 'active' : '' }}">Log Aktivitas</a>
         </div>
     </details>
 </nav>
-

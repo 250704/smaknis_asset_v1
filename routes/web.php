@@ -5,8 +5,10 @@ use App\Http\Controllers\Admin\Inventaris\AsetController;
 use App\Http\Controllers\Admin\Inventaris\CetakQrController;
 use App\Http\Controllers\Admin\MasterData\KategoriAsetController;
 use App\Http\Controllers\Admin\MasterData\RuanganController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\BlueprintPageController;
 use App\Http\Controllers\ScanQrController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 $redirectByRole = function ($user) {
@@ -76,7 +78,12 @@ Route::middleware(['auth'])->group(function () {
                     ->except(['create', 'show']);
             });
 
-        Route::get('/admin/fitur/{feature}', function (string $feature, BlueprintPageController $controller) {
+        Route::get('/admin/manajemen-user', [UserManagementController::class, 'index'])->name('admin.users.index');
+        Route::post('/admin/manajemen-user', [UserManagementController::class, 'store'])->name('admin.users.store');
+        Route::patch('/admin/manajemen-user/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+        Route::post('/admin/manajemen-user/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('admin.users.reset-password');
+
+        Route::get('/admin/fitur/{feature}', function (Request $request, string $feature, BlueprintPageController $controller) {
             if ($feature === 'scan-qr') {
                 return redirect()->route('admin.scan');
             }
@@ -93,7 +100,11 @@ Route::middleware(['auth'])->group(function () {
                 return redirect()->route('admin.cetak-qr.index');
             }
 
-            return $controller->show('admin', $feature);
+            if ($feature === 'manajemen-user') {
+                return redirect()->route('admin.users.index');
+            }
+
+            return $controller->show($request, 'admin', $feature);
         })->name('admin.feature');
     });
 
@@ -105,12 +116,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/guru/scan-qr/aksi/{aset}/{action}', [ScanQrController::class, 'quickAction'])
             ->defaults('role', 'guru')
             ->name('guru.scan.action');
-        Route::get('/guru/fitur/{feature}', function (string $feature, BlueprintPageController $controller) {
+        Route::get('/guru/fitur/{feature}', function (Request $request, string $feature, BlueprintPageController $controller) {
             if ($feature === 'scan-qr') {
                 return redirect()->route('guru.scan');
             }
 
-            return $controller->show('guru', $feature);
+            return $controller->show($request, 'guru', $feature);
         })->name('guru.feature');
     });
 
@@ -122,12 +133,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/kepala_sarana/scan-qr/aksi/{aset}/{action}', [ScanQrController::class, 'quickAction'])
             ->defaults('role', 'kepala_sarana')
             ->name('kepala_sarana.scan.action');
-        Route::get('/kepala_sarana/fitur/{feature}', function (string $feature, BlueprintPageController $controller) {
+        Route::get('/kepala_sarana/fitur/{feature}', function (Request $request, string $feature, BlueprintPageController $controller) {
             if ($feature === 'scan-qr') {
                 return redirect()->route('kepala_sarana.scan');
             }
 
-            return $controller->show('kepala_sarana', $feature);
+            return $controller->show($request, 'kepala_sarana', $feature);
         })->name('kepala_sarana.feature');
     });
 
@@ -139,12 +150,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/bendahara/scan-qr/aksi/{aset}/{action}', [ScanQrController::class, 'quickAction'])
             ->defaults('role', 'bendahara')
             ->name('bendahara.scan.action');
-        Route::get('/bendahara/fitur/{feature}', function (string $feature, BlueprintPageController $controller) {
+        Route::get('/bendahara/fitur/{feature}', function (Request $request, string $feature, BlueprintPageController $controller) {
             if ($feature === 'scan-qr') {
                 return redirect()->route('bendahara.scan');
             }
 
-            return $controller->show('bendahara', $feature);
+            return $controller->show($request, 'bendahara', $feature);
         })->name('bendahara.feature');
     });
 
@@ -156,12 +167,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/kepala_sekolah/scan-qr/aksi/{aset}/{action}', [ScanQrController::class, 'quickAction'])
             ->defaults('role', 'kepala_sekolah')
             ->name('kepala_sekolah.scan.action');
-        Route::get('/kepala_sekolah/fitur/{feature}', function (string $feature, BlueprintPageController $controller) {
+        Route::get('/kepala_sekolah/fitur/{feature}', function (Request $request, string $feature, BlueprintPageController $controller) {
             if ($feature === 'scan-qr') {
                 return redirect()->route('kepala_sekolah.scan');
             }
 
-            return $controller->show('kepala_sekolah', $feature);
+            return $controller->show($request, 'kepala_sekolah', $feature);
         })->name('kepala_sekolah.feature');
     });
 });

@@ -1,0 +1,17 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        DB::statement("ALTER TABLE riwayat_kondisi_aset MODIFY status ENUM('DILAPORKAN','DIVALIDASI','DITINDAKLANJUTI','DITOLAK') NOT NULL DEFAULT 'DILAPORKAN'");
+    }
+
+    public function down(): void
+    {
+        DB::statement("ALTER TABLE riwayat_kondisi_aset MODIFY status ENUM('DILAPORKAN','DIVALIDASI','DITINDAKLANJUTI') NOT NULL DEFAULT 'DILAPORKAN'");
+    }
+};

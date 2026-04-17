@@ -19,11 +19,36 @@ class ScanQrController extends Controller
         'kepala_sekolah',
     ];
 
-    private const ACTIONS = [
+    // Actions untuk GURU - Hanya Lapor Kerusakan dan Mutasi
+    private const ACTIONS_GURU = [
         'lapor-kerusakan' => 'Lapor Kerusakan',
-        'ajukan-perawatan' => 'Ajukan Perawatan',
-        'ajukan-penggantian' => 'Ajukan Penggantian',
         'usulan-mutasi' => 'Usulan Mutasi',
+    ];
+
+    // Actions untuk KEPALA SARANA - Validasi dan Approval
+    private const ACTIONS_KEPALA_SARANA = [
+        'lapor-kerusakan' => 'Lapor Kerusakan',
+        'validasi-kerusakan' => 'Validasi Kerusakan',
+        'approval-teknis' => 'Approval',
+    ];
+
+    // Actions untuk ADMIN - Management
+    private const ACTIONS_ADMIN = [
+        'lapor-kerusakan' => 'Lapor Kerusakan',
+        'lihat-histori' => 'Lihat Histori',
+        'usulan-mutasi' => 'Usulan Mutasi',
+    ];
+
+    // Actions untuk BENDAHARA - Review
+    private const ACTIONS_BENDAHARA = [
+        'lapor-kerusakan' => 'Lapor Kerusakan',
+        'review-pengajuan' => 'Review Pengajuan',
+    ];
+
+    // Actions untuk KEPALA SEKOLAH - Approval
+    private const ACTIONS_KEPALA_SEKOLAH = [
+        'lapor-kerusakan' => 'Lapor Kerusakan',
+        'approval-final' => 'Approval Final',
     ];
 
     private const KODE_ASET_PATTERN = '/^AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\\d{2}-\\d{4}-\\d{4}$/';
@@ -60,7 +85,7 @@ class ScanQrController extends Controller
                 }
 
                 $searchResults = $query
-                    ->latest()
+                    ->orderBy('kode_aset')
                     ->limit(10)
                     ->get();
 
@@ -93,9 +118,19 @@ class ScanQrController extends Controller
 
         $recentAset = Aset::query()
             ->with(['kategori', 'ruangan.gedung'])
-            ->latest()
+            ->orderBy('kode_aset')
             ->limit(8)
             ->get();
+
+        // Get actions based on role
+        $actions = match ($role) {
+            'guru' => self::ACTIONS_GURU,
+            'kepala_sarana' => self::ACTIONS_KEPALA_SARANA,
+            'bendahara' => self::ACTIONS_BENDAHARA,
+            'kepala_sekolah' => self::ACTIONS_KEPALA_SEKOLAH,
+            'admin' => self::ACTIONS_ADMIN,
+            default => [],
+        };
 
         return view('shared.scan-qr-action-hub', [
             'role' => $role,
@@ -103,7 +138,7 @@ class ScanQrController extends Controller
             'aset' => $aset,
             'searchResults' => $searchResults,
             'recentAset' => $recentAset,
-            'actions' => self::ACTIONS,
+            'actions' => $actions,
             'scanError' => $scanError,
             'isExactFormat' => $isExactFormat,
         ]);
@@ -113,14 +148,25 @@ class ScanQrController extends Controller
     {
         $role = (string) $request->route('role');
         abort_unless(in_array($role, self::ALLOWED_ROLES, true), 404);
-        abort_unless(array_key_exists($action, self::ACTIONS), 404);
+        
+        // Get allowed actions for this role
+        $allowedActions = match ($role) {
+            'guru' => self::ACTIONS_GURU,
+            'kepala_sarana' => self::ACTIONS_KEPALA_SARANA,
+            'bendahara' => self::ACTIONS_BENDAHARA,
+            'kepala_sekolah' => self::ACTIONS_KEPALA_SEKOLAH,
+            'admin' => self::ACTIONS_ADMIN,
+            default => [],
+        };
+        
+        abort_unless(array_key_exists($action, $allowedActions), 404);
 
         $this->logScanActivity(
             request: $request,
             role: $role,
             kodeAset: $aset->kode_aset,
             aset: $aset,
-            note: 'Quick action: ' . $this->actionLabel($action),
+            note: 'Quick action: ' . $this->actionLabel($action, $role),
         );
 
         return match ($role) {
@@ -135,57 +181,123 @@ class ScanQrController extends Controller
 
     private function redirectForAdmin(Aset $aset, string $action): RedirectResponse
     {
-        $targetFeature = match ($action) {
-            'usulan-mutasi' => 'mutasi-aset',
-            default => 'semua-pengajuan',
-        };
+        if ($action === 'lapor-kerusakan') {
+            return redirect()
+                ->route('admin.kerusakan.create', ['kode_aset' => $aset->kode_aset])
+                ->with('success', "Silakan laporkan kerusakan aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'lihat-histori') {
+            return redirect()
+                ->route('kepala_sarana.aset.histori', ['q' => $aset->kode_aset])
+                ->with('success', "Menampilkan histori aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'usulan-mutasi') {
+            return redirect()
+                ->route('admin.feature', ['feature' => 'mutasi-aset', 'aset_id' => $aset->id])
+                ->with('success', "Usulan mutasi untuk aset {$aset->kode_aset}.");
+        }
 
         return redirect()
-            ->route('admin.feature', $this->scanContext($targetFeature, $aset, $action))
-            ->with('success', "Aksi {$this->actionLabel($action)} dipilih untuk aset {$aset->kode_aset}.");
+            ->route('admin.dashboard')
+            ->with('error', 'Aksi tidak dikenali.');
     }
 
     private function redirectForGuru(Aset $aset, string $action): RedirectResponse
     {
+        if ($action === 'lapor-kerusakan') {
+            return redirect()
+                ->route('guru.kerusakan.create', ['kode_aset' => $aset->kode_aset])
+                ->with('success', "Silakan laporkan kerusakan aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'usulan-mutasi') {
+            return redirect()
+                ->route('admin.feature', ['feature' => 'mutasi-aset', 'aset_id' => $aset->id])
+                ->with('success', "Usulan mutasi untuk aset {$aset->kode_aset}.");
+        }
+
         return redirect()
-            ->route('guru.feature', $this->scanContext('buat-pengajuan', $aset, $action))
-            ->with('success', "Aksi {$this->actionLabel($action)} dipilih untuk aset {$aset->kode_aset}.");
+            ->route('guru.pengajuan.index')
+            ->with('error', 'Aksi tidak dikenali.');
     }
 
     private function redirectForKepalaSarana(Aset $aset, string $action): RedirectResponse
     {
-        $targetFeature = match ($action) {
-            'lapor-kerusakan' => 'validasi-kerusakan',
-            default => 'approval-teknis',
-        };
+        if ($action === 'lapor-kerusakan') {
+            return redirect()
+                ->route('kepala_sarana.kerusakan.create', ['kode_aset' => $aset->kode_aset])
+                ->with('success', "Silakan laporkan kerusakan aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'validasi-kerusakan') {
+            return redirect()
+                ->route('kepala_sarana.kerusakan.index', ['q' => $aset->kode_aset])
+                ->with('success', "Silakan validasi kerusakan aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'approval-teknis') {
+            return redirect()
+                ->route('kepala_sarana.pengajuan.approval', ['q' => $aset->kode_aset])
+                ->with('success', "Silakan approval teknis untuk aset {$aset->kode_aset}.");
+        }
 
         return redirect()
-            ->route('kepala_sarana.feature', $this->scanContext($targetFeature, $aset, $action))
-            ->with('success', "Aksi {$this->actionLabel($action)} dipilih untuk aset {$aset->kode_aset}.");
+            ->route('kepala_sarana.dashboard')
+            ->with('error', 'Aksi tidak dikenali.');
     }
 
     private function redirectForBendahara(Aset $aset, string $action): RedirectResponse
     {
-        $targetFeature = match ($action) {
-            'lapor-kerusakan' => 'semua-review',
-            default => 'approval-anggaran',
-        };
+        if ($action === 'lapor-kerusakan') {
+            return redirect()
+                ->route('bendahara.kerusakan.create', ['kode_aset' => $aset->kode_aset])
+                ->with('success', "Silakan laporkan kerusakan aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'review-pengajuan') {
+            return redirect()
+                ->route('bendahara.pengajuan.index', ['q' => $aset->kode_aset])
+                ->with('success', "Review pengajuan untuk aset {$aset->kode_aset}.");
+        }
 
         return redirect()
-            ->route('bendahara.feature', $this->scanContext($targetFeature, $aset, $action))
-            ->with('success', "Aksi {$this->actionLabel($action)} dipilih untuk aset {$aset->kode_aset}.");
+            ->route('bendahara.dashboard')
+            ->with('error', 'Aksi tidak dikenali.');
     }
 
     private function redirectForKepalaSekolah(Aset $aset, string $action): RedirectResponse
     {
+        if ($action === 'lapor-kerusakan') {
+            return redirect()
+                ->route('kepala_sekolah.kerusakan.create', ['kode_aset' => $aset->kode_aset])
+                ->with('success', "Silakan laporkan kerusakan aset {$aset->kode_aset}.");
+        }
+
+        if ($action === 'approval-final') {
+            return redirect()
+                ->route('kepala_sekolah.pengajuan.index', ['q' => $aset->kode_aset])
+                ->with('success', "Approval final untuk aset {$aset->kode_aset}.");
+        }
+
         return redirect()
-            ->route('kepala_sekolah.feature', $this->scanContext('approval-final', $aset, $action))
-            ->with('success', "Aksi {$this->actionLabel($action)} dipilih untuk aset {$aset->kode_aset}.");
+            ->route('kepala_sekolah.dashboard')
+            ->with('error', 'Aksi tidak dikenali.');
     }
 
-    private function actionLabel(string $action): string
+    private function actionLabel(string $action, string $role): string
     {
-        return self::ACTIONS[$action] ?? $action;
+        $actions = match ($role) {
+            'guru' => self::ACTIONS_GURU,
+            'kepala_sarana' => self::ACTIONS_KEPALA_SARANA,
+            'bendahara' => self::ACTIONS_BENDAHARA,
+            'kepala_sekolah' => self::ACTIONS_KEPALA_SEKOLAH,
+            'admin' => self::ACTIONS_ADMIN,
+            default => [],
+        };
+
+        return $actions[$action] ?? $action;
     }
 
     private function scanContext(string $feature, Aset $aset, string $action): array

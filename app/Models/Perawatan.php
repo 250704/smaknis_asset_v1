@@ -15,10 +15,14 @@ class Perawatan extends Model
     protected $fillable = [
         'pengajuan_id',
         'tanggal_perawatan',
-        'foto_sebelum',
         'foto_sesudah',
+        'foto_bukti',
         'biaya_realisasi',
         'keterangan',
+        'nama_teknisi',
+        'kontak_teknisi',
+        'nama_vendor',
+        'kontak_vendor',
     ];
 
     protected function casts(): array

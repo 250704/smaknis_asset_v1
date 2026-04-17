@@ -70,7 +70,7 @@ return new class extends Migration
             $table->foreignId('ruangan_id')->constrained('ruangan')->restrictOnDelete();
             $table->year('tahun_perolehan');
             $table->decimal('harga_perolehan', 15, 2)->nullable();
-            $table->enum('kondisi_terkini', ['BAIK', 'KR1', 'KR2', 'KR3'])->default('BAIK');
+            $table->enum('kondisi_terkini', ['BAIK', 'RINGAN', 'BERAT', 'TIDAK_LAYAK'])->default('BAIK');
             $table->enum('status_aset', ['AKTIF', 'NONAKTIF'])->default('AKTIF');
             $table->string('foto_aset')->nullable();
             $table->softDeletes();
@@ -81,7 +81,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('aset_id')->constrained('aset')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
-            $table->enum('tingkat_kerusakan', ['KR1', 'KR2', 'KR3']);
+            $table->enum('tingkat_kerusakan', ['RINGAN', 'BERAT', 'TIDAK_LAYAK']);
             $table->text('deskripsi');
             $table->string('foto_kerusakan');
             $table->enum('status', ['DILAPORKAN', 'DIVALIDASI', 'DITINDAKLANJUTI'])->default('DILAPORKAN');
@@ -106,6 +106,8 @@ return new class extends Migration
                 'DISETUJUI_KEPSEK',
                 'DITOLAK',
                 'DIPROSES',
+                'MENUNGGU_VERIFIKASI_TEKNIS',
+                'MENUNGGU_VERIFIKASI_KEUANGAN',
                 'SELESAI',
             ])->default('DIAJUKAN');
             $table->timestamps();
@@ -127,7 +129,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('pengajuan_id')->constrained('pengajuan')->cascadeOnDelete();
             $table->foreignId('approver_id')->constrained('users')->restrictOnDelete();
-            $table->enum('role_approval', ['KASARANA', 'BENDAHARA', 'KEPSEK']);
+            $table->enum('role_approval', ['KASARANA', 'BENDAHARA', 'KEPSEK', 'KASARANA_VERIFIKASI', 'BENDAHARA_VERIFIKASI']);
             $table->enum('status', ['DISETUJUI', 'DITOLAK']);
             $table->text('catatan')->nullable();
             $table->timestamp('approved_at');

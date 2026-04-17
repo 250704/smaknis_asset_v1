@@ -45,19 +45,14 @@
             </div>
 
             <div>
-                <label for="kode_ruangan" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Kode Ruangan (3 karakter)</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Kode Ruangan (otomatis)</label>
                 <input
-                    id="kode_ruangan"
-                    name="kode_ruangan"
                     type="text"
-                    maxlength="3"
-                    value="{{ old('kode_ruangan', $ruangan->kode_ruangan) }}"
-                    class="w-full rounded-xl border-slate-300 bg-white text-sm uppercase text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
-                    required
+                    value="{{ $ruangan->kode_ruangan }}"
+                    class="w-full rounded-xl border-slate-300 bg-slate-100 text-sm text-slate-700 shadow-sm dark:border-white/15 dark:bg-slate-800 dark:text-slate-200"
+                    readonly
                 >
-                @error('kode_ruangan')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                @enderror
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Kode akan diperbarui otomatis jika gedung, nama ruangan, atau lantai diubah.</p>
             </div>
 
             <div>

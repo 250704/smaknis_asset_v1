@@ -82,11 +82,12 @@
             <div class="relative">
                 <video id="qr-video" class="h-[280px] w-full bg-slate-950 object-cover sm:h-[360px]" autoplay muted playsinline></video>
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div id="scan-frame" class="relative h-36 w-36 rounded-lg border border-cyan-300/70 shadow-[0_0_0_9999px_rgba(2,6,23,.4)] transition-all duration-300 sm:h-40 sm:w-40">
+<div id="scan-frame" class="relative h-36 w-36 rounded-lg border border-cyan-300/70 shadow-[0_0_0_9999px_rgba(2,6,23,.4)] transition-all duration-300 sm:h-40 sm:w-40">
                         <span class="absolute -left-0.5 -top-0.5 h-5 w-5 border-l-2 border-t-2 border-cyan-300"></span>
                         <span class="absolute -right-0.5 -top-0.5 h-5 w-5 border-r-2 border-t-2 border-cyan-300"></span>
                         <span class="absolute -bottom-0.5 -left-0.5 h-5 w-5 border-b-2 border-l-2 border-cyan-300"></span>
                         <span class="absolute -bottom-0.5 -right-0.5 h-5 w-5 border-b-2 border-r-2 border-cyan-300"></span>
+                        <div class="scan-line"></div>
                         <div id="scan-success-badge" class="absolute -top-9 left-1/2 hidden -translate-x-1/2 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-semibold text-white shadow-lg">
                             QR Berhasil
                         </div>
@@ -100,6 +101,51 @@
         </div>
         </section>
     @endif
+
+    <style>
+        #scan-frame {
+            width: 11rem;
+            height: 11rem;
+        }
+
+        @media (min-width: 640px) {
+            #scan-frame {
+                width: 13rem;
+                height: 13rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #scan-frame {
+                width: 14rem;
+                height: 14rem;
+            }
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0.75rem;
+            right: 0.75rem;
+            height: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(239, 68, 68, 0.95);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.85);
+            animation: scanLine 2.2s ease-in-out infinite;
+        }
+
+        @keyframes scanLine {
+            0% {
+                top: 18%;
+            }
+            50% {
+                top: 82%;
+            }
+            100% {
+                top: 18%;
+            }
+        }
+    </style>
 
     @if ($kodeAset !== '')
         <section class="panel mt-5">
@@ -177,11 +223,36 @@
                     </div>
                 </dl>
 
-                <div class="mt-5 rounded-xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/30 dark:bg-cyan-500/10">
-                    <h3 class="text-sm font-semibold text-cyan-800 dark:text-cyan-200">Aksi Cepat Setelah Scan</h3>
-                    <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="mt-5">
+                    <div class="mb-3 rounded-xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/30 dark:bg-cyan-500/10">
+                        <h3 class="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
+                            <i class="fas fa-info-circle mr-2"></i>Aksi Tersedia
+                        </h3>
+                        <p class="mt-1 text-xs text-cyan-700 dark:text-cyan-300">
+                            @if($role === 'guru')
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                <strong>Tip:</strong> Gunakan "Lapor Kerusakan" jika aset rusak. Pengajuan perawatan/penggantian akan otomatis dibuat setelah validasi Kepala Sarana.
+                            @elseif($role === 'kepala_sarana')
+                                <i class="fas fa-clipboard-check mr-1"></i>
+                                <strong>Tip:</strong> Validasi kerusakan dan lakukan approval teknis dari sini.
+                            @elseif($role === 'bendahara')
+                                <i class="fas fa-coins mr-1"></i>
+                                <strong>Tip:</strong> Review pengajuan dan approval anggaran dari sini.
+                            @elseif($role === 'kepala_sekolah')
+                                <i class="fas fa-stamp mr-1"></i>
+                                <strong>Tip:</strong> Lakukan approval final dari sini.
+                            @else
+                                <i class="fas fa-tools mr-1"></i>
+                                <strong>Tip:</strong> Kelola mutasi dan lihat histori aset dari sini.
+                            @endif
+                        </p>
+                    </div>
+                    
+                    <h3 class="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Pilih Aksi:</h3>
+                    <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                         @foreach ($actions as $actionKey => $label)
-                            <a href="{{ route($role . '.scan.action', ['aset' => $aset, 'action' => $actionKey]) }}" class="btn-secondary justify-center text-center">
+                            <a href="{{ route($role . '.scan.action', ['aset' => $aset, 'action' => $actionKey]) }}" class="btn-secondary justify-center text-center hover:scale-105 transition-transform">
+                                <i class="fas fa-arrow-right mr-2 text-xs"></i>
                                 {{ $label }}
                             </a>
                         @endforeach
@@ -407,6 +478,7 @@
                 scanSuccessBadge.classList.add('hidden');
                 scanFrameEl.classList.remove('border-emerald-400', 'scale-105');
                 scanFrameEl.classList.add('border-cyan-300/70');
+                let canScan = true;
 
                 if ('BarcodeDetector' in window) {
                     try {
@@ -418,13 +490,13 @@
 
                 if (!detector) {
                     if (typeof window.jsQR !== 'function') {
-                        setStatus('Browser tidak mendukung scanner QR otomatis. Gunakan input manual/scanner eksternal.', true);
-                        return;
-                    }
-                    usingFallback = true;
-                    if (!canvas) {
-                        canvas = document.createElement('canvas');
-                        context2d = canvas.getContext('2d', { willReadFrequently: true });
+                        canScan = false;
+                    } else {
+                        usingFallback = true;
+                        if (!canvas) {
+                            canvas = document.createElement('canvas');
+                            context2d = canvas.getContext('2d', { willReadFrequently: true });
+                        }
                     }
                 }
 
@@ -437,10 +509,15 @@
                     video.srcObject = stream;
                     await video.play();
                     updateButtons(true);
-                    setStatus(usingFallback
-                        ? 'Kamera aktif (mode kompatibilitas). Arahkan QR aset ke kotak scan.'
-                        : 'Kamera aktif. Arahkan QR aset ke kotak scan.');
-                    startLoop();
+                    if (canScan) {
+                        setStatus(usingFallback
+                            ? 'Kamera aktif (mode kompatibilitas). Arahkan QR aset ke kotak scan.'
+                            : 'Kamera aktif. Arahkan QR aset ke kotak scan.');
+                        startLoop();
+                    } else {
+                        setStatus('Kamera aktif, tetapi scanner QR tidak tersedia di browser ini. Gunakan input manual.', true);
+                        stopLoop();
+                    }
                 } catch (error) {
                     setStatus(resolveCameraError(error), true);
                     updateButtons(false);

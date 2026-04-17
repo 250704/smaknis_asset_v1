@@ -44,7 +44,7 @@ class AsetController extends Controller
             ->when($filters['gedung_id'], function ($query, $gedungId) {
                 $query->whereHas('ruangan', fn ($ruanganQuery) => $ruanganQuery->where('gedung_id', $gedungId));
             })
-            ->latest()
+            ->orderBy('kode_aset')
             ->paginate(10)
             ->withQueryString();
 
@@ -324,28 +324,127 @@ class AsetController extends Controller
 
     public function destroy(Aset $aset): RedirectResponse
     {
-        if ($aset->pengajuan()->exists()) {
-            return redirect()
-                ->route('admin.aset.index')
-                ->with('error', 'Aset tidak bisa dihapus karena sudah memiliki riwayat pengajuan.');
-        }
-
         try {
-            if ($aset->foto_aset) {
-                Storage::disk('public')->delete($aset->foto_aset);
-            }
-
-            // Hapus fisik dari database agar sinkron dengan data aplikasi.
-            $aset->forceDelete();
+            $result = $this->deleteAssetRecord($aset);
         } catch (QueryException $e) {
             return redirect()
                 ->route('admin.aset.index')
-                ->with('error', 'Aset tidak bisa dihapus permanen karena masih dipakai data lain.');
+                ->with('error', 'Aset tidak bisa dihapus. Masih dipakai data lain.');
+        }
+
+        if ($result === 'archived') {
+            return redirect()
+                ->route('admin.aset.index')
+                ->with('success', 'Aset diarsipkan karena masih terhubung dengan data proses.');
         }
 
         return redirect()
             ->route('admin.aset.index')
             ->with('success', 'Data aset berhasil dihapus.');
+    }
+
+    public function destroySelected(Request $request): RedirectResponse
+    {
+        $assetIds = collect((array) $request->input('aset_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($assetIds === []) {
+            return redirect()
+                ->route('admin.aset.index')
+                ->with('error', 'Tidak ada aset yang dipilih.');
+        }
+
+        $assets = Aset::query()
+            ->whereIn('id', $assetIds)
+            ->get();
+
+        if ($assets->isEmpty()) {
+            return redirect()
+                ->route('admin.aset.index')
+                ->with('error', 'Tidak ada aset yang dipilih.');
+        }
+
+        $deletedCount = 0;
+        $archivedCount = 0;
+        $failedCount = 0;
+
+        foreach ($assets as $asset) {
+            try {
+                $result = $this->deleteAssetRecord($asset);
+                if ($result === 'archived') {
+                    $archivedCount++;
+                } else {
+                    $deletedCount++;
+                }
+            } catch (QueryException $e) {
+                $failedCount++;
+            }
+        }
+
+        $parts = [];
+        if ($deletedCount > 0) {
+            $parts[] = "{$deletedCount} aset dihapus permanen";
+        }
+        if ($archivedCount > 0) {
+            $parts[] = "{$archivedCount} aset diarsipkan";
+        }
+        if ($failedCount > 0) {
+            $parts[] = "{$failedCount} aset gagal dihapus";
+        }
+
+        $message = $parts === [] ? 'Tidak ada perubahan data aset.' : implode(', ', $parts) . '.';
+
+        return redirect()
+            ->route('admin.aset.index')
+            ->with($failedCount > 0 ? 'error' : 'success', $message);
+    }
+
+    public function destroyAll(): RedirectResponse
+    {
+        $assets = Aset::query()->get();
+        if ($assets->isEmpty()) {
+            return redirect()
+                ->route('admin.aset.index')
+                ->with('error', 'Tidak ada aset untuk dihapus.');
+        }
+
+        $deletedCount = 0;
+        $archivedCount = 0;
+        $failedCount = 0;
+
+        foreach ($assets as $asset) {
+            try {
+                $result = $this->deleteAssetRecord($asset);
+                if ($result === 'archived') {
+                    $archivedCount++;
+                } else {
+                    $deletedCount++;
+                }
+            } catch (QueryException $e) {
+                $failedCount++;
+            }
+        }
+
+        $parts = [];
+        if ($deletedCount > 0) {
+            $parts[] = "{$deletedCount} aset dihapus permanen";
+        }
+        if ($archivedCount > 0) {
+            $parts[] = "{$archivedCount} aset diarsipkan";
+        }
+        if ($failedCount > 0) {
+            $parts[] = "{$failedCount} aset gagal dihapus";
+        }
+
+        $message = $parts === [] ? 'Tidak ada perubahan data aset.' : implode(', ', $parts) . '.';
+
+        return redirect()
+            ->route('admin.aset.index')
+            ->with($failedCount > 0 ? 'error' : 'success', $message);
     }
 
     protected function validatedPayload(Request $request): array
@@ -372,10 +471,31 @@ class AsetController extends Controller
         ];
     }
 
+    protected function deleteAssetRecord(Aset $aset): string
+    {
+        $hasRelations = $aset->pengajuan()->exists()
+            || $aset->riwayatKondisiAset()->exists()
+            || $aset->mutasiAset()->exists()
+            || $aset->penggantianAsetLama()->exists()
+            || $aset->penggantianAsetBaru()->exists();
+
+        if ($hasRelations) {
+            $aset->delete();
+            return 'archived';
+        }
+
+        if ($aset->foto_aset) {
+            Storage::disk('public')->delete($aset->foto_aset);
+        }
+
+        $aset->forceDelete();
+        return 'deleted';
+    }
+
     protected function generateKodeAset(Ruangan $ruangan): string
     {
         $gedungCode = $this->makeSegmentCode($ruangan->gedung?->kode_gedung ?: $ruangan->gedung?->nama_gedung, 'GDG');
-        $ruanganCode = $this->makeSegmentCode($ruangan->kode_ruangan ?: $ruangan->nama_ruangan, 'RGN');
+        $ruanganCode = $this->extractRuanganCodeSegment($ruangan);
         $lantai = max(0, (int) ($ruangan->lantai ?? 0));
         $prefix = sprintf('AST-%s-%s-L%02d-%s-', $gedungCode, $ruanganCode, $lantai, date('Y'));
         $counter = 1;
@@ -420,6 +540,24 @@ class AsetController extends Controller
         }
 
         return str_pad($base, 3, 'X');
+    }
+
+    protected function extractRuanganCodeSegment(Ruangan $ruangan): string
+    {
+        $kodeRuangan = strtoupper(trim((string) ($ruangan->kode_ruangan ?? '')));
+        if ($kodeRuangan !== '') {
+            if (preg_match('/^[A-Z0-9]{3}-L\d{2}-([A-Z0-9]{3})$/', $kodeRuangan, $match)) {
+                return $match[1];
+            }
+
+            $segments = array_values(array_filter(explode('-', $kodeRuangan)));
+            $lastSegment = end($segments);
+            if (is_string($lastSegment) && $lastSegment !== '') {
+                return $this->makeSegmentCode($lastSegment, 'RGN');
+            }
+        }
+
+        return $this->makeSegmentCode($ruangan->nama_ruangan, 'RGN');
     }
 
     protected function generateNamaAset(string $requestedName, ?Aset $currentAset = null): string

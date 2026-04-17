@@ -20,6 +20,8 @@ class Pengajuan extends Model
     public const STATUS_DISETUJUI_KEPSEK = 'DISETUJUI_KEPSEK';
     public const STATUS_DITOLAK = 'DITOLAK';
     public const STATUS_DIPROSES = 'DIPROSES';
+    public const STATUS_MENUNGGU_VERIFIKASI_TEKNIS = 'MENUNGGU_VERIFIKASI_TEKNIS';
+    public const STATUS_MENUNGGU_VERIFIKASI_KEUANGAN = 'MENUNGGU_VERIFIKASI_KEUANGAN';
     public const STATUS_SELESAI = 'SELESAI';
 
     protected $fillable = [
@@ -31,12 +33,14 @@ class Pengajuan extends Model
         'estimasi_biaya',
         'target_realisasi',
         'status_pengajuan',
+        'lampiran',
     ];
 
     protected function casts(): array
     {
         return [
             'target_realisasi' => 'date',
+            'lampiran' => 'array',
         ];
     }
 
@@ -69,4 +73,5 @@ class Pengajuan extends Model
     {
         return $this->hasMany(DetailPengadaan::class);
     }
+
 }

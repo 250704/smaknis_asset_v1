@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin\MasterData;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gedung;
+use App\Models\Ruangan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -21,11 +23,41 @@ class GedungController extends Controller
                 $query->where('nama_gedung', 'like', "%{$search}%")
                     ->orWhere('kode_gedung', 'like', "%{$search}%");
             })
+            ->withCount('ruangan')
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.master.gedung.index', compact('gedung', 'search'));
+        // Statistik untuk summary cards
+        $totalGedung = Gedung::count();
+        $totalRuangan = Ruangan::count();
+        $gedungDenganRuangan = Gedung::has('ruangan')->count();
+        $gedungTanpaRuangan = $totalGedung - $gedungDenganRuangan;
+
+        // Data untuk Pie Chart - Distribusi Gedung
+        $gedungByRuangan = [
+            'tanpa_ruangan' => Gedung::doesntHave('ruangan')->count(),
+            '1_5_ruangan' => Gedung::has('ruangan', '>=', 1)->has('ruangan', '<=', 5)->count(),
+            '6_10_ruangan' => Gedung::has('ruangan', '>', 5)->has('ruangan', '<=', 10)->count(),
+            'lebih_10' => Gedung::has('ruangan', '>', 10)->count(),
+        ];
+
+        // Data untuk Bar Chart - Ruangan per Gedung (Top 10)
+        $ruanganPerGedung = Gedung::withCount('ruangan')
+            ->orderByDesc('ruangan_count')
+            ->limit(10)
+            ->get();
+
+        return view('admin.master.gedung.index', compact(
+            'gedung', 
+            'search', 
+            'totalGedung', 
+            'totalRuangan', 
+            'gedungDenganRuangan',
+            'gedungTanpaRuangan',
+            'gedungByRuangan',
+            'ruanganPerGedung'
+        ));
     }
 
     public function store(Request $request): RedirectResponse

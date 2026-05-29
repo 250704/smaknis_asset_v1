@@ -11,6 +11,7 @@ use App\Models\Pengajuan;
 use App\Models\RiwayatKondisiAset;
 use App\Models\Ruangan;
 use App\Models\User;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -1120,7 +1121,12 @@ class PengajuanController extends Controller
     }
 
 
-    private function broadcastPengajuanTracking(Pengajuan $pengajuan, string $aktivitas, ?string $catatan = null): void
+    private function broadcastPengajuanTracking(
+        Pengajuan $pengajuan,
+        string $aktivitas,
+        ?string $catatan = null,
+        ?int $actorUserId = null
+    ): void
     {
         $status = $this->statusLabel((string) $pengajuan->status_pengajuan);
         $judul = 'Tracking Pengajuan';
@@ -1130,22 +1136,42 @@ class PengajuanController extends Controller
             $isi .= "\n{$catatan}";
         }
 
-        $targetRoles = ['admin', 'kepala_sarana', 'bendahara', 'kepala_sekolah'];
+        $actorId = $actorUserId ?? (auth()->id() ? (int) auth()->id() : null);
+        $excludeUserIds = $actorId ? [$actorId] : [];
+
+        $targetRoles = $this->resolveNextPengajuanRoles($pengajuan);
         foreach ($targetRoles as $role) {
             $this->notifyRole(
                 $role,
                 $judul,
                 $isi,
-                $this->resolvePengajuanUrlByRole($role, $pengajuan)
+                $this->resolvePengajuanUrlByRole($role, $pengajuan),
+                $excludeUserIds
             );
         }
 
-        $this->notifyUser(
-            $pengajuan->user,
-            $judul,
-            $isi,
-            $this->resolvePengajuanUrlForUser($pengajuan->user, $pengajuan)
-        );
+        if ($targetRoles === []) {
+            $this->notifyUser(
+                $pengajuan->user,
+                $judul,
+                $isi,
+                $this->resolvePengajuanUrlForUser($pengajuan->user, $pengajuan),
+                $excludeUserIds
+            );
+        }
+    }
+
+    private function resolveNextPengajuanRoles(Pengajuan $pengajuan): array
+    {
+        return match ((string) $pengajuan->status_pengajuan) {
+            Pengajuan::STATUS_DIAJUKAN => ['kepala_sarana'],
+            Pengajuan::STATUS_DISETUJUI_KASARANA => ['bendahara'],
+            Pengajuan::STATUS_DISETUJUI_BENDAHARA => ['kepala_sekolah'],
+            Pengajuan::STATUS_DISETUJUI_KEPSEK, Pengajuan::STATUS_DIPROSES => ['admin'],
+            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS => ['kepala_sarana'],
+            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => ['bendahara'],
+            default => [],
+        };
     }
 
     private function resolvePengajuanUrlByRole(string $role, Pengajuan $pengajuan): ?string
@@ -1159,7 +1185,9 @@ class PengajuanController extends Controller
         }
 
         return match ($role) {
-            'admin' => route('admin.pengajuan.show', $pengajuan),
+            'admin' => $pengajuan->status_pengajuan === Pengajuan::STATUS_DIPROSES
+                ? route('admin.realisasi.index')
+                : route('admin.pengajuan.show', $pengajuan),
             'kepala_sarana' => route('kepala_sarana.pengajuan.show', $pengajuan),
             'bendahara' => route('bendahara.pengajuan.show', $pengajuan),
             'kepala_sekolah' => route('kepala_sekolah.pengajuan.show', $pengajuan),
@@ -1232,6 +1260,7 @@ class PengajuanController extends Controller
                     'url' => $url,
                     'is_read' => false,
                 ]);
+                app(WhatsAppNotificationService::class)->sendToUserId((int) $userId, $judul, $isi, $url);
                 continue;
             }
 
@@ -1242,6 +1271,7 @@ class PengajuanController extends Controller
                 'url' => $url,
                 'is_read' => false,
             ]);
+            app(WhatsAppNotificationService::class)->sendToUserId((int) $userId, $judul, $isi, $url);
         }
     }
 
@@ -1346,5 +1376,3 @@ class PengajuanController extends Controller
         };
     }
 }
-
-

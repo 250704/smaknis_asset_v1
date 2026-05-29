@@ -14,10 +14,13 @@
     html {
         font-family: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
         scroll-behavior: smooth;
+        height: 100%;
     }
 
     body {
         @apply bg-slate-100 text-slate-800;
+        min-height: 100%;
+        overflow: hidden;
     }
 
     input,
@@ -78,7 +81,8 @@
 
 @layer components {
     .app-shell {
-        @apply relative min-h-screen overflow-hidden;
+        @apply relative min-h-screen overflow-x-hidden overflow-y-auto;
+        height: 100dvh;
         background:
             radial-gradient(900px 500px at -10% -10%, rgba(59, 130, 246, 0.16), transparent 60%),
             radial-gradient(800px 500px at 110% -10%, rgba(20, 184, 166, 0.12), transparent 60%),

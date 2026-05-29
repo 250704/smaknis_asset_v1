@@ -1,4 +1,4 @@
-<x-layouts.sbadmin>
+﻿<x-layouts.sbadmin>
     @php
         $roleLabel = match ($role) {
             'admin' => 'Admin',
@@ -98,54 +98,75 @@
         </div>
     </details>
 
-    <section class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="panel">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Aset</p>
-            <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_aset']) }}</p>
-            <p class="mt-1 text-xs text-slate-500">Aktif {{ number_format($kpi['aset_aktif']) }} • Nonaktif {{ number_format($kpi['aset_nonaktif']) }}</p>
+    <section class="mt-6">
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-100">
+                <i class="fas fa-chart-line text-blue-500"></i>
+                Analisis Ringkas
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Disusun dari filter aktif</p>
         </div>
-        <div class="panel">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Aset Perlu Perhatian</p>
-            <p class="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-300">{{ number_format($kpi['aset_rusak']) }}</p>
-            <p class="mt-1 text-xs text-slate-500">Kondisi ringan, berat, tidak layak</p>
+
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="panel">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Aset</p>
+                    <i class="fas fa-boxes-stacked text-slate-400"></i>
+                </div>
+                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_aset']) }}</p>
+                <p class="mt-1 text-xs text-slate-500">Aktif {{ number_format($kpi['aset_aktif']) }} - Nonaktif {{ number_format($kpi['aset_nonaktif']) }}</p>
+            </div>
+            <div class="panel">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Perlu Perhatian</p>
+                    <i class="fas fa-triangle-exclamation text-amber-500"></i>
+                </div>
+                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['aset_rusak']) }}</p>
+                <p class="mt-1 text-xs text-slate-500">Kondisi ringan, berat, tidak layak</p>
+            </div>
+            <div class="panel">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pengajuan</p>
+                    <i class="fas fa-file-circle-check text-slate-400"></i>
+                </div>
+                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_pengajuan']) }}</p>
+                <p class="mt-1 text-xs text-slate-500">Menunggu {{ number_format($kpi['pengajuan_menunggu']) }} - Selesai {{ number_format($kpi['pengajuan_selesai']) }}</p>
+            </div>
+            <div class="panel">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Laporan Kerusakan</p>
+                    <i class="fas fa-screwdriver-wrench text-slate-400"></i>
+                </div>
+                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_kerusakan']) }}</p>
+                <p class="mt-1 text-xs text-slate-500">Aktif {{ number_format($kpi['kerusakan_aktif']) }} - Selesai {{ number_format($kpi['kerusakan_selesai']) }}</p>
+            </div>
         </div>
-        <div class="panel">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pengajuan</p>
-            <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_pengajuan']) }}</p>
-            <p class="mt-1 text-xs text-slate-500">Menunggu {{ number_format($kpi['pengajuan_menunggu']) }} • Selesai {{ number_format($kpi['pengajuan_selesai']) }}</p>
-        </div>
-        <div class="panel">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Laporan Kerusakan</p>
-            <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_kerusakan']) }}</p>
-            <p class="mt-1 text-xs text-slate-500">Aktif {{ number_format($kpi['kerusakan_aktif']) }} • Selesai {{ number_format($kpi['kerusakan_selesai']) }}</p>
+
+        <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div class="panel">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimasi Pengajuan</p>
+                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['estimasi_total'], 0, ',', '.') }}</p>
+            </div>
+            <div class="panel">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Realisasi Perawatan</p>
+                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['realisasi_perawatan'], 0, ',', '.') }}</p>
+            </div>
+            <div class="panel">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Realisasi Penggantian</p>
+                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['realisasi_penggantian'], 0, ',', '.') }}</p>
+            </div>
+            <div class="panel">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Realisasi</p>
+                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['total_realisasi'], 0, ',', '.') }}</p>
+            </div>
+            <div class="panel">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Selisih Anggaran</p>
+                <p class="mt-2 text-lg font-bold {{ $finance['selisih_anggaran'] >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
+                    Rp {{ number_format($finance['selisih_anggaran'], 0, ',', '.') }}
+                </p>
+            </div>
         </div>
     </section>
-
-    <section class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <div class="panel xl:col-span-1">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimasi Pengajuan</p>
-            <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['estimasi_total'], 0, ',', '.') }}</p>
-        </div>
-        <div class="panel xl:col-span-1">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Realisasi Perawatan</p>
-            <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['realisasi_perawatan'], 0, ',', '.') }}</p>
-        </div>
-        <div class="panel xl:col-span-1">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Realisasi Penggantian</p>
-            <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['realisasi_penggantian'], 0, ',', '.') }}</p>
-        </div>
-        <div class="panel xl:col-span-1">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Realisasi</p>
-            <p class="mt-2 text-lg font-bold text-blue-600 dark:text-cyan-300">Rp {{ number_format($finance['total_realisasi'], 0, ',', '.') }}</p>
-        </div>
-        <div class="panel xl:col-span-1">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Selisih Anggaran</p>
-            <p class="mt-2 text-lg font-bold {{ $finance['selisih_anggaran'] >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
-                Rp {{ number_format($finance['selisih_anggaran'], 0, ',', '.') }}
-            </p>
-        </div>
-    </section>
-
     <section class="mt-4 grid gap-4 xl:grid-cols-2">
         <div class="panel">
             <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Tren Pengajuan Bulanan</h2>

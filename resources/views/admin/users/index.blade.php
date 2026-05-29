@@ -22,6 +22,10 @@
                     <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Email</label>
                     <input type="email" name="email" value="{{ old('email') }}" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100" required>
                 </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nomor Telepon (WhatsApp)</label>
+                    <input type="text" name="nomor_telepon" value="{{ old('nomor_telepon') }}" placeholder="contoh: 081234567890" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Role</label>
@@ -107,6 +111,7 @@
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">User</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Email</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">No. WA</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Role</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Aksi</th>
@@ -117,6 +122,7 @@
                             <tr class="bg-white/70 dark:bg-transparent">
                                 <td class="px-4 py-3 align-top font-medium text-slate-700 dark:text-slate-200">{{ $item->display_name }}</td>
                                 <td class="px-4 py-3 align-top text-slate-600 dark:text-slate-300">{{ $item->email }}</td>
+                                <td class="px-4 py-3 align-top text-slate-600 dark:text-slate-300">{{ $item->nomor_telepon ?: '-' }}</td>
                                 <td class="px-4 py-3 align-top text-slate-600 dark:text-slate-300">{{ strtoupper(str_replace('_', ' ', (string) $item->role_code)) }}</td>
                                 <td class="px-4 py-3 align-top">
                                     @php
@@ -135,6 +141,7 @@
                                                 @method('PATCH')
                                                 <input type="text" name="nama" value="{{ $item->display_name }}" placeholder="Nama lengkap" class="w-full rounded-lg border-slate-300 bg-white text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60" required>
                                                 <input type="email" name="email" value="{{ $item->email }}" placeholder="Email" class="w-full rounded-lg border-slate-300 bg-white text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60" required>
+                                                <input type="text" name="nomor_telepon" value="{{ $item->nomor_telepon }}" placeholder="Nomor WA" class="w-full rounded-lg border-slate-300 bg-white text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60">
                                                 <div class="grid grid-cols-2 gap-2">
                                                     <select name="role" class="w-full rounded-lg border-slate-300 bg-white text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60">
                                                         @foreach ($roles as $role)
@@ -164,7 +171,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data user.</td>
+                                <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Belum ada data user.</td>
                             </tr>
                         @endforelse
                     </tbody>

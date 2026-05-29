@@ -27,7 +27,8 @@ class UserManagementController extends Controller
                 $query->where(function ($inner) use ($filters) {
                     $inner->where('nama', 'like', "%{$filters['q']}%")
                         ->orWhere('name', 'like', "%{$filters['q']}%")
-                        ->orWhere('email', 'like', "%{$filters['q']}%");
+                        ->orWhere('email', 'like', "%{$filters['q']}%")
+                        ->orWhere('nomor_telepon', 'like', "%{$filters['q']}%");
                 });
             })
             ->when($filters['role'] !== '', function ($query) use ($filters) {
@@ -55,6 +56,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'nomor_telepon' => ['nullable', 'string', 'max:30'],
             'role' => ['required', 'string', 'exists:roles,nama_role'],
             'status_akun' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -66,6 +68,7 @@ class UserManagementController extends Controller
             'name' => $validated['nama'],
             'nama' => $validated['nama'],
             'email' => $validated['email'],
+            'nomor_telepon' => $validated['nomor_telepon'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'role_id' => $role->id,
@@ -82,6 +85,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'nomor_telepon' => ['nullable', 'string', 'max:30'],
             'role' => ['required', 'string', 'exists:roles,nama_role'],
             'status_akun' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
         ]);
@@ -103,6 +107,7 @@ class UserManagementController extends Controller
             'name' => $validated['nama'],
             'nama' => $validated['nama'],
             'email' => $validated['email'],
+            'nomor_telepon' => $validated['nomor_telepon'] ?? null,
             'role' => $validated['role'],
             'role_id' => $role->id,
             'status_akun' => $validated['status_akun'],

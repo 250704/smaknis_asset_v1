@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'enabled' => env('WHATSAPP_ENABLED', false),
+        'provider' => env('WHATSAPP_PROVIDER', 'fonnte'),
+        'token' => env('WHATSAPP_TOKEN'),
+        'endpoint' => env('WHATSAPP_ENDPOINT', 'https://api.fonnte.com/send'),
+        'timeout' => (int) env('WHATSAPP_TIMEOUT', 12),
+    ],
+
 ];

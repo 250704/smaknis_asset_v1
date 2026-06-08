@@ -64,7 +64,7 @@
                                 <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Lt. {{ $item->lantai ?? '-' }}</td>
                                 <td class="py-3 pl-4 pr-4">
                                     <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-                                        <button type="button" class="btn-secondary whitespace-nowrap" @click="openEditModal = true">Edit</button>
+                                        <button type="button" class="btn-muted whitespace-nowrap" @click="openEditModal = true">Edit</button>
                                         <form action="{{ route('admin.master.ruangan.destroy', $item) }}" method="POST" class="shrink-0" onsubmit="return confirm('Hapus data ruangan ini?')">
                                             @csrf
                                             @method('DELETE')

@@ -186,7 +186,7 @@
                                                 ></textarea>
                                                 <div class="flex items-center gap-2">
                                                     <button type="submit" formaction="{{ route($approveRoute, $item) }}" class="btn-primary w-full justify-center">Setujui</button>
-                                                    <button type="submit" formaction="{{ route($rejectRoute, $item) }}" class="btn-secondary w-full justify-center text-rose-600 dark:text-rose-300">Tolak</button>
+                                                    <button type="submit" formaction="{{ route($rejectRoute, $item) }}" class="btn-danger w-full justify-center">Tolak</button>
                                                 </div>
                                             </form>
                                         </td>

@@ -133,11 +133,10 @@
             class="fixed inset-y-0 left-0 z-40 px-4 pt-5 pb-6 overflow-y-auto transition-transform duration-200 transform sidebar-shell w-72 lg:translate-x-0 lg:shadow-none"
         >
             <div class="flex items-center gap-3 px-2 mb-6">
-                <div class="flex items-center justify-center text-white shadow-lg app-float h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 shadow-cyan-500/20">
-                    <i class="text-sm fas fa-shield-alt"></i>
-                </div>
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Sistem Inventaris</p>
+                <img src="{{ asset('img/logo smk.png') }}" alt="SMK Nurul Islam" class="h-11 w-11 object-contain" />
+                <div class="space-y-1">
+                    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-700 dark:text-slate-200">Sistem Inventaris</p>
+                    <p class="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">SMK Nurul Islam</p>
                 </div>
             </div>
 
@@ -155,7 +154,7 @@
         </aside>
 
         <div class="lg:pl-72">
-            <header class="sticky top-0 z-20 px-4 pt-4 sm:px-6">
+            <header class="sticky top-0 z-20 px-4 pt-0 sm:px-6">
                 <div class="flex items-center justify-between h-16 px-4 mx-auto topbar-shell max-w-screen-2xl sm:px-5">
                     <div class="flex items-center gap-3">
                         <button

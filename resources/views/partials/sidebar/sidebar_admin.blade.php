@@ -1,7 +1,6 @@
 @php
     $feature = request()->route('feature');
-    $inventarisOpen = request()->routeIs('admin.aset.*', 'admin.cetak-qr.*') || in_array($feature, ['mutasi-aset', 'cetak-qr'], true);
-    $masterOpen = request()->routeIs('admin.master.*');
+    $masterOpen = request()->routeIs('admin.master.*', 'admin.aset.*', 'admin.cetak-qr.*') || in_array($feature, ['mutasi-aset', 'cetak-qr'], true);
     $sistemOpen = request()->routeIs('admin.users.*') || in_array($feature, ['manajemen-user', 'log-aktivitas'], true);
 @endphp
 
@@ -11,20 +10,6 @@
         <span>Dashboard</span>
     </a>
 
-    {{-- Inventaris --}}
-    <details class="side-group group" @if($inventarisOpen) open @endif>
-        <summary class="side-nav-link cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-            <i class="w-4 text-xs text-center fas fa-boxes"></i>
-            <span class="flex-1">Inventaris</span>
-            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition group-open:rotate-180"></i>
-        </summary>
-        <div class="pb-2 pr-2 space-y-1 pl-9">
-            <a href="{{ route('admin.aset.index') }}" class="side-sub-link {{ request()->routeIs('admin.aset.index', 'admin.aset.show', 'admin.aset.edit') ? 'active' : '' }}">Data Aset</a>
-            <a href="{{ route('admin.aset.create') }}" class="side-sub-link {{ request()->routeIs('admin.aset.create') ? 'active' : '' }}">Tambah Aset</a>
-            <a href="{{ route('admin.cetak-qr.index') }}" class="side-sub-link {{ request()->routeIs('admin.cetak-qr.*') || $feature === 'cetak-qr' ? 'active' : '' }}">Cetak QR</a>
-        </div>
-    </details>
-
     {{-- Master Data --}}
     <details class="side-group group" @if($masterOpen) open @endif>
         <summary class="side-nav-link cursor-pointer list-none [&::-webkit-details-marker]:hidden">
@@ -33,6 +18,9 @@
             <i class="fas fa-chevron-down text-[10px] text-slate-400 transition group-open:rotate-180"></i>
         </summary>
         <div class="pb-2 pr-2 space-y-1 pl-9">
+            <a href="{{ route('admin.aset.index') }}" class="side-sub-link {{ request()->routeIs('admin.aset.index', 'admin.aset.show', 'admin.aset.edit') ? 'active' : '' }}">Data Aset</a>
+            <a href="{{ route('admin.aset.create') }}" class="side-sub-link {{ request()->routeIs('admin.aset.create') ? 'active' : '' }}">Tambah Aset</a>
+            <a href="{{ route('admin.cetak-qr.index') }}" class="side-sub-link {{ request()->routeIs('admin.cetak-qr.*') || $feature === 'cetak-qr' ? 'active' : '' }}">Cetak QR</a>
             <a href="{{ route('admin.master.gedung.index') }}" class="side-sub-link {{ request()->routeIs('admin.master.gedung.*') ? 'active' : '' }}">Gedung</a>
             <a href="{{ route('admin.master.ruangan.index') }}" class="side-sub-link {{ request()->routeIs('admin.master.ruangan.*') ? 'active' : '' }}">Ruangan</a>
             <a href="{{ route('admin.master.kategori-aset.index') }}" class="side-sub-link {{ request()->routeIs('admin.master.kategori-aset.*') ? 'active' : '' }}">Kategori Aset</a>

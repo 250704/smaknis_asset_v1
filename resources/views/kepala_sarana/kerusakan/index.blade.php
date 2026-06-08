@@ -182,7 +182,7 @@
                                                     >
                                                 </div>
                                                 <div class="flex flex-wrap items-center justify-end gap-2">
-                                                    <button type="submit" name="action" value="TOLAK" class="btn-secondary">Tolak</button>
+                                                    <button type="submit" name="action" value="TOLAK" class="btn-danger">Tolak</button>
                                                     <button type="submit" name="action" value="VALIDASI" class="btn-primary">
                                                         {{ $isKepalaSekolahContext ? 'Validasi & Ajukan ke Bendahara' : 'Validasi & Ajukan' }}
                                                     </button>

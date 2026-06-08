@@ -6,7 +6,7 @@
         </div>
         <div class="flex gap-2">
             <a href="{{ route('admin.cetak-qr.index', ['q' => $aset->kode_aset]) }}" class="btn-secondary">Cetak QR</a>
-            <a href="{{ route('admin.aset.edit', $aset) }}" class="btn-secondary">Edit</a>
+            <a href="{{ route('admin.aset.edit', $aset) }}" class="btn-muted">Edit</a>
             <a href="{{ route('admin.aset.index') }}" class="btn-secondary">Kembali</a>
         </div>
     </div>

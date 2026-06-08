@@ -8,7 +8,7 @@
     </div>
 
     <section class="panel">
-        <form method="GET" action="{{ route('kepala_sarana.aset.index') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <form method="GET" action="{{ route('kepala_sarana.aset.index') }}" class="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
             <div class="xl:col-span-2">
                 <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="q">Cari Aset</label>
                 <input
@@ -71,7 +71,7 @@
                 </select>
             </div>
 
-            <div class="flex items-end gap-2 xl:col-span-4">
+            <div class="flex items-end gap-2 xl:col-span-1">
                 <button type="submit" class="btn-primary">Terapkan Filter</button>
                 <a href="{{ route('kepala_sarana.aset.index') }}" class="btn-secondary">Reset</a>
             </div>

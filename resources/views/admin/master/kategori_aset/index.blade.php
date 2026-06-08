@@ -70,7 +70,7 @@
                                 <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">{{ $item->nama_kategori }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap gap-2">
-                                        <a href="{{ route('admin.master.kategori-aset.edit', $item) }}" class="btn-secondary">Edit</a>
+                                        <a href="{{ route('admin.master.kategori-aset.edit', $item) }}" class="btn-muted">Edit</a>
                                         <form action="{{ route('admin.master.kategori-aset.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data kategori ini?')">
                                             @csrf
                                             @method('DELETE')

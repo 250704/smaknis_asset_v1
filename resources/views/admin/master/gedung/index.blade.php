@@ -6,19 +6,19 @@
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Daftar data gedung untuk struktur lokasi aset.</p>
             </div>
             <button type="button" @click="modalOpen = true" class="btn-primary">
-                <i class="fas fa-plus mr-2 text-xs"></i>
+                <i class="mr-2 text-xs fas fa-plus"></i>
                 Tambah Gedung
             </button>
         </div>
 
         @if (session('success'))
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+            <div class="px-4 py-3 text-sm border rounded-xl border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session('error'))
-            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
+            <div class="px-4 py-3 text-sm border rounded-xl border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
                 {{ session('error') }}
             </div>
         @endif
@@ -26,13 +26,13 @@
         <section class="panel">
             <form method="GET" action="{{ route('admin.master.gedung.index') }}" class="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div class="relative flex-1">
-                    <i class="fas fa-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+                    <i class="absolute text-xs -translate-y-1/2 pointer-events-none fas fa-search left-3 top-1/2 text-slate-400"></i>
                     <input
                         type="text"
                         name="q"
                         value="{{ $search }}"
                         placeholder="Cari nama atau kode gedung..."
-                        class="w-full rounded-xl border-slate-300 bg-white pl-9 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
+                        class="w-full text-sm bg-white shadow-sm rounded-xl border-slate-300 pl-9 text-slate-800 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                     >
                 </div>
                 <div class="flex items-center gap-2">
@@ -44,21 +44,21 @@
             </form>
         </section>
 
-        <section class="panel overflow-hidden p-0">
+        <section class="p-0 overflow-hidden panel">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[760px] divide-y divide-slate-200 text-sm dark:divide-white/10">
                     <thead class="bg-slate-50 dark:bg-white/[0.04]">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">No</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Gedung</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Nama Gedung</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Jumlah Ruangan</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Aksi</th>
+                            <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">No</th>
+                            <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Kode Gedung</th>
+                            <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Nama Gedung</th>
+                            <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Jumlah Ruangan</th>
+                            <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                         @forelse ($gedung as $index => $item)
-                            <tr class="bg-white/70 transition hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
+                            <tr class="transition bg-white/70 hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
                                 <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
                                     {{ $gedung->firstItem() + $index }}
                                 </td>
@@ -71,18 +71,18 @@
                                 <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $item->ruangan_count }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ route('admin.master.gedung.edit', $item) }}" class="btn-secondary">Edit</a>
+                                        <a href="{{ route('admin.master.gedung.edit', $item) }}" class="btn-muted">Edit</a>
                                         <form action="{{ route('admin.master.gedung.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data gedung ini? Gedung yang masih memiliki ruangan tidak dapat dihapus.')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn-secondary text-rose-600 dark:text-rose-300">Hapus</button>
+                                            <button type="submit" class="btn-danger">Hapus</button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                                <td colspan="5" class="px-4 py-10 text-sm text-center text-slate-500 dark:text-slate-400">
                                     Belum ada data gedung.
                                 </td>
                             </tr>
@@ -102,7 +102,7 @@
             x-show="modalOpen"
             x-cloak
             @keydown.escape.window="modalOpen = false"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             style="display: none;"
         >
             <div
@@ -114,9 +114,9 @@
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
                 @click.outside="modalOpen = false"
-                class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-900"
+                class="w-full max-w-md p-6 bg-white border shadow-2xl rounded-2xl border-slate-200 dark:border-white/10 dark:bg-slate-900"
             >
-                <div class="mb-5 flex items-center justify-between">
+                <div class="flex items-center justify-between mb-5">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tambah Gedung</h3>
                     <button type="button" @click="modalOpen = false" class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 dark:hover:text-slate-300">
                         <i class="fas fa-times"></i>
@@ -132,7 +132,7 @@
                             name="nama_gedung"
                             type="text"
                             value="{{ old('nama_gedung') }}"
-                            class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
+                            class="w-full text-sm bg-white shadow-sm rounded-xl border-slate-300 text-slate-800 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                             required
                         >
                         @error('nama_gedung')
@@ -148,7 +148,7 @@
                             type="text"
                             maxlength="3"
                             value="{{ old('kode_gedung') }}"
-                            class="w-full rounded-xl border-slate-300 bg-white text-sm uppercase text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
+                            class="w-full text-sm uppercase bg-white shadow-sm rounded-xl border-slate-300 text-slate-800 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                             required
                         >
                         @error('kode_gedung')
@@ -157,8 +157,8 @@
                     </div>
 
                     <div class="flex items-center gap-2 pt-2">
-                        <button type="button" @click="modalOpen = false" class="btn-secondary w-full">Batal</button>
-                        <button type="submit" class="btn-primary w-full justify-center">Simpan</button>
+                        <button type="button" @click="modalOpen = false" class="w-full btn-secondary">Batal</button>
+                        <button type="submit" class="justify-center w-full btn-primary">Simpan</button>
                     </div>
                 </form>
             </div>

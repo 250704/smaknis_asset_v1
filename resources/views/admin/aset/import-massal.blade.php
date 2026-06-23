@@ -83,10 +83,16 @@
                     </div>
 
                     <div class="mt-6 space-y-3">
-                        <button type="submit" class="btn-primary w-full justify-center bg-emerald-600 hover:bg-emerald-700">
+                        <button
+                            type="submit"
+                            class="btn-primary w-full justify-center bg-emerald-600 hover:bg-emerald-700"
+                            data-confirm-title="Konfirmasi Import"
+                            data-confirm-confirm-label="Ya, Import"
+                            data-confirm-variant="success"
+                        >
                             <i class="fas fa-save mr-2 text-xs"></i>Import Sekarang
                         </button>
-                        <button type="reset" onclick="resetForm()" class="btn-secondary w-full">
+                        <button type="button" onclick="resetForm()" class="btn-secondary w-full">
                             <i class="fas fa-undo mr-2 text-xs"></i>Reset Form
                         </button>
                     </div>
@@ -226,12 +232,27 @@
         }
 
         function removeRow(rowId) {
-            const row = document.querySelector(`[data-row="${rowId}"]`);
-            if (row) {
-                row.remove();
-                reindexRows();
-                updateSummary();
+            const deleteRow = function () {
+                const row = document.querySelector(`[data-row="${rowId}"]`);
+                if (row) {
+                    row.remove();
+                    reindexRows();
+                    updateSummary();
+                }
+            };
+
+            if (window.SarprasConfirm) {
+                window.SarprasConfirm.open({
+                    title: 'Konfirmasi Hapus Baris',
+                    message: 'Apakah Anda yakin ingin menghapus baris data ini?',
+                    confirmLabel: 'Ya, Hapus',
+                    variant: 'danger',
+                    onConfirm: deleteRow,
+                });
+                return;
             }
+
+            deleteRow();
         }
 
         function reindexRows() {
@@ -281,11 +302,26 @@
         }
 
         function resetForm() {
-            if (confirm('Reset semua data?')) {
+            const resetRows = function () {
+                document.getElementById('import-form').reset();
                 document.getElementById('rows-container').innerHTML = '';
                 rowCount = 0;
+                addRow();
                 updateSummary();
+            };
+
+            if (window.SarprasConfirm) {
+                window.SarprasConfirm.open({
+                    title: 'Konfirmasi Reset Form',
+                    message: 'Apakah Anda yakin ingin mereset semua data import?',
+                    confirmLabel: 'Ya, Reset',
+                    variant: 'warning',
+                    onConfirm: resetRows,
+                });
+                return;
             }
+
+            resetRows();
         }
 
         // Add event listeners for real-time summary update
@@ -309,11 +345,7 @@
                 return false;
             }
 
-            const confirmed = confirm(`Import ${rows.length} baris data (${document.getElementById('summary-units').textContent} unit)?`);
-            if (!confirmed) {
-                e.preventDefault();
-                return false;
-            }
+            this.dataset.confirmMessage = `Apakah Anda yakin ingin mengimport ${rows.length} baris data (${document.getElementById('summary-units').textContent} unit)?`;
         });
     </script>
 </x-layouts.sbadmin>

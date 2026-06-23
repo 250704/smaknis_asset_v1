@@ -182,8 +182,26 @@
                                                     >
                                                 </div>
                                                 <div class="flex flex-wrap items-center justify-end gap-2">
-                                                    <button type="submit" name="action" value="TOLAK" class="btn-danger">Tolak</button>
-                                                    <button type="submit" name="action" value="VALIDASI" class="btn-primary">
+                                                    <button
+                                                        type="submit"
+                                                        name="action"
+                                                        value="TOLAK"
+                                                        class="btn-danger"
+                                                        data-confirm-title="Konfirmasi Penolakan"
+                                                        data-confirm-message="Apakah Anda yakin ingin menolak laporan kerusakan ini?"
+                                                        data-confirm-confirm-label="Ya, Tolak"
+                                                        data-confirm-variant="danger"
+                                                    >Tolak</button>
+                                                    <button
+                                                        type="submit"
+                                                        name="action"
+                                                        value="VALIDASI"
+                                                        class="btn-primary"
+                                                        data-confirm-title="Konfirmasi Validasi"
+                                                        data-confirm-message="Apakah Anda yakin ingin memvalidasi laporan kerusakan ini?"
+                                                        data-confirm-confirm-label="Ya, Validasi"
+                                                        data-confirm-variant="success"
+                                                    >
                                                         {{ $isKepalaSekolahContext ? 'Validasi & Ajukan ke Bendahara' : 'Validasi & Ajukan' }}
                                                     </button>
                                                 </div>

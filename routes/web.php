@@ -36,6 +36,10 @@ Route::get('/', function () use ($redirectByRole) {
     return view('welcome');
 });
 
+Route::get('/dashboard', fn () => $redirectByRole(auth()->user()))
+    ->middleware('auth')
+    ->name('dashboard');
+
 Route::get('/logout', function (Request $request) {
     Auth::guard('web')->logout();
     $request->session()->invalidate();

@@ -65,7 +65,15 @@
                                 <td class="py-3 pl-4 pr-4">
                                     <div class="flex items-center justify-end gap-2 whitespace-nowrap">
                                         <button type="button" class="btn-muted whitespace-nowrap" @click="openEditModal = true">Edit</button>
-                                        <form action="{{ route('admin.master.ruangan.destroy', $item) }}" method="POST" class="shrink-0" onsubmit="return confirm('Hapus data ruangan ini?')">
+                                        <form
+                                            action="{{ route('admin.master.ruangan.destroy', $item) }}"
+                                            method="POST"
+                                            class="shrink-0"
+                                            data-confirm-title="Konfirmasi Hapus Ruangan"
+                                            data-confirm-message="Apakah Anda yakin ingin menghapus data ruangan ini?"
+                                            data-confirm-confirm-label="Ya, Hapus"
+                                            data-confirm-variant="danger"
+                                        >
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-danger whitespace-nowrap">Hapus</button>

@@ -71,7 +71,14 @@
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap gap-2">
                                         <a href="{{ route('admin.master.kategori-aset.edit', $item) }}" class="btn-muted">Edit</a>
-                                        <form action="{{ route('admin.master.kategori-aset.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data kategori ini?')">
+                                        <form
+                                            action="{{ route('admin.master.kategori-aset.destroy', $item) }}"
+                                            method="POST"
+                                            data-confirm-title="Konfirmasi Hapus Kategori"
+                                            data-confirm-message="Apakah Anda yakin ingin menghapus data kategori ini?"
+                                            data-confirm-confirm-label="Ya, Hapus"
+                                            data-confirm-variant="danger"
+                                        >
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-danger">Hapus</button>
@@ -94,6 +101,5 @@
         </section>
     </div>
 </x-layouts.sbadmin>
-
 
 

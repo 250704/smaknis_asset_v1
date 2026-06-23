@@ -185,8 +185,24 @@
                                                     class="w-full rounded-lg border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                                                 ></textarea>
                                                 <div class="flex items-center gap-2">
-                                                    <button type="submit" formaction="{{ route($approveRoute, $item) }}" class="btn-primary w-full justify-center">Setujui</button>
-                                                    <button type="submit" formaction="{{ route($rejectRoute, $item) }}" class="btn-danger w-full justify-center">Tolak</button>
+                                                    <button
+                                                        type="submit"
+                                                        formaction="{{ route($approveRoute, $item) }}"
+                                                        class="btn-primary w-full justify-center"
+                                                        data-confirm-title="Konfirmasi Persetujuan"
+                                                        data-confirm-message="Apakah Anda yakin ingin menyetujui pengajuan ini?"
+                                                        data-confirm-confirm-label="Ya, Setujui"
+                                                        data-confirm-variant="success"
+                                                    >Setujui</button>
+                                                    <button
+                                                        type="submit"
+                                                        formaction="{{ route($rejectRoute, $item) }}"
+                                                        class="btn-danger w-full justify-center"
+                                                        data-confirm-title="Konfirmasi Penolakan"
+                                                        data-confirm-message="Apakah Anda yakin ingin menolak pengajuan ini?"
+                                                        data-confirm-confirm-label="Ya, Tolak"
+                                                        data-confirm-variant="danger"
+                                                    >Tolak</button>
                                                 </div>
                                             </form>
                                         </td>

@@ -23,13 +23,24 @@
                         id="btn-delete-selected"
                         disabled
                         class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:text-slate-400 dark:text-rose-300 dark:hover:bg-rose-500/10 dark:disabled:text-slate-500"
-                        onclick="return confirm('Hapus aset yang dipilih? Aset yang punya relasi akan diarsipkan.')"
+                        data-confirm-title="Konfirmasi Hapus Aset"
+                        data-confirm-message="Apakah Anda yakin ingin menghapus aset yang dipilih? Aset yang punya relasi akan diarsipkan."
+                        data-confirm-confirm-label="Ya, Hapus"
+                        data-confirm-variant="danger"
                     >
                         <span>Hapus Terpilih</span>
                         <span id="selected-count" class="text-xs">0</span>
                     </button>
 
-                    <form method="POST" action="{{ route('admin.aset.destroy-all') }}" onsubmit="return confirm('Hapus semua aset? Aset yang punya relasi akan diarsipkan.')" class="mt-1">
+                    <form
+                        method="POST"
+                        action="{{ route('admin.aset.destroy-all') }}"
+                        class="mt-1"
+                        data-confirm-title="Konfirmasi Hapus Semua Aset"
+                        data-confirm-message="Apakah Anda yakin ingin menghapus semua aset? Aset yang punya relasi akan diarsipkan."
+                        data-confirm-confirm-label="Ya, Hapus Semua"
+                        data-confirm-variant="danger"
+                    >
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10">
@@ -208,7 +219,15 @@
                                            title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.aset.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus aset ini?')" class="inline">
+                                        <form
+                                            action="{{ route('admin.aset.destroy', $item) }}"
+                                            method="POST"
+                                            class="inline"
+                                            data-confirm-title="Konfirmasi Hapus Aset"
+                                            data-confirm-message="Apakah Anda yakin ingin menghapus aset ini?"
+                                            data-confirm-confirm-label="Ya, Hapus"
+                                            data-confirm-variant="danger"
+                                        >
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"

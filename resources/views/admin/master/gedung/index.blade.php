@@ -72,7 +72,14 @@
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('admin.master.gedung.edit', $item) }}" class="btn-muted">Edit</a>
-                                        <form action="{{ route('admin.master.gedung.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data gedung ini? Gedung yang masih memiliki ruangan tidak dapat dihapus.')">
+                                        <form
+                                            action="{{ route('admin.master.gedung.destroy', $item) }}"
+                                            method="POST"
+                                            data-confirm-title="Konfirmasi Hapus Gedung"
+                                            data-confirm-message="Apakah Anda yakin ingin menghapus data gedung ini? Gedung yang masih memiliki ruangan tidak dapat dihapus."
+                                            data-confirm-confirm-label="Ya, Hapus"
+                                            data-confirm-variant="danger"
+                                        >
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-danger">Hapus</button>

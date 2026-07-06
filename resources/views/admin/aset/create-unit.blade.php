@@ -2,8 +2,8 @@
     <div class="mb-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h1 class="page-title">Input Aset Per Unit</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Form penambahan aset individual</p>
+                <h1 class="page-title">Input Sarana Per Unit</h1>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Form penambahan sarana individual</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('admin.aset.create') }}" class="btn-secondary">
@@ -38,11 +38,11 @@
                         </h3>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
-                                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Format Kode Aset (Otomatis)</label>
+                                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Format Kode Sarana (Otomatis)</label>
                                 <input type="text" value="{{ $kodeAsetPattern }}" disabled class="w-full rounded-xl border-slate-300 bg-slate-100 text-sm text-slate-600 dark:border-white/15 dark:bg-slate-800 dark:text-slate-300">
                             </div>
                             <div class="md:col-span-2">
-                                <label for="nama_aset" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Nama Aset <span class="text-rose-500">*</span></label>
+                                <label for="nama_aset" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Nama Sarana <span class="text-rose-500">*</span></label>
                                 <input id="nama_aset" name="nama_aset" type="text" value="{{ old('nama_aset') }}" required placeholder="Contoh: PC All in One" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
                                 @error('nama_aset') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                             </div>
@@ -79,11 +79,11 @@
                         </div>
                     </div>
 
-                    {{-- Detail Aset --}}
+                    {{-- Detail Sarana --}}
                     <div>
                         <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                             <i class="fas fa-clipboard-list text-blue-500"></i>
-                            Detail Aset
+                            Detail Sarana
                         </h3>
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
@@ -117,11 +117,11 @@
                         </div>
                     </div>
 
-                    {{-- Foto Aset --}}
+                    {{-- Foto Sarana --}}
                     <div>
                         <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                             <i class="fas fa-camera text-blue-500"></i>
-                            Foto Aset
+                            Foto Sarana
                         </h3>
                         <div class="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center dark:border-white/10 dark:bg-slate-900/50">
                             <label for="foto_aset" class="cursor-pointer">
@@ -142,7 +142,7 @@
                             <i class="fas fa-undo mr-2 text-xs"></i>Reset
                         </button>
                         <button type="submit" class="btn-primary">
-                            <i class="fas fa-save mr-2 text-xs"></i>Simpan Aset
+                            <i class="fas fa-save mr-2 text-xs"></i>Simpan Sarana
                         </button>
                     </div>
                 </form>
@@ -152,14 +152,14 @@
         {{-- Preview --}}
         <aside class="xl:col-span-4">
             <div class="panel sticky top-6">
-                <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Preview Kode Aset</h3>
+                <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Preview Kode Sarana</h3>
                 <div class="mt-3 space-y-3">
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-900/60">
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Format Kode</p>
                         <p id="preview-kode" class="mt-1 font-mono text-lg font-bold text-slate-800 dark:text-slate-100">{{ $kodeAsetPattern }}</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-900/60">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Aset</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Sarana</p>
                         <p id="preview-nama" class="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">-</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-900/60">
@@ -173,7 +173,7 @@
                         <i class="fas fa-lightbulb mt-0.5 text-yellow-500"></i>
                         <div class="text-sm text-slate-700 dark:text-slate-300">
                             <p class="font-semibold">Tips</p>
-                            <p class="mt-1 text-xs">Ingin input banyak aset sekaligus? Gunakan fitur <strong>Import Massal Excel</strong> untuk efisiensi waktu.</p>
+                            <p class="mt-1 text-xs">Ingin input banyak sarana sekaligus? Gunakan fitur <strong>Import Massal Excel</strong> untuk efisiensi waktu.</p>
                         </div>
                     </div>
                 </div>
@@ -198,9 +198,9 @@
                 if (previewNama) previewNama.textContent = nama;
                 if (previewLokasi) previewLokasi.textContent = ruangan !== '-' ? ruangan : '-';
                 
-                // Update kode preview dengan nama aset
+                // Update kode preview dengan nama sarana
                 if (previewKode && nama !== '-') {
-                    const base = nama.trim().replace(/\d+$/, '').trim() || 'aset';
+                    const base = nama.trim().replace(/\d+$/, '').trim() || 'sarana';
                     previewKode.textContent = `${base.toLowerCase().replace(/\s+/g, '-')}01`;
                 }
             }

@@ -30,15 +30,17 @@
         <section class="panel">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-sm font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Daftar Ruangan</h2>
-                <form method="GET" action="{{ route('admin.master.ruangan.index') }}" class="flex w-full gap-2 sm:w-auto">
+                <form method="GET" action="{{ route('admin.master.ruangan.index') }}" class="filter-grid">
                     <input
                         type="text"
                         name="q"
                         value="{{ $search }}"
                         placeholder="Cari ruangan / kode / gedung..."
-                        class="w-full text-sm bg-white shadow-sm rounded-xl border-slate-300 text-slate-800 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40 sm:w-72"
+                        class="w-full text-sm bg-white shadow-sm rounded-xl border-slate-300 text-slate-800 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                     >
-                    <button type="submit" class="btn-secondary whitespace-nowrap">Cari</button>
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-secondary whitespace-nowrap">Cari</button>
+                    </div>
                 </form>
             </div>
 
@@ -48,10 +50,10 @@
                         <tr>
                             <th class="w-16 px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">No</th>
                             <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Ruangan</th>
-                            <th class="w-44 px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Kode</th>
+                            <th class="px-4 py-3 font-semibold text-left w-44 text-slate-600 dark:text-slate-300">Kode</th>
                             <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Gedung</th>
-                            <th class="w-28 px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Lantai</th>
-                            <th class="w-52 py-3 pl-4 pr-4 font-semibold text-right text-slate-600 dark:text-slate-300">Aksi</th>
+                            <th class="px-4 py-3 font-semibold text-left w-28 text-slate-600 dark:text-slate-300">Lantai</th>
+                            <th class="py-3 pl-4 pr-4 font-semibold text-right w-52 text-slate-600 dark:text-slate-300">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-transparent divide-y divide-slate-100 dark:divide-white/5">
@@ -147,11 +149,11 @@
                                                     >
                                                 </div>
 
-                                                <div class="px-4 py-3 text-xs border md:col-span-8 rounded-xl border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-300">
-                                                    Kode ruangan dibuat otomatis oleh sistem dengan format:
-                                                    <span class="font-mono font-semibold">KDG-Lxx-RNG</span>
-                                                    (contoh: <span class="font-mono">GDU-L02-LAB</span>).
-                                                </div>
+                                                                                                <div class="px-4 py-3 text-xs border md:col-span-8 rounded-xl border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-300">
+                                                                                                                                                    Kode ruangan dibuat otomatis oleh sistem dengan format:
+                                                                                                                                                                                                        <span class="font-mono font-semibold">KDG-Lxx-RNG</span>
+                                                                                                                                                                                                                                                            (contoh: <span class="font-mono">GDU-L02-LAB</span>).
+                                                                                                                                                                                                                                                                                                            </div>
 
                                                 <div class="md:col-span-4 md:flex md:items-end">
                                                     <button type="submit" class="w-full btn-primary">Simpan Perubahan</button>

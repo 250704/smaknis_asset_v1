@@ -1,4 +1,4 @@
-﻿<x-layouts.sbadmin>
+<x-layouts.sbadmin>
     @php
         $roleLabel = match ($role) {
             'admin' => 'Admin',
@@ -11,12 +11,12 @@
 
     <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-            <h1 class="page-title">Laporan Sistem Sarpras</h1>
+            <h1 class="page-title">Laporan Sarana</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Data real-time inventaris, pengajuan, kerusakan, dan keuangan.
+                Data sarana yang bisa difilter dan ditinjau lintas role.
             </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             @php
                 $baseParams = request()->query();
                 $excelRoute = route($role . '.laporan.export.excel', $baseParams);
@@ -30,241 +30,120 @@
         </div>
     </div>
 
-    <details class="panel group overflow-hidden" open>
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-1">
+    <section class="panel">
+        <form method="GET" class="filter-grid">
             <div>
-                <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Filter Laporan</h2>
-                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Semua angka akan otomatis menyesuaikan filter.</p>
+                <label class="filter-label" for="q">Pencarian</label>
+                <input id="q" type="text" name="q" value="{{ $filters['q'] }}" placeholder="Kode sarana, nama sarana..." class="filter-control">
             </div>
-            <svg class="h-4 w-4 text-slate-500 transition-transform duration-200 group-open:rotate-180 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.167l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-            </svg>
-        </summary>
-
-        <div class="mt-4 border-t border-slate-200 pt-4 dark:border-white/10">
-            <form method="GET" class="grid gap-3 md:grid-cols-12">
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dari</label>
-                    <input type="date" name="date_from" value="{{ $filters['date_from'] }}" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Sampai</label>
-                    <input type="date" name="date_to" value="{{ $filters['date_to'] }}" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Gedung</label>
-                    <select name="gedung_id" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                        <option value="0">Semua gedung</option>
-                        @foreach ($gedungList as $gedung)
-                            <option value="{{ $gedung->id }}" @selected((int) $filters['gedung_id'] === (int) $gedung->id)>{{ $gedung->nama_gedung }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Ruangan</label>
-                    <select name="ruangan_id" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                        <option value="0">Semua ruangan</option>
-                        @foreach ($ruanganList as $ruangan)
-                            <option value="{{ $ruangan->id }}" @selected((int) $filters['ruangan_id'] === (int) $ruangan->id)>{{ $ruangan->nama_ruangan }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kategori</label>
-                    <select name="kategori_id" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                        <option value="0">Semua kategori</option>
-                        @foreach ($kategoriList as $kategori)
-                            <option value="{{ $kategori->id }}" @selected((int) $filters['kategori_id'] === (int) $kategori->id)>{{ $kategori->nama_kategori }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status Aset</label>
-                    <select name="status" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                        <option value="">Semua status</option>
-                        <option value="AKTIF" @selected($filters['status'] === 'AKTIF')>AKTIF</option>
-                        <option value="NONAKTIF" @selected($filters['status'] === 'NONAKTIF')>NONAKTIF</option>
-                    </select>
-                </div>
-                <div class="md:col-span-9">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pencarian</label>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Kode aset, nama aset, atau judul pengajuan..." class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
-                </div>
-                <div class="flex items-end gap-2 md:col-span-3">
-                    <a href="{{ url()->current() }}" class="btn-secondary w-full justify-center">Reset</a>
-                    <button type="submit" class="btn-primary w-full justify-center">Terapkan</button>
-                </div>
-            </form>
-        </div>
-    </details>
-
-    <section class="mt-6">
-        <div class="mb-3 flex items-center justify-between">
-            <h2 class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-100">
-                <i class="fas fa-chart-line text-blue-500"></i>
-                Analisis Ringkas
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Disusun dari filter aktif</p>
-        </div>
-
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div class="panel">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Aset</p>
-                    <i class="fas fa-boxes-stacked text-slate-400"></i>
-                </div>
-                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_aset']) }}</p>
-                <p class="mt-1 text-xs text-slate-500">Aktif {{ number_format($kpi['aset_aktif']) }} - Nonaktif {{ number_format($kpi['aset_nonaktif']) }}</p>
+            <div>
+                <label class="filter-label" for="kategori_id">Kategori</label>
+                <select id="kategori_id" name="kategori_id" class="filter-control">
+                    <option value="0">Semua kategori</option>
+                    @foreach ($kategoriList as $kategori)
+                        <option value="{{ $kategori->id }}" @selected((int) $filters['kategori_id'] === (int) $kategori->id)>{{ $kategori->nama_kategori }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="panel">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Perlu Perhatian</p>
-                    <i class="fas fa-triangle-exclamation text-amber-500"></i>
-                </div>
-                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['aset_rusak']) }}</p>
-                <p class="mt-1 text-xs text-slate-500">Kondisi ringan, berat, tidak layak</p>
+            <div>
+                <label class="filter-label" for="gedung_id">Gedung</label>
+                <select id="gedung_id" name="gedung_id" class="filter-control">
+                    <option value="0">Semua gedung</option>
+                    @foreach ($gedungList as $gedung)
+                        <option value="{{ $gedung->id }}" @selected((int) $filters['gedung_id'] === (int) $gedung->id)>{{ $gedung->nama_gedung }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="panel">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pengajuan</p>
-                    <i class="fas fa-file-circle-check text-slate-400"></i>
-                </div>
-                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_pengajuan']) }}</p>
-                <p class="mt-1 text-xs text-slate-500">Menunggu {{ number_format($kpi['pengajuan_menunggu']) }} - Selesai {{ number_format($kpi['pengajuan_selesai']) }}</p>
+            <div>
+                <label class="filter-label" for="ruangan_id">Ruangan</label>
+                <select id="ruangan_id" name="ruangan_id" class="filter-control">
+                    <option value="0">Semua ruangan</option>
+                    @foreach ($ruanganList as $ruangan)
+                        <option value="{{ $ruangan->id }}" @selected((int) $filters['ruangan_id'] === (int) $ruangan->id)>{{ $ruangan->nama_ruangan }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="panel">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Laporan Kerusakan</p>
-                    <i class="fas fa-screwdriver-wrench text-slate-400"></i>
-                </div>
-                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($kpi['total_kerusakan']) }}</p>
-                <p class="mt-1 text-xs text-slate-500">Aktif {{ number_format($kpi['kerusakan_aktif']) }} - Selesai {{ number_format($kpi['kerusakan_selesai']) }}</p>
+            <div>
+                <label class="filter-label" for="kondisi_terkini">Kondisi</label>
+                <select id="kondisi_terkini" name="kondisi_terkini" class="filter-control">
+                    <option value="">Semua kondisi</option>
+                    @foreach ($kondisiList as $kondisi)
+                        <option value="{{ $kondisi }}" @selected($filters['kondisi_terkini'] === $kondisi)>{{ $kondisi }}</option>
+                    @endforeach
+                </select>
             </div>
-        </div>
-
-        <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            <div class="panel">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimasi Pengajuan</p>
-                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['estimasi_total'], 0, ',', '.') }}</p>
+            <div>
+                <label class="filter-label" for="status_aset">Status</label>
+                <select id="status_aset" name="status_aset" class="filter-control">
+                    <option value="">Semua status</option>
+                    @foreach ($statusList as $status)
+                        <option value="{{ $status }}" @selected($filters['status_aset'] === $status)>{{ $status }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="panel">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Realisasi Perawatan</p>
-                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['realisasi_perawatan'], 0, ',', '.') }}</p>
+            <div class="filter-actions">
+                <button type="submit" class="filter-submit">
+                    <i class="fas fa-filter text-xs"></i>Filter
+                </button>
+                <a href="{{ url()->current() }}" class="filter-reset">
+                    <i class="fas fa-undo text-xs"></i>Reset
+                </a>
             </div>
-            <div class="panel">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Realisasi Penggantian</p>
-                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['realisasi_penggantian'], 0, ',', '.') }}</p>
-            </div>
-            <div class="panel">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Realisasi</p>
-                <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Rp {{ number_format($finance['total_realisasi'], 0, ',', '.') }}</p>
-            </div>
-            <div class="panel">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Selisih Anggaran</p>
-                <p class="mt-2 text-lg font-bold {{ $finance['selisih_anggaran'] >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
-                    Rp {{ number_format($finance['selisih_anggaran'], 0, ',', '.') }}
-                </p>
-            </div>
-        </div>
-    </section>
-    <section class="mt-4 grid gap-4 xl:grid-cols-2">
-        <div class="panel">
-            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Tren Pengajuan Bulanan</h2>
-            <div class="mt-3 space-y-2">
-                @forelse ($trenPengajuan as $row)
-                    <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900/50">
-                        <span class="font-medium text-slate-700 dark:text-slate-200">{{ \Carbon\Carbon::createFromFormat('Y-m', $row->bulan)->translatedFormat('M Y') }}</span>
-                        <span class="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">{{ number_format($row->total) }}</span>
-                    </div>
-                @empty
-                    <p class="text-sm text-slate-500">Belum ada data pengajuan pada periode ini.</p>
-                @endforelse
-            </div>
-        </div>
-
-        <div class="panel">
-            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Tren Kerusakan Bulanan</h2>
-            <div class="mt-3 space-y-2">
-                @forelse ($trenKerusakan as $row)
-                    <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900/50">
-                        <span class="font-medium text-slate-700 dark:text-slate-200">{{ \Carbon\Carbon::createFromFormat('Y-m', $row->bulan)->translatedFormat('M Y') }}</span>
-                        <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">{{ number_format($row->total) }}</span>
-                    </div>
-                @empty
-                    <p class="text-sm text-slate-500">Belum ada data kerusakan pada periode ini.</p>
-                @endforelse
-            </div>
-        </div>
+        </form>
     </section>
 
-    <section class="mt-4 grid gap-4 xl:grid-cols-2">
+    <section class="mt-5">
         <div class="panel overflow-hidden p-0">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-white/10">
-                <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Pengajuan Terbaru</h2>
-            </div>
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[640px] divide-y divide-slate-200 text-sm dark:divide-white/10">
+                <table class="w-full min-w-[980px] divide-y divide-slate-200 text-sm dark:divide-white/10">
                     <thead class="bg-slate-50 dark:bg-white/[0.04]">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Kode Aset</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Judul</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tanggal</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Sarana</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kategori</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Lokasi</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kondisi</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                        @forelse ($latestPengajuan as $row)
-                            <tr class="bg-white/70 dark:bg-transparent">
-                                <td class="px-4 py-2 font-mono text-xs text-slate-700 dark:text-slate-200">{{ $row->aset?->kode_aset ?? '-' }}</td>
-                                <td class="px-4 py-2 text-slate-700 dark:text-slate-200">{{ $row->judul_pengajuan }}</td>
-                                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ str_replace('_', ' ', $row->status_pengajuan) }}</td>
-                                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ $row->created_at?->format('d M Y H:i') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-4 py-4 text-center text-sm text-slate-500">Belum ada data pengajuan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="panel overflow-hidden p-0">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-white/10">
-                <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Aset Perlu Tindak Lanjut</h2>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[640px] divide-y divide-slate-200 text-sm dark:divide-white/10">
-                    <thead class="bg-slate-50 dark:bg-white/[0.04]">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Kode</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Nama</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Lokasi</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Kondisi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                        @forelse ($asetPerluPerhatian as $aset)
-                            <tr class="bg-white/70 dark:bg-transparent">
-                                <td class="px-4 py-2 font-mono text-xs text-slate-700 dark:text-slate-200">{{ $aset->kode_aset }}</td>
-                                <td class="px-4 py-2 text-slate-700 dark:text-slate-200">{{ $aset->nama_aset }}</td>
-                                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ $aset->ruangan?->nama_ruangan }} - {{ $aset->ruangan?->gedung?->nama_gedung }}</td>
-                                <td class="px-4 py-2">
-                                    <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">{{ $aset->kondisi_terkini }}</span>
+                        @forelse ($aset as $item)
+                            <tr class="bg-white/70 transition hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
+                                <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $item->kode_aset }}</td>
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-700 dark:text-slate-200">{{ $item->nama_aset }}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Tahun {{ $item->tahun_perolehan }}</p>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">{{ $item->kategori?->nama_kategori }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                                    {{ $item->ruangan?->nama_ruangan }}<br>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">{{ $item->ruangan?->gedung?->nama_gedung }} - Lt. {{ $item->ruangan?->lantai ?? '-' }}</span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->kondisi_terkini === 'BAIK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200' }}">
+                                        {{ $item->kondisi_terkini }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->status_aset === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
+                                        {{ $item->status_aset }}
+                                    </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-4 py-4 text-center text-sm text-slate-500">Tidak ada aset yang perlu perhatian.</td>
+                                <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                                    Belum ada data sarana.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <div class="mt-4">
+            {{ $aset->links() }}
+        </div>
     </section>
 </x-layouts.sbadmin>
-
-
-

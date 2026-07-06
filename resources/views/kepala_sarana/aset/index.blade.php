@@ -1,22 +1,22 @@
 <x-layouts.sbadmin>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="page-title">Data Aset</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Daftar aset aktif untuk monitoring kepala sarana.</p>
+            <h1 class="page-title">Data Sarana</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Daftar sarana aktif untuk monitoring kepala sarana.</p>
         </div>
-        <a href="{{ route('kepala_sarana.aset.histori') }}" class="btn-secondary">Lihat Histori Aset</a>
+        <a href="{{ route('kepala_sarana.aset.histori') }}" class="btn-secondary">Lihat Histori Sarana</a>
     </div>
 
     <section class="panel">
-        <form method="GET" action="{{ route('kepala_sarana.aset.index') }}" class="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+        <form method="GET" action="{{ route('kepala_sarana.aset.index') }}" class="filter-grid">
             <div class="xl:col-span-2">
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="q">Cari Aset</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="q">Cari Sarana</label>
                 <input
                     type="text"
                     id="q"
                     name="q"
                     value="{{ $filters['q'] }}"
-                    placeholder="Kode aset atau nama aset..."
+                    placeholder="Kode sarana atau nama sarana..."
                     class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                 >
             </div>
@@ -71,7 +71,7 @@
                 </select>
             </div>
 
-            <div class="flex items-end gap-2 xl:col-span-1">
+            <div class="filter-actions">
                 <button type="submit" class="btn-primary">Terapkan Filter</button>
                 <a href="{{ route('kepala_sarana.aset.index') }}" class="btn-secondary">Reset</a>
             </div>
@@ -84,7 +84,7 @@
                 <thead class="bg-slate-50 dark:bg-white/[0.04]">
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kode</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Aset</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Sarana</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kategori</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Lokasi</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kondisi</th>
@@ -121,7 +121,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Belum ada data aset.</td>
+                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Belum ada data sarana.</td>
                         </tr>
                     @endforelse
                 </tbody>

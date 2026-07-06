@@ -52,37 +52,32 @@ class ScanQrController extends Controller
     ];
 
     private const KODE_ASET_PATTERN = '/^AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\\d{2}-\\d{4}-\\d{4}$/';
-    private const KODE_ASET_SEARCH_PATTERN = '/^[A-Z0-9\\-]{3,50}$/';
+    private const INVALID_QR_MESSAGE = 'QR code tidak valid. Pastikan QR milik sarana yang terdaftar.';
 
     public function index(Request $request): View
     {
         $role = (string) $request->route('role');
         abort_unless(in_array($role, self::ALLOWED_ROLES, true), 404);
 
-        $kodeAset = Str::upper(trim((string) $request->query('kode_aset', '')));
+        $kodeAset = $this->normalizeScanValue((string) $request->query('kode_aset', ''));
         $aset = null;
         $searchResults = collect();
         $scanError = null;
         $isExactFormat = false;
 
         if ($kodeAset !== '') {
-            $normalizedCode = preg_replace('/\\s+/', '', $kodeAset) ?? '';
-            $kodeAset = $normalizedCode;
+            $kodeAset = preg_replace('/\\s+/', '', $kodeAset) ?? '';
+            $kodeAset = Str::upper($kodeAset);
 
-            if (!preg_match(self::KODE_ASET_SEARCH_PATTERN, $kodeAset)) {
-                $scanError = 'Format kode tidak valid. Gunakan huruf, angka, dan tanda "-" (min 3 karakter).';
-            } else {
-                $isExactFormat = (bool) preg_match(self::KODE_ASET_PATTERN, $kodeAset);
+            $matchedKodeAset = $this->extractKodeAset($kodeAset);
+            $isExactFormat = $matchedKodeAset !== null;
+
+            if ($isExactFormat) {
+                $kodeAset = $matchedKodeAset;
 
                 $query = Aset::query()
-                    ->with(['kategori', 'ruangan.gedung']);
-
-                if ($isExactFormat) {
-                    $query->where('kode_aset', $kodeAset);
-                } else {
-                    $query->where('kode_aset', 'like', "%{$kodeAset}%")
-                        ->orderByRaw('CASE WHEN kode_aset = ? THEN 0 ELSE 1 END', [$kodeAset]);
-                }
+                    ->with(['kategori', 'ruangan.gedung'])
+                    ->where('kode_aset', $kodeAset);
 
                 $searchResults = $query
                     ->orderBy('kode_aset')
@@ -102,7 +97,7 @@ class ScanQrController extends Controller
                         role: $role,
                         kodeAset: $kodeAset,
                         aset: $aset,
-                        note: $isExactFormat ? 'Exact QR match' : 'Search match',
+                        note: 'Exact QR match',
                     );
                 } else {
                     $this->logScanActivity(
@@ -112,7 +107,11 @@ class ScanQrController extends Controller
                         aset: null,
                         note: 'No asset found',
                     );
+
+                    $scanError = self::INVALID_QR_MESSAGE;
                 }
+            } else {
+                $scanError = self::INVALID_QR_MESSAGE;
             }
         }
 
@@ -310,6 +309,24 @@ class ScanQrController extends Controller
             'nama_aset' => $aset->nama_aset,
             'aksi' => $action,
         ];
+    }
+
+    private function normalizeScanValue(string $value): string
+    {
+        return trim($value);
+    }
+
+    private function extractKodeAset(string $value): ?string
+    {
+        if (preg_match(self::KODE_ASET_PATTERN, $value)) {
+            return $value;
+        }
+
+        if (preg_match('/AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\\d{2}-\\d{4}-\\d{4}/', $value, $matches)) {
+            return $matches[0];
+        }
+
+        return null;
     }
 
     private function logScanActivity(Request $request, string $role, string $kodeAset, ?Aset $aset, string $note): void

@@ -42,57 +42,47 @@
     @endif
 
     @if (($showFilters ?? true) === true)
-        <details class="panel group overflow-hidden">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-1">
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Filter Pengajuan</h2>
-                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Saring daftar pengajuan sesuai kebutuhan</p>
+        <section class="panel">
+            <form method="GET" class="filter-grid">
+                <div class="xl:col-span-3">
+                    <label class="filter-label" for="q">Pencarian</label>
+                    <input
+                        type="text"
+                        id="q"
+                        name="q"
+                        value="{{ $filters['q'] }}"
+                        placeholder="Judul / kode sarana / nama sarana..."
+                        class="filter-control"
+                    >
                 </div>
-                <svg class="h-4 w-4 text-slate-500 transition-transform duration-200 group-open:rotate-180 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.167l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-            </summary>
-
-            <div class="mt-4 border-t border-slate-200 pt-4 dark:border-white/10">
-                <form method="GET" class="space-y-4">
-                    <div class="grid gap-3 md:grid-cols-12">
-                        <div class="md:col-span-5">
-                            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pencarian</label>
-                            <input
-                                type="text"
-                                name="q"
-                                value="{{ $filters['q'] }}"
-                                placeholder="Judul / kode aset / nama aset..."
-                                class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
-                            >
-                        </div>
-                        <div class="md:col-span-3">
-                            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</label>
-                            <select name="status" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
-                                <option value="">Semua status</option>
-                                @foreach ($statusList as $status)
-                                    <option value="{{ $status }}" @selected((string) $filters['status'] === (string) $status)>{{ $statusLabels[$status] ?? $status }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="md:col-span-4">
-                            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis</label>
-                            <select name="jenis" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
-                                <option value="">Semua jenis</option>
-                                @foreach ($jenisList as $jenis)
-                                    <option value="{{ $jenis }}" @selected((string) $filters['jenis'] === (string) $jenis)>{{ $jenis }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-white/10">
-                        <a href="{{ url()->current() }}" class="btn-secondary">Reset</a>
-                        <button type="submit" class="btn-primary">Terapkan Filter</button>
-                    </div>
-                </form>
-            </div>
-        </details>
+                <div class="xl:col-span-2">
+                    <label class="filter-label" for="status">Status</label>
+                    <select id="status" name="status" class="filter-control">
+                        <option value="">Semua status</option>
+                        @foreach ($statusList as $status)
+                            <option value="{{ $status }}" @selected((string) $filters['status'] === (string) $status)>{{ $statusLabels[$status] ?? $status }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="filter-label" for="jenis">Jenis</label>
+                    <select id="jenis" name="jenis" class="filter-control">
+                        <option value="">Semua jenis</option>
+                        @foreach ($jenisList as $jenis)
+                            <option value="{{ $jenis }}" @selected((string) $filters['jenis'] === (string) $jenis)>{{ $jenis }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="filter-submit">
+                        <i class="fas fa-filter text-xs"></i>Filter
+                    </button>
+                    <a href="{{ url()->current() }}" class="filter-reset">
+                        <i class="fas fa-undo text-xs"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </section>
     @endif
 
     <section class="mt-5">
@@ -104,7 +94,7 @@
                     <table class="w-full min-w-[960px] table-auto divide-y divide-slate-200 text-sm dark:divide-white/10">
                         <thead class="bg-slate-50 dark:bg-white/[0.04]">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Aset</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Sarana</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Judul</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Jenis</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Estimasi</th>

@@ -82,12 +82,13 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('editUser', [
             'nama' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'nomor_telepon' => ['nullable', 'string', 'max:30'],
             'role' => ['required', 'string', 'exists:roles,nama_role'],
             'status_akun' => ['required', Rule::in(['AKTIF', 'NONAKTIF'])],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         $authUser = $request->user();
@@ -103,7 +104,7 @@ class UserManagementController extends Controller
 
         $role = Role::query()->where('nama_role', $validated['role'])->firstOrFail();
 
-        $user->update([
+        $payload = [
             'name' => $validated['nama'],
             'nama' => $validated['nama'],
             'email' => $validated['email'],
@@ -111,25 +112,32 @@ class UserManagementController extends Controller
             'role' => $validated['role'],
             'role_id' => $role->id,
             'status_akun' => $validated['status_akun'],
-        ]);
+        ];
+
+        if (!empty($validated['password'])) {
+            $payload['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($payload);
 
         return redirect()
             ->back()
             ->with('success', 'Data user berhasil diperbarui.');
     }
 
-    public function resetPassword(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        $authUser = $request->user();
+        if ($authUser && $authUser->id === $user->id) {
+            return redirect()
+                ->back()
+                ->with('error', 'Akun yang sedang login tidak bisa dihapus.');
+        }
 
-        $user->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        $user->delete();
 
         return redirect()
-            ->back()
-            ->with('success', 'Password user berhasil direset.');
+            ->route('admin.users.index')
+            ->with('success', 'User berhasil dihapus.');
     }
 }

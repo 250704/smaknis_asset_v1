@@ -8,6 +8,8 @@ use App\Models\DetailPengadaan;
 use App\Models\KategoriAset;
 use App\Models\Notifikasi;
 use App\Models\Pengajuan;
+use App\Models\Penggantian;
+use App\Models\Perawatan;
 use App\Models\RiwayatKondisiAset;
 use App\Models\Ruangan;
 use App\Models\User;
@@ -76,23 +78,6 @@ class PengajuanController extends Controller
     private function createByRole(Request $request, string $role): View
     {
         $kodeAset = trim((string) $request->query('kode_aset', ''));
-        $selectedAset = null;
-        if ($kodeAset !== '') {
-            $selectedAset = Aset::query()
-                ->with(['ruangan.gedung'])
-                ->where('kode_aset', $kodeAset)
-                ->first();
-        }
-
-        $selectedJenis = strtoupper((string) $request->query('jenis', 'PENGADAAN'));
-        if (!in_array($selectedJenis, ['PENGADAAN', 'PENGGANTIAN'], true)) {
-            $selectedJenis = 'PENGADAAN';
-        }
-
-        $asetList = Aset::query()
-            ->with(['ruangan.gedung'])
-            ->orderBy('kode_aset')
-            ->get();
 
         $storeRouteMap = [
             'guru' => 'guru.pengajuan.store',
@@ -117,13 +102,11 @@ class PengajuanController extends Controller
         ];
 
         return view('guru.pengajuan.create', [
-            'jenisList' => ['PENGADAAN', 'PENGGANTIAN'],
-            'selectedJenis' => $selectedJenis,
+            'jenisList' => ['PENGADAAN'],
+            'selectedJenis' => 'PENGADAAN',
             'kodeAset' => $kodeAset,
-            'selectedAset' => $selectedAset,
             'kategoriList' => KategoriAset::query()->orderBy('nama_kategori')->get(),
             'ruanganList' => Ruangan::query()->with('gedung')->orderBy('nama_ruangan')->get(),
-            'asetList' => $asetList,
             'storeRoute' => route($storeRouteMap[$role] ?? 'guru.pengajuan.store'),
             'indexRoute' => route($indexRouteMap[$role] ?? 'guru.pengajuan.index'),
             'scanRoute' => route($scanRouteMap[$role] ?? 'guru.scan'),
@@ -164,7 +147,7 @@ class PengajuanController extends Controller
     {
         $base = $request->validate([
             'judul_pengajuan' => ['required', 'string', 'max:200'],
-            'jenis_pengajuan' => ['required', Rule::in(['PENGADAAN', 'PENGGANTIAN'])],
+            'jenis_pengajuan' => ['required', Rule::in(['PENGADAAN'])],
             'deskripsi' => ['required', 'string'],
             'estimasi_biaya' => ['nullable', 'numeric', 'min:0'],
             'target_realisasi' => ['nullable', 'date'],
@@ -172,44 +155,20 @@ class PengajuanController extends Controller
             'lampiran.*' => ['file', 'max:4096', 'mimes:jpg,jpeg,png,pdf,doc,docx'],
         ]);
 
-        $jenis = $base['jenis_pengajuan'];
+        $jenis = 'PENGADAAN';
         $items = [];
-        if ($jenis === 'PENGADAAN') {
-            $validatedItems = $request->validate([
-                'items' => ['required', 'array', 'min:1'],
-                'items.*.nama_aset_rencana' => ['required', 'string', 'max:200'],
-                'items.*.kategori_id' => ['required', 'integer', 'exists:kategori_aset,id'],
-                'items.*.ruangan_id' => ['required', 'integer', 'exists:ruangan,id'],
-                'items.*.jumlah' => ['required', 'integer', 'min:1'],
-                'items.*.spesifikasi' => ['nullable', 'string', 'max:500'],
-                'items.*.estimasi_harga_satuan' => ['nullable', 'numeric', 'min:0'],
-            ]);
-            $items = $this->sanitizePengadaanItems($validatedItems['items']);
-            if ($items === []) {
-                return redirect()->back()->withInput()->withErrors(['items' => 'Minimal 1 item pengadaan valid wajib diisi.']);
-            }
-        } else {
-            $validatedPenggantian = $request->validate([
-                'aset_id' => ['required', 'integer', 'exists:aset,id'],
-            ]);
-
-            $activeExists = Pengajuan::query()
-                ->where('aset_id', $validatedPenggantian['aset_id'])
-                ->whereIn('status_pengajuan', [
-                    Pengajuan::STATUS_DIAJUKAN,
-                    Pengajuan::STATUS_DISETUJUI_KASARANA,
-                    Pengajuan::STATUS_DISETUJUI_BENDAHARA,
-                    Pengajuan::STATUS_DISETUJUI_KEPSEK,
-                    Pengajuan::STATUS_DIPROSES,
-                    Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-                    Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
-                ])
-                ->exists();
-            if ($activeExists) {
-                return redirect()->back()->withInput()->withErrors(['aset_id' => 'Aset ini masih memiliki pengajuan aktif.']);
-            }
-
-            $base['aset_id'] = (int) $validatedPenggantian['aset_id'];
+        $validatedItems = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.nama_aset_rencana' => ['required', 'string', 'max:200'],
+            'items.*.kategori_id' => ['required', 'integer', 'exists:kategori_aset,id'],
+            'items.*.ruangan_id' => ['required', 'integer', 'exists:ruangan,id'],
+            'items.*.jumlah' => ['required', 'integer', 'min:1'],
+            'items.*.spesifikasi' => ['nullable', 'string', 'max:500'],
+            'items.*.estimasi_harga_satuan' => ['nullable', 'numeric', 'min:0'],
+        ]);
+        $items = $this->sanitizePengadaanItems($validatedItems['items']);
+        if ($items === []) {
+            return redirect()->back()->withInput()->withErrors(['items' => 'Minimal 1 item pengadaan valid wajib diisi.']);
         }
 
         $estimasi = $base['estimasi_biaya'] ?? null;
@@ -222,7 +181,7 @@ class PengajuanController extends Controller
             foreach ($request->file('lampiran') as $file) {
                 if ($file) {
                     $lampiranPaths[] = [
-                        'path' => $file->store('pengajuan', 'public'),
+                        'path' => $this->storeMediaFile($file, 'pengajuan', 'public'),
                         'name' => $file->getClientOriginalName(),
                     ];
                 }
@@ -231,7 +190,7 @@ class PengajuanController extends Controller
 
         $pengajuan = DB::transaction(function () use ($request, $base, $jenis, $items, $estimasi, $lampiranPaths) {
             $pengajuan = Pengajuan::query()->create([
-                'aset_id' => $jenis === 'PENGGANTIAN' ? ($base['aset_id'] ?? null) : null,
+                'aset_id' => null,
                 'user_id' => $request->user()->id,
                 'judul_pengajuan' => $base['judul_pengajuan'],
                 'jenis_pengajuan' => $jenis,
@@ -704,13 +663,13 @@ class PengajuanController extends Controller
             if ($existing?->foto_sesudah) {
                 Storage::disk('public')->delete($existing->foto_sesudah);
             }
-            $payload['foto_sesudah'] = $request->file('foto_sesudah')->store('perawatan', 'public');
+            $payload['foto_sesudah'] = $this->storeMediaFile($request->file('foto_sesudah'), 'perawatan', 'public');
         }
         if ($request->hasFile('foto_bukti')) {
             if ($existing?->foto_bukti) {
                 Storage::disk('public')->delete($existing->foto_bukti);
             }
-            $payload['foto_bukti'] = $request->file('foto_bukti')->store('perawatan/bukti', 'public');
+            $payload['foto_bukti'] = $this->storeMediaFile($request->file('foto_bukti'), 'perawatan/bukti', 'public');
         }
 
         DB::transaction(function () use ($pengajuan, $payload, $request) {
@@ -733,6 +692,9 @@ class PengajuanController extends Controller
             // Sync riwayat kerusakan
             $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
         });
+
+        $this->cleanupPerawatanMedia($pengajuan->perawatan()->first());
+        $this->cleanupPengajuanLampiran($pengajuan);
 
         $this->broadcastPengajuanTracking(
             $pengajuan,
@@ -806,13 +768,13 @@ class PengajuanController extends Controller
             if ($existing?->foto_aset_baru) {
                 Storage::disk('public')->delete($existing->foto_aset_baru);
             }
-            $payload['foto_aset_baru'] = $request->file('foto_aset_baru')->store('penggantian', 'public');
+            $payload['foto_aset_baru'] = $this->storeMediaFile($request->file('foto_aset_baru'), 'penggantian', 'public');
         }
         if ($request->hasFile('foto_bukti')) {
             if ($existing?->foto_bukti) {
                 Storage::disk('public')->delete($existing->foto_bukti);
             }
-            $payload['foto_bukti'] = $request->file('foto_bukti')->store('penggantian/bukti', 'public');
+            $payload['foto_bukti'] = $this->storeMediaFile($request->file('foto_bukti'), 'penggantian/bukti', 'public');
         }
 
         DB::transaction(function () use ($pengajuan, $payload, $asetBaruId) {
@@ -842,6 +804,9 @@ class PengajuanController extends Controller
             // Sync riwayat kerusakan
             $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
         });
+
+        $this->cleanupPenggantianMedia($pengajuan->penggantian()->first());
+        $this->cleanupPengajuanLampiran($pengajuan);
 
         $extra = "Biaya realisasi: Rp " . number_format((float) $validated['biaya_realisasi'], 0, ',','.') . '.';
         if ($asetBaruId && !empty($validated['kode_aset_baru'])) {
@@ -909,6 +874,7 @@ class PengajuanController extends Controller
             }
 
             $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
+            $this->cleanupPengajuanLampiran($pengajuan);
             $this->broadcastPengajuanTracking(
                 $pengajuan,
                 "Verifikasi teknis akhir oleh {$request->user()->display_name}.",
@@ -960,6 +926,7 @@ class PengajuanController extends Controller
         });
 
         $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
+        $this->cleanupPengajuanLampiran($pengajuan);
 
         $this->broadcastPengajuanTracking(
             $pengajuan,
@@ -1374,5 +1341,68 @@ class PengajuanController extends Controller
             'PENGADAAN' => 'Pengadaan',
             default => $jenis,
         };
+    }
+
+    private function cleanupPerawatanMedia(?Perawatan $perawatan): void
+    {
+        if (!$perawatan) {
+            return;
+        }
+
+        $paths = array_values(array_filter([
+            $perawatan->foto_sesudah,
+            $perawatan->foto_bukti,
+        ]));
+
+        if ($paths !== []) {
+            Storage::disk('public')->delete($paths);
+        }
+
+        $perawatan->update([
+            'foto_sesudah' => '',
+            'foto_bukti' => '',
+        ]);
+    }
+
+    private function cleanupPenggantianMedia(?Penggantian $penggantian): void
+    {
+        if (!$penggantian) {
+            return;
+        }
+
+        $paths = array_values(array_filter([
+            $penggantian->foto_aset_baru,
+            $penggantian->foto_bukti,
+        ]));
+
+        if ($paths !== []) {
+            Storage::disk('public')->delete($paths);
+        }
+
+        $penggantian->update([
+            'foto_aset_baru' => '',
+            'foto_bukti' => '',
+        ]);
+    }
+
+    private function cleanupPengajuanLampiran(Pengajuan $pengajuan): void
+    {
+        $lampiran = $pengajuan->lampiran ?? [];
+        if (!is_array($lampiran) || $lampiran === []) {
+            return;
+        }
+
+        $paths = [];
+        foreach ($lampiran as $item) {
+            if (is_array($item) && !empty($item['path']) && is_string($item['path'])) {
+                $paths[] = $item['path'];
+            }
+        }
+
+        $this->deleteStoredFiles($paths);
+
+        $pengajuan->update([
+            'lampiran' => null,
+        ]);
     }
 }

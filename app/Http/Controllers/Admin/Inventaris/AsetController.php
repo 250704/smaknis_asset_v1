@@ -158,7 +158,7 @@ class AsetController extends Controller
         $data['nama_aset'] = $this->generateNamaAset($data['nama_aset']);
 
         if ($request->hasFile('foto_aset')) {
-            $data['foto_aset'] = $request->file('foto_aset')->store('aset', 'public');
+            $data['foto_aset'] = $this->storeMediaFile($request->file('foto_aset'), 'aset', 'public');
         }
 
         try {
@@ -312,7 +312,7 @@ class AsetController extends Controller
             if ($aset->foto_aset) {
                 Storage::disk('public')->delete($aset->foto_aset);
             }
-            $data['foto_aset'] = $request->file('foto_aset')->store('aset', 'public');
+            $data['foto_aset'] = $this->storeMediaFile($request->file('foto_aset'), 'aset', 'public');
         }
 
         $aset->update($data);

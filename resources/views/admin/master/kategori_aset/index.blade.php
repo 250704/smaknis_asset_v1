@@ -1,7 +1,7 @@
 <x-layouts.sbadmin>
     <div class="mb-6">
-        <h1 class="page-title">Master Kategori Aset</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola kategori untuk klasifikasi inventaris.</p>
+        <h1 class="page-title">Master Kategori Sarana</h1>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola kategori untuk klasifikasi sarana.</p>
     </div>
 
     @if (session('success'))
@@ -42,15 +42,17 @@
         <section class="panel lg:col-span-8">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Daftar Kategori</h2>
-                <form method="GET" action="{{ route('admin.master.kategori-aset.index') }}" class="flex w-full gap-2 sm:w-auto">
+                <form method="GET" action="{{ route('admin.master.kategori-aset.index') }}" class="filter-grid">
                     <input
                         type="text"
                         name="q"
                         value="{{ $search }}"
                         placeholder="Cari kategori..."
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40 sm:w-64"
+                        class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                     >
-                    <button type="submit" class="btn-secondary">Cari</button>
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-secondary">Cari</button>
+                    </div>
                 </form>
             </div>
 
@@ -101,5 +103,3 @@
         </section>
     </div>
 </x-layouts.sbadmin>
-
-

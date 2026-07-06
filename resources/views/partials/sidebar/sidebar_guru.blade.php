@@ -21,7 +21,7 @@
         <span>Lapor Kerusakan</span>
     </a>
 
-    {{-- Buat Pengajuan - LANGSUNG (PENGADAAN / PENGGANTIAN) --}}
+    {{-- Buat Pengajuan - LANGSUNG --}}
     <a href="{{ route('guru.pengajuan.create') }}" class="side-nav-link {{ request()->routeIs('guru.pengajuan.create') ? 'active' : '' }}">
         <i class="fas fa-plus-circle w-4 text-center text-xs"></i>
         <span>Buat Pengajuan</span>

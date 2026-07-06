@@ -130,12 +130,12 @@
 
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden transition-transform duration-200 transform sidebar-shell w-72 lg:translate-x-0 lg:shadow-none"
+            class="fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden transition-transform duration-300 ease-out transform sidebar-shell w-72 lg:translate-x-0 lg:shadow-none"
         >
             <div class="flex h-16 shrink-0 items-center gap-3 px-6">
                 <img src="{{ asset('img/logo smk.png') }}" alt="SMK Nurul Islam" class="h-11 w-11 object-contain" />
                 <div class="space-y-1">
-                    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-white">Sistem Inventaris</p>
+                    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-white">Sistem Sarana</p>
                     <p class="text-xs font-medium uppercase tracking-[0.2em] text-blue-100">SMK Nurul Islam</p>
                 </div>
             </div>
@@ -404,6 +404,7 @@
                 modal.classList.remove('flex');
                 modal.setAttribute('aria-hidden', 'true');
                 pendingConfirm = null;
+                window.dispatchEvent(new CustomEvent('action-confirm-closed'));
             }
 
             function openModal(config, onConfirm) {

@@ -147,31 +147,23 @@ class BlueprintPageController extends Controller
 
     private function buildLaporanPayload(Request $request, string $role, bool $withDetails = false): array
     {
-        $today = now();
-        $fromDate = $this->parseDateOrDefault((string) $request->query('date_from', ''), $today->copy()->startOfMonth());
-        $toDate = $this->parseDateOrDefault((string) $request->query('date_to', ''), $today->copy()->endOfDay());
-        if ($toDate->lt($fromDate)) {
-            [$fromDate, $toDate] = [$toDate->copy()->startOfDay(), $fromDate->copy()->endOfDay()];
-        } else {
-            $fromDate = $fromDate->copy()->startOfDay();
-            $toDate = $toDate->copy()->endOfDay();
-        }
-
         $filters = [
-            'date_from' => $fromDate->toDateString(),
-            'date_to' => $toDate->toDateString(),
+            'q' => trim((string) $request->query('q', '')),
             'gedung_id' => (int) $request->query('gedung_id', 0),
             'ruangan_id' => (int) $request->query('ruangan_id', 0),
             'kategori_id' => (int) $request->query('kategori_id', 0),
-            'status' => strtoupper(trim((string) $request->query('status', ''))),
-            'q' => trim((string) $request->query('q', '')),
+            'kondisi_terkini' => strtoupper(trim((string) $request->query('kondisi_terkini', ''))),
+            'status_aset' => strtoupper(trim((string) $request->query('status_aset', ''))),
+            'date_from' => (string) $request->query('date_from', now()->copy()->startOfMonth()->toDateString()),
+            'date_to' => (string) $request->query('date_to', now()->copy()->endOfMonth()->toDateString()),
         ];
 
         $asetQuery = Aset::query()
             ->with(['kategori', 'ruangan.gedung'])
-            ->when($filters['status'] !== '', fn (Builder $q) => $q->where('status_aset', $filters['status']))
+            ->when($filters['status_aset'] !== '', fn (Builder $q) => $q->where('status_aset', $filters['status_aset']))
             ->when($filters['kategori_id'] > 0, fn (Builder $q) => $q->where('kategori_id', $filters['kategori_id']))
             ->when($filters['ruangan_id'] > 0, fn (Builder $q) => $q->where('ruangan_id', $filters['ruangan_id']))
+            ->when($filters['kondisi_terkini'] !== '', fn (Builder $q) => $q->where('kondisi_terkini', $filters['kondisi_terkini']))
             ->when($filters['gedung_id'] > 0, function (Builder $q) use ($filters) {
                 $q->whereHas('ruangan', fn (Builder $r) => $r->where('gedung_id', $filters['gedung_id']));
             })
@@ -181,6 +173,33 @@ class BlueprintPageController extends Controller
                         ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
                 });
             });
+
+        if (!$withDetails) {
+            return [
+                'role' => $role,
+                'filters' => $filters,
+                'gedungList' => Gedung::query()->orderBy('nama_gedung')->get(),
+                'ruanganList' => Ruangan::query()
+                    ->with('gedung')
+                    ->when($filters['gedung_id'] > 0, fn (Builder $q) => $q->where('gedung_id', $filters['gedung_id']))
+                    ->orderBy('nama_ruangan')
+                    ->get(),
+                'kategoriList' => KategoriAset::query()->orderBy('nama_kategori')->get(),
+                'kondisiList' => Aset::KONDISI_LIST,
+                'statusList' => Aset::STATUS_LIST,
+                'aset' => (clone $asetQuery)->orderBy('kode_aset')->paginate(10)->withQueryString(),
+            ];
+        }
+
+        $today = now();
+        $fromDate = $this->parseDateOrDefault((string) $filters['date_from'], $today->copy()->startOfMonth());
+        $toDate = $this->parseDateOrDefault((string) $filters['date_to'], $today->copy()->endOfDay());
+        if ($toDate->lt($fromDate)) {
+            [$fromDate, $toDate] = [$toDate->copy()->startOfDay(), $fromDate->copy()->endOfDay()];
+        } else {
+            $fromDate = $fromDate->copy()->startOfDay();
+            $toDate = $toDate->copy()->endOfDay();
+        }
 
         $pengajuanQuery = Pengajuan::query()
             ->with(['aset.ruangan.gedung', 'user'])

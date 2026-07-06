@@ -12,109 +12,95 @@
 
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-            <h1 class="page-title">Cetak QR Aset</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola dan cetak label QR untuk aset sekolah</p>
+        <h1 class="page-title">Cetak QR Sarana</h1>
+        {{-- <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola dan cetak label QR untuk sarana sekolah</p> --}}
             <div class="mt-3 flex flex-wrap items-center gap-2">
                 <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200">
-                    {{ number_format($totalAset) }} aset ditemukan
+                    {{ number_format($totalAset) }} sarana ditemukan
                 </span>
                 <span id="selected-count-header" class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200">
-                    0 aset terpilih
+                    0 sarana terpilih
                 </span>
             </div>
         </div>
-        <a href="{{ route('admin.aset.index') }}" class="btn-secondary">Data Aset</a>
+        <a href="{{ route('admin.aset.index') }}" class="btn-secondary">Data Sarana</a>
     </div>
 
-    <details class="panel group overflow-hidden">
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-1">
+    <section class="panel">
+        <form method="GET" action="{{ route('admin.cetak-qr.index') }}" class="filter-grid">
+            <div class="xl:col-span-2">
+                <label class="filter-label" for="q">Cari Sarana</label>
+                <input
+                    type="text"
+                    id="q"
+                    name="q"
+                    value="{{ $filters['q'] }}"
+                    placeholder="Kode sarana atau nama sarana..."
+                    class="filter-control"
+                >
+            </div>
+
             <div>
-                <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Filter Data Aset</h2>
-                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Buka panel ini untuk menyaring daftar aset sebelum cetak QR</p>
+                <label class="filter-label" for="gedung_id">Gedung</label>
+                <select id="gedung_id" name="gedung_id" class="filter-control">
+                    <option value="">Semua gedung</option>
+                    @foreach ($gedungList as $gedung)
+                        <option value="{{ $gedung->id }}" @selected((string) $filters['gedung_id'] === (string) $gedung->id)>{{ $gedung->nama_gedung }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-slate-800/70 dark:text-slate-300">
-                    {{ $activeFilterCount }} aktif
-                </span>
-                <svg class="h-4 w-4 text-slate-500 transition-transform duration-200 group-open:rotate-180 dark:text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.167l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
+
+            <div>
+                <label class="filter-label" for="ruangan_id">Ruangan</label>
+                <select id="ruangan_id" name="ruangan_id" class="filter-control">
+                    <option value="">Semua ruangan</option>
+                    @foreach ($ruanganList as $ruangan)
+                        <option value="{{ $ruangan->id }}" @selected((string) $filters['ruangan_id'] === (string) $ruangan->id)>{{ $ruangan->nama_ruangan }} - {{ $ruangan->gedung?->nama_gedung }}</option>
+                    @endforeach
+                </select>
             </div>
-        </summary>
 
-        <div class="mt-4 border-t border-slate-200 pt-4 dark:border-white/10">
-            <form method="GET" action="{{ route('admin.cetak-qr.index') }}" class="space-y-4">
-                <div class="grid gap-3 md:grid-cols-12">
-                    <div class="md:col-span-4">
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pencarian</label>
-                        <input
-                            type="text"
-                            name="q"
-                            value="{{ $filters['q'] }}"
-                            placeholder="Kode / nama aset..."
-                            class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
-                        >
-                    </div>
+            <div>
+                <label class="filter-label" for="kategori_id">Kategori</label>
+                <select id="kategori_id" name="kategori_id" class="filter-control">
+                    <option value="">Semua kategori</option>
+                    @foreach ($kategoriList as $kategori)
+                        <option value="{{ $kategori->id }}" @selected((string) $filters['kategori_id'] === (string) $kategori->id)>{{ $kategori->nama_kategori }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                    <div class="md:col-span-2">
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Gedung</label>
-                        <select name="gedung_id" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
-                            <option value="">Semua gedung</option>
-                            @foreach ($gedungList as $gedung)
-                                <option value="{{ $gedung->id }}" @selected((string) $filters['gedung_id'] === (string) $gedung->id)>{{ $gedung->nama_gedung }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+            <div>
+                <label class="filter-label" for="status_aset">Status</label>
+                <select id="status_aset" name="status_aset" class="filter-control">
+                    <option value="">Semua status</option>
+                    @foreach ($statusList as $status)
+                        <option value="{{ $status }}" @selected((string) $filters['status_aset'] === (string) $status)>{{ $status }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                    <div class="md:col-span-2">
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Ruangan</label>
-                        <select name="ruangan_id" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
-                            <option value="">Semua ruangan</option>
-                            @foreach ($ruanganList as $ruangan)
-                                <option value="{{ $ruangan->id }}" @selected((string) $filters['ruangan_id'] === (string) $ruangan->id)>{{ $ruangan->nama_ruangan }} - {{ $ruangan->gedung?->nama_gedung }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kategori</label>
-                        <select name="kategori_id" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
-                            <option value="">Semua kategori</option>
-                            @foreach ($kategoriList as $kategori)
-                                <option value="{{ $kategori->id }}" @selected((string) $filters['kategori_id'] === (string) $kategori->id)>{{ $kategori->nama_kategori }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</label>
-                        <select name="status_aset" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
-                            <option value="">Semua status</option>
-                            @foreach ($statusList as $status)
-                                <option value="{{ $status }}" @selected((string) $filters['status_aset'] === (string) $status)>{{ $status }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-white/10">
-                    <a href="{{ route('admin.cetak-qr.index') }}" class="btn-secondary">Reset</a>
-                    <button type="submit" class="btn-primary">Terapkan Filter</button>
-                </div>
-            </form>
-        </div>
-    </details>
+            <div class="filter-actions">
+                <button type="submit" class="filter-submit">
+                    <i class="fas fa-filter text-xs"></i>Filter
+                </button>
+                <a href="{{ route('admin.cetak-qr.index') }}" class="filter-reset">
+                    <i class="fas fa-undo text-xs"></i>Reset
+                </a>
+            </div>
+        </form>
+    </section>
 
     <section class="mt-5 pb-24">
         @if ($aset->isEmpty())
             <div class="panel text-sm text-slate-500 dark:text-slate-400">
-                Belum ada data aset untuk dicetak.
+                Belum ada data sarana untuk dicetak.
             </div>
         @else
             <div class="space-y-4">
                     <div class="panel overflow-hidden p-0">
                         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-white/10">
-                            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Daftar Aset</h2>
+                            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Daftar Sarana</h2>
                             <div class="flex flex-wrap items-center gap-2">
                                 <label for="print-paper" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300">
                                     <span>Kertas</span>
@@ -136,8 +122,8 @@
                                         <th class="w-16 px-4 py-3 text-left">
                                             <input type="checkbox" id="check-all-header" class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/40">
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Aset</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Nama Aset</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Sarana</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Nama Sarana</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Lokasi</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Status</th>
                                     </tr>
@@ -229,8 +215,8 @@
                 const selectedRows = getSelectedRows();
                 const selectedCount = selectedRows.length;
 
-                if (selectedCountHeader) selectedCountHeader.textContent = `${selectedCount} aset terpilih`;
-                if (selectedCountSticky) selectedCountSticky.textContent = `${selectedCount} aset terpilih`;
+                if (selectedCountHeader) selectedCountHeader.textContent = `${selectedCount} sarana terpilih`;
+                if (selectedCountSticky) selectedCountSticky.textContent = `${selectedCount} sarana terpilih`;
                 if (stickyActionBar) stickyActionBar.classList.toggle('hidden', selectedCount === 0);
                 toggleButtonState(btnPrintSelectedSticky, selectedCount === 0);
 
@@ -418,15 +404,15 @@
             function printSelected() {
                 const selectedRows = getSelectedRows();
                 if (!selectedRows.length) {
-                    window.alert('Pilih minimal 1 aset untuk dicetak.');
+                    window.alert('Pilih minimal 1 sarana untuk dicetak.');
                     return;
                 }
 
-                printLabels(mapData(selectedRows, 220), 'Cetak QR Aset (Terpilih)');
+                printLabels(mapData(selectedRows, 220), 'Cetak QR Sarana (Terpilih)');
             }
 
             function printPage() {
-                printLabels(mapData(rows, 220), 'Cetak QR Aset (Semua Halaman)');
+                printLabels(mapData(rows, 220), 'Cetak QR Sarana (Semua Halaman)');
             }
 
             if (headerCheck) {

@@ -1,6 +1,6 @@
 <x-layouts.sbadmin>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 class="page-title">Edit Kategori Aset</h1>
+        <h1 class="page-title">Edit Kategori Sarana</h1>
         <a href="{{ route('admin.master.kategori-aset.index') }}" class="btn-secondary">Kembali</a>
     </div>
 

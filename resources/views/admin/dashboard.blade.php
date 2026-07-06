@@ -38,7 +38,7 @@
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div class="panel">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Total Aset</p>
+                <p class="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Total Sarana</p>
                 <span class="inline-flex items-center justify-center text-blue-600 rounded-lg h-9 w-9 bg-blue-500/10 dark:bg-blue-500/20 dark:text-blue-300">
                     <i class="text-sm fas fa-layer-group"></i>
                 </span>
@@ -71,13 +71,13 @@
 
         <div class="panel">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Nilai Inventaris</p>
+                <p class="text-xs font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Nilai Sarana</p>
                 <span class="inline-flex items-center justify-center rounded-lg h-9 w-9 bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300">
                     <i class="text-sm fas fa-wallet"></i>
                 </span>
             </div>
             <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">Rp {{ number_format($nilaiTotalAset, 0, ',', '.') }}</p>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $totalKategori }} kategori aset</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $totalKategori }} kategori sarana</p>
         </div>
     </div>
 
@@ -131,8 +131,8 @@
             </h2>
             <div class="grid gap-2 mt-4">
                 <a href="{{ route('admin.scan') }}" class="justify-start btn-secondary"><i class="fas fa-qrcode text-slate-500"></i>Scan QR</a>
-                <a href="{{ route('admin.aset.index') }}" class="justify-start btn-secondary"><i class="fas fa-boxes-stacked text-slate-500"></i>Kelola Aset</a>
-                <a href="{{ route('admin.aset.create') }}" class="justify-start btn-secondary"><i class="fas fa-plus text-slate-500"></i>Tambah Aset</a>
+                <a href="{{ route('admin.aset.index') }}" class="justify-start btn-secondary"><i class="fas fa-boxes-stacked text-slate-500"></i>Kelola Sarana</a>
+                <a href="{{ route('admin.aset.create') }}" class="justify-start btn-secondary"><i class="fas fa-plus text-slate-500"></i>Tambah Sarana</a>
                 <a href="{{ route('admin.pengajuan.index') }}" class="justify-start btn-secondary"><i class="fas fa-file-circle-check text-slate-500"></i>Kelola Pengajuan</a>
                 <a href="{{ route('admin.cetak-qr.index') }}" class="justify-start btn-secondary"><i class="fas fa-print text-slate-500"></i>Cetak QR</a>
             </div>

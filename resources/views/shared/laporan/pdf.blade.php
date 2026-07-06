@@ -43,8 +43,8 @@
             <thead>
                 <tr>
                     <th>Tanggal</th>
-                    <th>Kode Aset</th>
-                    <th>Nama Aset</th>
+                    <th>Kode Sarana</th>
+                    <th>Nama Sarana</th>
                     <th>Lokasi</th>
                     <th>Tingkat</th>
                     <th>Status</th>
@@ -75,8 +75,8 @@
             <thead>
                 <tr>
                     <th>Tanggal</th>
-                    <th>Kode Aset</th>
-                    <th>Nama Aset</th>
+                    <th>Kode Sarana</th>
+                    <th>Nama Sarana</th>
                     <th>Pengaju</th>
                     <th>Biaya Realisasi</th>
                     <th>Vendor</th>
@@ -107,8 +107,8 @@
             <thead>
                 <tr>
                     <th>Tanggal</th>
-                    <th>Kode Aset Lama</th>
-                    <th>Kode Aset Baru</th>
+                    <th>Kode Sarana Lama</th>
+                    <th>Kode Sarana Baru</th>
                     <th>Pengaju</th>
                     <th>Biaya Realisasi</th>
                     <th>Status</th>
@@ -139,7 +139,7 @@
             <thead>
                 <tr>
                     <th>Tanggal</th>
-                    <th>Kode Aset</th>
+                    <th>Kode Sarana</th>
                     <th>Judul</th>
                     <th>Jenis</th>
                     <th>Estimasi</th>
@@ -170,8 +170,8 @@
 
         <h3>Ringkasan KPI</h3>
         <div class="kpi-grid">
-            <div class="card"><div class="label">Total Aset</div><div class="value">{{ number_format($kpi['total_aset']) }}</div></div>
-            <div class="card"><div class="label">Aset Perlu Perhatian</div><div class="value">{{ number_format($kpi['aset_rusak']) }}</div></div>
+            <div class="card"><div class="label">Total Sarana</div><div class="value">{{ number_format($kpi['total_aset']) }}</div></div>
+            <div class="card"><div class="label">Sarana Perlu Perhatian</div><div class="value">{{ number_format($kpi['aset_rusak']) }}</div></div>
             <div class="card"><div class="label">Total Pengajuan</div><div class="value">{{ number_format($kpi['total_pengajuan']) }}</div></div>
             <div class="card"><div class="label">Pengajuan Menunggu</div><div class="value">{{ number_format($kpi['pengajuan_menunggu']) }}</div></div>
             <div class="card"><div class="label">Total Kerusakan</div><div class="value">{{ number_format($kpi['total_kerusakan']) }}</div></div>

@@ -1,7 +1,7 @@
 <x-layouts.sbadmin>
     <div class="mb-6">
         <h1 class="page-title">Dashboard Guru / Staf</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Alur utama: scan aset, lapor kerusakan jika ada masalah, atau ajukan pengadaan barang baru.</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Alur utama: scan sarana, lapor kerusakan jika ada masalah, atau ajukan pengadaan barang baru.</p>
     </div>
 
     <div class="panel">
@@ -16,5 +16,4 @@
         <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Catatan: perawatan/penggantian tidak diajukan manual oleh guru, tetapi otomatis dari hasil validasi laporan kerusakan.</p>
     </div>
 </x-layouts.sbadmin>
-
 

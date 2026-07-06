@@ -24,8 +24,8 @@
         @endif
 
         <section class="panel">
-            <form method="GET" action="{{ route('admin.master.gedung.index') }}" class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div class="relative flex-1">
+            <form method="GET" action="{{ route('admin.master.gedung.index') }}" class="filter-grid">
+                <div class="relative">
                     <i class="absolute text-xs -translate-y-1/2 pointer-events-none fas fa-search left-3 top-1/2 text-slate-400"></i>
                     <input
                         type="text"
@@ -35,7 +35,7 @@
                         class="w-full text-sm bg-white shadow-sm rounded-xl border-slate-300 pl-9 text-slate-800 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                     >
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="filter-actions">
                     <button type="submit" class="btn-secondary">Cari</button>
                     @if ($search !== '')
                         <a href="{{ route('admin.master.gedung.index') }}" class="btn-secondary">Reset</a>

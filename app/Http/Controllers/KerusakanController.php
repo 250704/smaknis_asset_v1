@@ -94,7 +94,7 @@ class KerusakanController extends Controller
                 ->withErrors(['aset_id' => 'Aset ini sudah memiliki laporan aktif yang sedang diproses.']);
         }
 
-        $path = $request->file('foto_kerusakan')->store('kerusakan', 'public');
+        $path = $this->storeMediaFile($request->file('foto_kerusakan'), 'kerusakan', 'public');
 
         $riwayat = RiwayatKondisiAset::query()->create([
             'aset_id' => $aset->id,

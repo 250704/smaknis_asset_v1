@@ -1,26 +1,26 @@
 <x-layouts.sbadmin>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="page-title">Histori Aset</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Riwayat kondisi kerusakan dan tindak lanjut aset.</p>
+            <h1 class="page-title">Histori Sarana</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Riwayat kondisi kerusakan dan tindak lanjut sarana.</p>
         </div>
-        <a href="{{ route('kepala_sarana.aset.index') }}" class="btn-secondary">Kembali ke Data Aset</a>
+        <a href="{{ route('kepala_sarana.aset.index') }}" class="btn-secondary">Kembali ke Data Sarana</a>
     </div>
 
     <section class="panel">
-        <form method="GET" action="{{ route('kepala_sarana.aset.histori') }}" class="grid gap-3 md:grid-cols-12">
-            <div class="md:col-span-8">
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="q">Cari Aset</label>
+        <form method="GET" action="{{ route('kepala_sarana.aset.histori') }}" class="filter-grid">
+            <div class="xl:col-span-2">
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="q">Cari Sarana</label>
                 <input
                     type="text"
                     id="q"
                     name="q"
                     value="{{ $filters['q'] }}"
-                    placeholder="Kode aset atau nama aset..."
+                    placeholder="Kode sarana atau nama sarana..."
                     class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                 >
             </div>
-            <div class="md:col-span-4">
+            <div>
                 <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="status">Status</label>
                 <select id="status" name="status" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
                     <option value="">Semua status</option>
@@ -29,7 +29,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="md:col-span-12 flex gap-2">
+            <div class="filter-actions">
                 <button type="submit" class="btn-primary">Terapkan Filter</button>
                 <a href="{{ route('kepala_sarana.aset.histori') }}" class="btn-secondary">Reset</a>
             </div>
@@ -42,7 +42,7 @@
                 <thead class="bg-slate-50 dark:bg-white/[0.04]">
                     <tr>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Tanggal</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Aset</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Sarana</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Tingkat</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Status</th>
                         <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Pelapor</th>
@@ -76,7 +76,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Belum ada histori kondisi aset.</td>
+                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Belum ada histori kondisi sarana.</td>
                         </tr>
                     @endforelse
                 </tbody>

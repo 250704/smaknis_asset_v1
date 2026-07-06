@@ -15,7 +15,7 @@
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="page-title">Scan QR Action Hub</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Input hasil scan QR, lihat detail aset, lalu pilih aksi proses.</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Input hasil scan QR, lihat detail sarana, lalu pilih aksi proses.</p>
         </div>
         <span class="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-200">
             {{ $roleLabel }}
@@ -28,10 +28,15 @@
         </div>
     @endif
 
+    @php
+        $invalidQrMessage = 'QR code tidak valid. Pastikan QR milik sarana yang terdaftar.';
+        $shouldOpenInvalidQrPopup = $scanError === $invalidQrMessage;
+    @endphp
+
     <section class="panel">
-        <form id="qr-scan-form" method="GET" action="{{ $scanRoute }}" class="grid gap-3 md:grid-cols-[1fr_auto]">
+        <form id="qr-scan-form" method="GET" action="{{ $scanRoute }}" class="filter-grid">
             <div>
-                <label for="kode_aset" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Hasil QR / Kode Aset</label>
+                <label for="kode_aset" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Hasil QR / Kode Sarana</label>
                 <input
                     id="kode_aset"
                     name="kode_aset"
@@ -49,13 +54,13 @@
                 >
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Bisa tempel dari scanner barcode atau ketik manual. Hanya huruf, angka, dan tanda "-".</p>
             </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="btn-primary">Cari Aset</button>
+            <div class="filter-actions">
+                <button type="submit" class="btn-primary">Cari Sarana</button>
                 <a href="{{ $scanRoute }}" class="btn-secondary">Reset</a>
             </div>
         </form>
 
-        @if ($scanError)
+        @if ($scanError && !$shouldOpenInvalidQrPopup)
             <div class="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-500/10 dark:text-rose-200">
                 {{ $scanError }}
             </div>
@@ -150,9 +155,9 @@
     @if ($kodeAset !== '')
         <section class="panel mt-5">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Hasil Pencarian</h2>
-            @if ($searchResults->isEmpty())
-                <p class="mt-3 text-sm text-rose-600 dark:text-rose-300">Aset dengan kode/kata kunci tersebut tidak ditemukan.</p>
-            @else
+            @if ($searchResults->isEmpty() && !$scanError)
+                <p class="mt-3 text-sm text-rose-600 dark:text-rose-300">Sarana dengan kode/kata kunci tersebut tidak ditemukan.</p>
+            @elseif ($searchResults->isNotEmpty())
                 <div class="mt-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
                     <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
                         <thead class="bg-slate-50 dark:bg-white/[0.04]">
@@ -184,14 +189,14 @@
     @if ($aset)
         <div class="mt-5 grid gap-5 lg:grid-cols-12">
             <section class="panel lg:col-span-7">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Detail Aset Terscan</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Detail Sarana Terscan</h2>
                 <dl class="mt-4 grid gap-3 sm:grid-cols-2">
                     <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode Aset</dt>
+                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode Sarana</dt>
                         <dd class="font-mono text-sm text-slate-700 dark:text-slate-200">{{ $aset->kode_aset }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Aset</dt>
+                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Sarana</dt>
                         <dd class="text-sm text-slate-700 dark:text-slate-200">{{ $aset->nama_aset }}</dd>
                     </div>
                     <div>
@@ -231,7 +236,7 @@
                         <p class="mt-1 text-xs text-cyan-700 dark:text-cyan-300">
                             @if($role === 'guru')
                                 <i class="fas fa-lightbulb mr-1"></i>
-                                <strong>Tip:</strong> Gunakan "Lapor Kerusakan" jika aset rusak. Pengajuan perawatan/penggantian akan otomatis dibuat setelah validasi Kepala Sarana.
+                                <strong>Tip:</strong> Gunakan "Lapor Kerusakan" jika sarana rusak. Pengajuan perawatan/penggantian akan otomatis dibuat setelah validasi Kepala Sarana.
                             @elseif($role === 'kepala_sarana')
                                 <i class="fas fa-clipboard-check mr-1"></i>
                                 <strong>Tip:</strong> Validasi kerusakan dan lakukan approval teknis dari sini.
@@ -243,7 +248,7 @@
                                 <strong>Tip:</strong> Lakukan approval final dari sini.
                             @else
                                 <i class="fas fa-tools mr-1"></i>
-                                <strong>Tip:</strong> Kelola mutasi dan lihat histori aset dari sini.
+                                <strong>Tip:</strong> Kelola mutasi dan lihat histori sarana dari sini.
                             @endif
                         </p>
                     </div>
@@ -261,13 +266,13 @@
             </section>
 
             <section class="panel lg:col-span-5">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Foto Aset</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Foto Sarana</h2>
                 <div class="mt-4">
                     @if ($aset->foto_aset)
-                        <img src="{{ asset('storage/' . $aset->foto_aset) }}" alt="Foto aset" class="h-56 w-full rounded-xl object-cover">
+                        <img src="{{ asset('storage/' . $aset->foto_aset) }}" alt="Foto sarana" class="h-56 w-full rounded-xl object-cover">
                     @else
                         <div class="flex h-56 items-center justify-center rounded-xl border border-dashed border-slate-300 text-sm text-slate-500 dark:border-white/20 dark:text-slate-400">
-                            Belum ada foto aset
+                            Belum ada foto sarana
                         </div>
                     @endif
                 </div>
@@ -312,6 +317,13 @@
             let context2d = null;
             let usingFallback = false;
             let isSubmitting = false;
+            let isDetecting = false;
+            let lastScanAt = 0;
+            let lastInvalidCode = '';
+            let lastInvalidAt = 0;
+            let lastAcceptedCode = '';
+            let scanLoopEnabled = false;
+            let invalidDialogOpen = false;
 
             const exactPattern = /^AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}$/;
 
@@ -357,12 +369,14 @@
             }
 
             function normalizeCode(rawValue) {
-                const raw = String(rawValue || '').trim().toUpperCase();
-                if (exactPattern.test(raw)) {
-                    return raw;
+                const raw = String(rawValue || '').trim();
+                const upper = raw.toUpperCase();
+
+                if (exactPattern.test(upper)) {
+                    return upper;
                 }
 
-                const matches = raw.match(/AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/g);
+                const matches = upper.match(/AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/g);
                 if (matches && matches.length > 0) {
                     return matches[0];
                 }
@@ -370,48 +384,105 @@
                 return raw.replace(/\s+/g, '');
             }
 
+            function openInvalidQrPopup(detail) {
+                if (invalidDialogOpen || !window.SarprasConfirm) {
+                    setStatus('QR code tidak valid. Pastikan QR milik sarana yang terdaftar.', true);
+                    return;
+                }
+
+                invalidDialogOpen = true;
+                stopCamera();
+                window.SarprasConfirm.open({
+                    title: 'QR code tidak valid',
+                    message: detail || 'Pastikan QR yang dipindai adalah milik sarana yang terdaftar.',
+                    confirmLabel: 'Tutup',
+                    variant: 'danger',
+                    onConfirm: function () {
+                        invalidDialogOpen = false;
+                        setStatus('Kamera dihentikan. Silakan scan ulang jika diperlukan.');
+                    },
+                });
+            }
+
+            function showInvalidQr(code) {
+                const now = Date.now();
+                if (!code || (code === lastInvalidCode && now - lastInvalidAt < 1500)) {
+                    return;
+                }
+
+                lastInvalidCode = code;
+                lastInvalidAt = now;
+                openInvalidQrPopup('QR code tidak valid. Pastikan QR milik sarana yang terdaftar.');
+            }
+
             function submitCode(code) {
                 if (!code || isSubmitting) {
                     return;
                 }
 
+                if (code === lastAcceptedCode) {
+                    return;
+                }
+
+                lastAcceptedCode = code;
                 isSubmitting = true;
                 input.value = code;
-                setStatus('QR terdeteksi: ' + code + '. Klik "Cari Aset" untuk melihat detail.');
+                setStatus('QR terdeteksi: ' + code + '. Memeriksa data sarana...');
                 scanFrameEl.classList.remove('border-cyan-300/70');
                 scanFrameEl.classList.add('border-emerald-400', 'scale-105');
                 scanSuccessBadge.classList.remove('hidden');
-                stopCamera();
                 window.setTimeout(function () {
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
                     isSubmitting = false;
                     scanSuccessBadge.classList.add('hidden');
                     scanFrameEl.classList.remove('border-emerald-400', 'scale-105');
                     scanFrameEl.classList.add('border-cyan-300/70');
-                }, 1200);
+                }, 900);
             }
 
             async function detectFrame() {
-                if (!video || video.readyState < 2) {
+                if (!scanLoopEnabled || !video || video.readyState < 2 || isDetecting) {
                     return;
                 }
 
                 try {
+                    isDetecting = true;
                     if (detector) {
                         const barcodes = await detector.detect(video);
                         if (barcodes && barcodes.length > 0) {
                             const value = normalizeCode(barcodes[0].rawValue || '');
-                            submitCode(value);
+                            const extracted = extractAssetCode(value);
+                            if (extracted) {
+                                submitCode(extracted);
+                            } else {
+                                showInvalidQr(value);
+                            }
                         }
                         return;
                     }
 
                     if (usingFallback && context2d && canvas && typeof window.jsQR === 'function') {
-                        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
+                        const sourceWidth = video.videoWidth || 0;
+                        const sourceHeight = video.videoHeight || 0;
+                        if (!sourceWidth || !sourceHeight) {
+                            return;
                         }
 
-                        context2d.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const maxWidth = 640;
+                        const scale = sourceWidth > maxWidth ? maxWidth / sourceWidth : 1;
+                        const targetWidth = Math.max(320, Math.floor(sourceWidth * scale));
+                        const targetHeight = Math.max(240, Math.floor(sourceHeight * scale));
+
+                        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+                            canvas.width = targetWidth;
+                            canvas.height = targetHeight;
+                        }
+
+                        context2d.drawImage(video, 0, 0, targetWidth, targetHeight);
                         const imageData = context2d.getImageData(0, 0, canvas.width, canvas.height);
                         const result = window.jsQR(imageData.data, imageData.width, imageData.height, {
                             inversionAttempts: 'dontInvert'
@@ -419,22 +490,46 @@
 
                         if (result && result.data) {
                             const value = normalizeCode(result.data);
-                            submitCode(value);
+                            const extracted = extractAssetCode(value);
+                            if (extracted) {
+                                submitCode(extracted);
+                            } else {
+                                showInvalidQr(value);
+                            }
                         }
                     }
                 } catch (error) {
                     setStatus('Gagal membaca frame kamera. Coba ulangi start kamera.', true);
+                } finally {
+                    isDetecting = false;
                 }
             }
 
             function startLoop() {
                 stopLoop();
-                scanTimer = window.setInterval(detectFrame, 250);
+                scanLoopEnabled = true;
+                lastScanAt = 0;
+
+                const loop = function (timestamp) {
+                    if (!scanLoopEnabled) {
+                        return;
+                    }
+
+                    if (timestamp - lastScanAt >= 90) {
+                        lastScanAt = timestamp;
+                        void detectFrame();
+                    }
+
+                    scanTimer = window.requestAnimationFrame(loop);
+                };
+
+                scanTimer = window.requestAnimationFrame(loop);
             }
 
             function stopLoop() {
+                scanLoopEnabled = false;
                 if (scanTimer) {
-                    window.clearInterval(scanTimer);
+                    window.cancelAnimationFrame(scanTimer);
                     scanTimer = null;
                 }
             }
@@ -443,7 +538,7 @@
                 const primaryConstraints = {
                     video: {
                         facingMode: { ideal: currentFacingMode },
-                        width: { ideal: 1280 },
+                        width: { ideal: 960 },
                         height: { ideal: 720 }
                     },
                     audio: false
@@ -475,6 +570,10 @@
                 detector = null;
                 usingFallback = false;
                 isSubmitting = false;
+                isDetecting = false;
+                lastInvalidCode = '';
+                lastInvalidAt = 0;
+                lastAcceptedCode = '';
                 scanSuccessBadge.classList.add('hidden');
                 scanFrameEl.classList.remove('border-emerald-400', 'scale-105');
                 scanFrameEl.classList.add('border-cyan-300/70');
@@ -511,8 +610,8 @@
                     updateButtons(true);
                     if (canScan) {
                         setStatus(usingFallback
-                            ? 'Kamera aktif (mode kompatibilitas). Arahkan QR aset ke kotak scan.'
-                            : 'Kamera aktif. Arahkan QR aset ke kotak scan.');
+                            ? 'Kamera aktif (mode kompatibilitas). Arahkan QR sarana ke kotak scan.'
+                            : 'Kamera aktif. Arahkan QR sarana ke kotak scan.');
                         startLoop();
                     } else {
                         setStatus('Kamera aktif, tetapi scanner QR tidak tersedia di browser ini. Gunakan input manual.', true);
@@ -534,6 +633,16 @@
                 updateButtons(false);
             }
 
+            function extractAssetCode(value) {
+                const raw = String(value || '').toUpperCase();
+                if (exactPattern.test(raw)) {
+                    return raw;
+                }
+
+                const match = raw.match(/AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/);
+                return match ? match[0] : null;
+            }
+
             btnStart.addEventListener('click', startCamera);
             btnStop.addEventListener('click', function () {
                 stopCamera();
@@ -544,6 +653,14 @@
                 currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
                 await startCamera();
             });
+
+            window.addEventListener('action-confirm-closed', function () {
+                invalidDialogOpen = false;
+            });
+
+            @if ($shouldOpenInvalidQrPopup)
+                openInvalidQrPopup(@json($scanError));
+            @endif
 
             window.addEventListener('beforeunload', stopCamera);
             document.addEventListener('visibilitychange', function () {

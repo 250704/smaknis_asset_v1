@@ -2,8 +2,8 @@
     <div class="mb-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h1 class="page-title">Input Massal Aset</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Input data aset dalam jumlah banyak langsung dari web</p>
+                <h1 class="page-title">Input Massal Sarana</h1>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Input data sarana dalam jumlah banyak langsung dari web</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('admin.aset.create') }}" class="btn-secondary">
@@ -38,8 +38,8 @@
                 <div class="panel">
                     <div class="mb-4 flex items-center justify-between">
                         <div>
-                            <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">Data Aset</h2>
-                            <p class="text-sm text-slate-500 dark:text-slate-400">Tambahkan data aset yang akan diimport</p>
+                            <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">Data Sarana</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Tambahkan data sarana yang akan diimport</p>
                         </div>
                         <button type="button" onclick="addRow()" class="btn-primary">
                             <i class="fas fa-plus mr-2 text-xs"></i>Tambah Baris
@@ -105,7 +105,7 @@
                                 <ul class="mt-2 space-y-1 text-xs">
                                     <li>• Max 50 baris per import</li>
                                     <li>• Isi semua field wajib (*)</li>
-                                    <li>• Jumlah unit = total aset dibuat</li>
+                                    <li>• Jumlah unit = total sarana dibuat</li>
                                 </ul>
                             </div>
                         </div>
@@ -120,7 +120,7 @@
         <div class="import-row rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-800/50" data-row="__ROW__">
             <div class="mb-3 flex items-center justify-between border-b border-slate-200 pb-2 dark:border-white/10">
                 <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    <span class="row-number">__ROW__</span>. Data Aset
+                    <span class="row-number">__ROW__</span>. Data Sarana
                 </h4>
                 <button type="button" onclick="removeRow(__ROW__)" class="text-rose-500 hover:text-rose-700">
                     <i class="fas fa-trash mr-1 text-xs"></i>Hapus Baris
@@ -129,7 +129,7 @@
 
             <div class="grid gap-3 md:grid-cols-3">
                 <div class="md:col-span-3">
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Nama Aset <span class="text-rose-500">*</span></label>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Nama Sarana <span class="text-rose-500">*</span></label>
                     <input type="text" name="rows[__ROW__][nama_aset]" required placeholder="Contoh: PC All in One" 
                            class="w-full rounded-lg border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900 dark:text-slate-100">
                 </div>

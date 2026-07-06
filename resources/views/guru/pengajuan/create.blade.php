@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="page-title">Buat Pengajuan</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ajukan penggantian aset atau pengadaan aset baru sesuai kebutuhan sekolah.</p>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Ajukan pengadaan sarana baru sesuai kebutuhan sekolah.</p>
             </div>
             <a href="{{ $indexRoute ?? route('guru.pengajuan.index') }}" class="btn-secondary">
                 <i class="fas fa-history mr-2 text-xs"></i>
@@ -19,7 +19,7 @@
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500 text-white">
                     <i class="fas fa-box text-sm"></i>
                 </div>
-                <h3 class="text-sm font-bold text-cyan-800 dark:text-cyan-200">Pengadaan Aset Baru</h3>
+                <h3 class="text-sm font-bold text-cyan-800 dark:text-cyan-200">Pengadaan Sarana Baru</h3>
             </div>
             <p class="text-xs text-slate-600 dark:text-slate-400">
                 Gunakan jenis <strong>PENGADAAN</strong> untuk mengajukan barang/fasilitas baru.
@@ -31,14 +31,14 @@
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white">
                     <i class="fas fa-tools text-sm"></i>
                 </div>
-                <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-200">Penggantian Aset Rusak</h3>
+                <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-200">Lapor Kerusakan</h3>
             </div>
             <p class="text-xs text-slate-600 dark:text-slate-400">
-                Gunakan jenis <strong>PENGGANTIAN</strong> jika aset rusak dan perlu diganti unit baru.
+                Jika sarana rusak, gunakan menu <strong>Lapor Kerusakan</strong>. Tindak lanjut perawatan atau penggantian akan diproses dari sana.
             </p>
             <a href="{{ $scanRoute ?? route('guru.scan') }}" class="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
                 <i class="fas fa-qrcode"></i>
-                Scan QR & Lapor Kerusakan (opsional)
+                Scan QR & Lapor Kerusakan
             </a>
         </div>
     </div>
@@ -67,24 +67,6 @@
                         required
                     >
                     @error('judul_pengajuan')
-                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                        Jenis Pengajuan <span class="text-rose-500">*</span>
-                    </label>
-                    <select
-                        name="jenis_pengajuan"
-                        id="jenis_pengajuan"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
-                        required
-                    >
-                        <option value="PENGADAAN" @selected(old('jenis_pengajuan', $selectedJenis ?? 'PENGADAAN') === 'PENGADAAN')>Pengadaan Aset Baru</option>
-                        <option value="PENGGANTIAN" @selected(old('jenis_pengajuan', $selectedJenis ?? 'PENGADAAN') === 'PENGGANTIAN')>Penggantian Aset</option>
-                    </select>
-                    @error('jenis_pengajuan')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -142,33 +124,6 @@
                     </thead>
                     <tbody id="items-body" class="divide-y divide-slate-100 dark:divide-white/5"></tbody>
                 </table>
-            </div>
-        </div>
-
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 dark:border-emerald-700 dark:bg-emerald-900/20" id="section-penggantian">
-            <h3 class="mb-3 flex items-center gap-2 text-base font-bold text-emerald-800 dark:text-emerald-200">
-                <i class="fas fa-sync-alt text-emerald-600"></i>
-                2. Aset yang Akan Diganti
-            </h3>
-            <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                    Pilih Aset <span class="text-rose-500">*</span>
-                </label>
-                <select
-                    name="aset_id"
-                    id="aset_id"
-                    class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
-                >
-                    <option value="">Pilih aset yang akan diganti...</option>
-                    @foreach ($asetList as $aset)
-                        <option value="{{ $aset->id }}" @selected((string) old('aset_id', $selectedAset?->id) === (string) $aset->id)>
-                            {{ $aset->kode_aset }} - {{ $aset->nama_aset }} ({{ $aset->ruangan?->nama_ruangan }} - {{ $aset->ruangan?->gedung?->nama_gedung }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('aset_id')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                @enderror
             </div>
         </div>
 
@@ -259,10 +214,7 @@
 
     <script>
         (function () {
-            const jenisPengajuanSelect = document.getElementById('jenis_pengajuan');
             const sectionPengadaan = document.getElementById('section-pengadaan');
-            const sectionPenggantian = document.getElementById('section-penggantian');
-            const asetIdSelect = document.getElementById('aset_id');
             const itemsBody = document.getElementById('items-body');
             const btnAddItem = document.getElementById('btn-add-item');
             
@@ -326,46 +278,14 @@
                 itemsBody?.appendChild(createRow(index));
             }
 
-            function setItemsEnabled(enabled) {
-                if (!itemsBody) return;
-                itemsBody.querySelectorAll('input, select, textarea').forEach((el) => {
-                    if (enabled) {
-                        el.removeAttribute('disabled');
-                    } else {
-                        el.setAttribute('disabled', 'disabled');
-                    }
-                });
-            }
-
-            function applyJenisMode() {
-                const jenis = (jenisPengajuanSelect?.value || 'PENGADAAN').toUpperCase();
-                const isPengadaan = jenis === 'PENGADAAN';
-
-                sectionPengadaan?.classList.toggle('hidden', !isPengadaan);
-                sectionPenggantian?.classList.toggle('hidden', isPengadaan);
-
-                if (asetIdSelect) {
-                    if (isPengadaan) {
-                        asetIdSelect.removeAttribute('required');
-                    } else {
-                        asetIdSelect.setAttribute('required', 'required');
-                    }
-                }
-
-                if (isPengadaan) {
-                    setItemsEnabled(true);
-                    if (itemsBody && itemsBody.children.length === 0) {
-                        addRow();
-                    }
-                } else {
-                    setItemsEnabled(false);
+            function ensureInitialRow() {
+                if (itemsBody && itemsBody.children.length === 0) {
+                    addRow();
                 }
             }
 
             btnAddItem?.addEventListener('click', addRow);
-            jenisPengajuanSelect?.addEventListener('change', applyJenisMode);
-
-            applyJenisMode();
+            ensureInitialRow();
         })();
     </script>
 </x-layouts.sbadmin>

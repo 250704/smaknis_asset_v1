@@ -58,7 +58,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/manajemen-user', [UserManagementController::class, 'store'])->name('admin.users.store');
     Route::patch('/admin/manajemen-user/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/manajemen-user/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
-    Route::post('/admin/manajemen-user/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('admin.users.reset-password');
 
     Route::get('/admin/laporan', [BlueprintPageController::class, 'laporan'])
         ->defaults('role', 'admin')

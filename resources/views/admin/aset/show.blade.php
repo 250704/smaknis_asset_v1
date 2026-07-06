@@ -1,7 +1,7 @@
 <x-layouts.sbadmin>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="page-title">Detail Aset</h1>
+            <h1 class="page-title">Detail Sarana</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ $aset->kode_aset }} - {{ $aset->nama_aset }}</p>
         </div>
         <div class="flex gap-2">
@@ -22,11 +22,11 @@
             <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Informasi Utama</h2>
             <dl class="mt-4 grid gap-3 sm:grid-cols-2">
                 <div>
-                    <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode Aset</dt>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode Sarana</dt>
                     <dd class="font-mono text-sm text-slate-700 dark:text-slate-200">{{ $aset->kode_aset }}</dd>
                 </div>
                 <div>
-                    <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Aset</dt>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Sarana</dt>
                     <dd class="text-sm text-slate-700 dark:text-slate-200">{{ $aset->nama_aset }}</dd>
                 </div>
                 <div>
@@ -69,19 +69,19 @@
         </section>
 
         <section class="panel lg:col-span-5">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Foto Aset</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Foto Sarana</h2>
             <div class="mt-4">
                 @if ($aset->foto_aset)
                     <img src="{{ asset('storage/' . $aset->foto_aset) }}" alt="Foto aset" class="h-64 w-full rounded-xl object-cover">
                 @else
                     <div class="flex h-64 items-center justify-center rounded-xl border border-dashed border-slate-300 text-sm text-slate-500 dark:border-white/20 dark:text-slate-400">
-                        Belum ada foto aset
+                        Belum ada foto sarana
                     </div>
                 @endif
             </div>
 
             <div class="mt-5 rounded-xl border border-slate-200 p-4 dark:border-white/10">
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">QR Unit Aset</h3>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">QR Unit Sarana</h3>
                 <div class="mt-3 flex flex-col items-center gap-3">
                     <div id="detail-qr" class="rounded-lg bg-white p-2"></div>
                     <p class="font-mono text-[11px] text-slate-600 dark:text-slate-300">{{ $aset->kode_aset }}</p>

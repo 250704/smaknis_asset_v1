@@ -18,11 +18,11 @@
         <div>
             <h1 class="page-title">Semua Proses</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Monitoring status terakhir setiap aset secara ringkas dan tanpa duplikasi.
+                Monitoring status terakhir setiap sarana secara ringkas dan tanpa duplikasi.
             </p>
             <div class="mt-3 flex items-center gap-2">
                 <span class="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200">
-                    {{ number_format($stats['total']) }} aset terdeteksi
+                    {{ number_format($stats['total']) }} sarana terdeteksi
                 </span>
             </div>
         </div>
@@ -52,18 +52,18 @@
     </section>
 
     <section class="panel mb-5">
-        <form method="GET" class="grid gap-3 md:grid-cols-12">
-            <div class="md:col-span-6">
+        <form method="GET" class="filter-grid">
+            <div class="xl:col-span-2">
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pencarian</label>
                 <input
                     type="text"
                     name="q"
                     value="{{ $filters['q'] }}"
-                    placeholder="Kode atau nama aset..."
+                    placeholder="Kode atau nama sarana..."
                     class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100"
                 >
             </div>
-            <div class="md:col-span-2">
+            <div>
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</label>
                 <select name="status" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
                     <option value="">Semua</option>
@@ -73,7 +73,7 @@
                     <option value="DITOLAK" @selected($filters['status'] === 'DITOLAK')>Ditolak</option>
                 </select>
             </div>
-            <div class="md:col-span-2">
+            <div>
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis</label>
                 <select name="jenis" class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
                     <option value="">Semua</option>
@@ -83,7 +83,7 @@
                     <option value="KERUSAKAN" @selected($filters['jenis'] === 'KERUSAKAN')>Kerusakan</option>
                 </select>
             </div>
-            <div class="md:col-span-2 flex items-end justify-end gap-2">
+            <div class="filter-actions">
                 <a href="{{ route('kepala_sarana.validasi.semua') }}" class="btn-secondary">Reset</a>
                 <button type="submit" class="btn-primary">Filter</button>
             </div>
@@ -95,8 +95,8 @@
             <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
                 <thead class="bg-slate-50 dark:bg-white/[0.04]">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Aset</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Nama Aset</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode Sarana</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Nama Sarana</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Tahap Terakhir</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Jenis</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Status</th>

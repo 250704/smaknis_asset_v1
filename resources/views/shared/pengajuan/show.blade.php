@@ -30,7 +30,7 @@
         <div>
             <h1 class="page-title">{{ $isRealisasiPage ? 'Form Realisasi' : 'Detail Pengajuan' }}</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {{ $isRealisasiPage ? 'Lengkapi data realisasi pengajuan aset.' : 'Informasi lengkap pengajuan aset.' }}
+                {{ $isRealisasiPage ? 'Lengkapi data realisasi pengajuan sarana.' : 'Informasi lengkap pengajuan sarana.' }}
             </p>
         </div>
         <a href="{{ $backRoute ?: url()->previous() }}" class="btn-secondary">Kembali</a>
@@ -129,7 +129,7 @@
                                 <textarea name="keterangan" rows="2" class="w-full rounded-lg border-slate-300 bg-white text-sm text-slate-700 shadow-sm focus:border-amber-500 focus:ring-amber-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100" required>{{ old('keterangan', $pengajuan->penggantian?->keterangan) }}</textarea>
                             </div>
                             <div>
-                                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Kode Aset Baru (jika ada)</label>
+                                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Kode Sarana Baru (jika ada)</label>
                                 <input type="text" name="kode_aset_baru" value="{{ old('kode_aset_baru', $pengajuan->penggantian?->asetBaru?->kode_aset) }}" class="w-full rounded-lg border-slate-300 bg-white text-sm text-slate-700 shadow-sm focus:border-amber-500 focus:ring-amber-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
                             </div>
                             <div>
@@ -137,7 +137,7 @@
                                 <input type="file" name="foto_bukti" accept="image/*" class="w-full rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-200">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Foto Aset Baru (Sesudah)</label>
+                                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Foto Sarana Baru (Sesudah)</label>
                                 <input type="file" name="foto_aset_baru" accept="image/*" class="w-full rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-200">
                             </div>
                             <div class="md:col-span-2">
@@ -175,14 +175,14 @@
 
             @if (!$isRealisasiPage && $pengajuan->aset)
                 <div class="panel">
-                    <h2 class="text-sm font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Aset Terkait</h2>
+                    <h2 class="text-sm font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Sarana Terkait</h2>
                     <dl class="grid gap-3 mt-4 sm:grid-cols-2">
                         <div>
-                            <dt class="text-xs tracking-wide uppercase text-slate-500 dark:text-slate-400">Kode Aset</dt>
+                            <dt class="text-xs tracking-wide uppercase text-slate-500 dark:text-slate-400">Kode Sarana</dt>
                             <dd class="font-mono text-sm text-slate-700 dark:text-slate-200">{{ $pengajuan->aset->kode_aset }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs tracking-wide uppercase text-slate-500 dark:text-slate-400">Nama Aset</dt>
+                            <dt class="text-xs tracking-wide uppercase text-slate-500 dark:text-slate-400">Nama Sarana</dt>
                             <dd class="text-sm text-slate-700 dark:text-slate-200">{{ $pengajuan->aset->nama_aset }}</dd>
                         </div>
                         <div class="sm:col-span-2">
@@ -460,7 +460,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Kode Aset Baru (jika ada)</label>
+                                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Kode Sarana Baru (jika ada)</label>
                                     <input type="text" name="kode_aset_baru" value="{{ old('kode_aset_baru', $pengajuan->penggantian?->asetBaru?->kode_aset) }}" class="w-full rounded-lg border-slate-300 bg-white text-sm text-slate-700 shadow-sm focus:border-amber-500 focus:ring-amber-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100">
                                 </div>
 
@@ -470,7 +470,7 @@
                                         <input type="file" name="foto_bukti" accept="image/*" class="w-full rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-200">
                                     </div>
                                     <div>
-                                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Foto Aset Baru (Sesudah)</label>
+                                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Foto Sarana Baru (Sesudah)</label>
                                         <input type="file" name="foto_aset_baru" accept="image/*" class="w-full rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-200">
                                     </div>
                                 </div>
@@ -549,4 +549,3 @@
     </section>
     @endif
 </x-layouts.sbadmin>
-

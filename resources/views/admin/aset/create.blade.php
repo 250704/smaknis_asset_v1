@@ -2,8 +2,8 @@
     <div class="mb-8">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h1 class="page-title">Tambah Aset</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Pilih metode penambahan aset</p>
+                <h1 class="page-title">Tambah Sarana</h1>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Pilih metode penambahan sarana</p>
             </div>
             <a href="{{ route('admin.aset.index') }}" class="btn-secondary">
                 <i class="fas fa-arrow-left mr-2 text-xs"></i>Kembali
@@ -27,7 +27,7 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">Input Per Unit</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Tambah satu aset individual</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Tambah satu sarana individual</p>
                     </div>
                 </div>
             </div>
@@ -35,7 +35,7 @@
                 <ul class="mb-6 space-y-2 text-sm text-slate-600 dark:text-slate-300">
                     <li class="flex items-start gap-2">
                         <i class="fas fa-check text-xs text-emerald-500 mt-1"></i>
-                        <span>Untuk penambahan 1 aset</span>
+                        <span>Untuk penambahan 1 sarana</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-check text-xs text-emerald-500 mt-1"></i>
@@ -47,7 +47,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-check text-xs text-emerald-500 mt-1"></i>
-                        <span>Upload foto aset tersedia</span>
+                        <span>Upload foto sarana tersedia</span>
                     </li>
                 </ul>
                 <div class="flex items-center justify-between">
@@ -68,7 +68,7 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">Input Massal</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Tambah banyak aset sekaligus</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Tambah banyak sarana sekaligus</p>
                     </div>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                 <ul class="mb-6 space-y-2 text-sm text-slate-600 dark:text-slate-300">
                     <li class="flex items-start gap-2">
                         <i class="fas fa-check text-xs text-emerald-500 mt-1"></i>
-                        <span>Untuk penambahan banyak aset</span>
+                        <span>Untuk penambahan banyak sarana</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-check text-xs text-emerald-500 mt-1"></i>

@@ -2,14 +2,14 @@
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
             <h1 class="page-title">Lapor Kerusakan</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Laporkan kondisi aset yang rusak untuk validasi kepala sarana.</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Laporkan kondisi sarana yang rusak untuk validasi kepala sarana.</p>
         </div>
         <a href="{{ $scanRoute ?? route('guru.scan') }}" class="btn-secondary">Kembali</a>
     </div>
 
     @if ($aset)
         <div class="panel mb-5 border border-cyan-200 bg-cyan-50/70 dark:border-cyan-400/30 dark:bg-cyan-500/10">
-            <h2 class="text-sm font-semibold text-cyan-800 dark:text-cyan-200">Aset dari hasil scan</h2>
+            <h2 class="text-sm font-semibold text-cyan-800 dark:text-cyan-200">Sarana dari hasil scan</h2>
             <div class="mt-2 grid gap-2 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-2">
                 <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode</span><br>{{ $aset->kode_aset }}</div>
                 <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama</span><br>{{ $aset->nama_aset }}</div>
@@ -63,14 +63,14 @@
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Pilih Aset yang Dilaporkan</label>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Pilih Sarana yang Dilaporkan</label>
             <select
                 id="aset-select"
                 name="aset_id"
                 class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                 required
             >
-                <option value="">-- Pilih aset --</option>
+                <option value="">-- Pilih sarana --</option>
                 @foreach (($asetList ?? collect()) as $asetItem)
                     <option
                         value="{{ $asetItem->id }}"
@@ -118,7 +118,7 @@
             <textarea
                 name="deskripsi"
                 rows="4"
-                placeholder="Jelaskan kondisi kerusakan aset."
+                placeholder="Jelaskan kondisi kerusakan sarana."
                 class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                 required
             >{{ old('deskripsi') }}</textarea>

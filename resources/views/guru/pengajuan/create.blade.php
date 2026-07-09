@@ -12,37 +12,6 @@
         </div>
     </div>
 
-    {{-- Info Box - Penting! --}}
-    <div class="mb-6 grid gap-4 md:grid-cols-2">
-        <div class="rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-4 dark:border-cyan-700 dark:from-cyan-900/20 dark:to-blue-900/20">
-            <div class="mb-2 flex items-center gap-2">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500 text-white">
-                    <i class="fas fa-box text-sm"></i>
-                </div>
-                <h3 class="text-sm font-bold text-cyan-800 dark:text-cyan-200">Pengadaan Sarana Baru</h3>
-            </div>
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-                Gunakan jenis <strong>PENGADAAN</strong> untuk mengajukan barang/fasilitas baru.
-            </p>
-        </div>
-
-        <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 dark:border-emerald-700 dark:from-emerald-900/20 dark:to-teal-900/20">
-            <div class="mb-2 flex items-center gap-2">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white">
-                    <i class="fas fa-tools text-sm"></i>
-                </div>
-                <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-200">Lapor Kerusakan</h3>
-            </div>
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-                Jika sarana rusak, gunakan menu <strong>Lapor Kerusakan</strong>. Tindak lanjut perawatan atau penggantian akan diproses dari sana.
-            </p>
-            <a href="{{ $scanRoute ?? route('guru.scan') }}" class="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
-                <i class="fas fa-qrcode"></i>
-                Scan QR & Lapor Kerusakan
-            </a>
-        </div>
-    </div>
-
     <form method="POST" action="{{ $storeRoute ?? route('guru.pengajuan.store') }}" enctype="multipart/form-data" class="panel space-y-4" id="form-pengajuan">
         @csrf
 

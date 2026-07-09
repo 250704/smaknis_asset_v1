@@ -45,6 +45,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         });
 
     Route::get('/admin/pengajuan', [PengajuanController::class, 'adminIndex'])->name('admin.pengajuan.index');
+    Route::get('/admin/pengajuan-saya', [PengajuanController::class, 'adminMineIndex'])->name('admin.pengajuan.mine');
     Route::get('/admin/pengajuan/create', [PengajuanController::class, 'adminCreate'])->name('admin.pengajuan.create');
     Route::post('/admin/pengajuan', [PengajuanController::class, 'adminStore'])->name('admin.pengajuan.store');
     Route::get('/admin/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('admin.pengajuan.show');

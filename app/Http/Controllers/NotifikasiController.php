@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengajuan;
 use App\Models\Notifikasi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,6 +65,15 @@ class NotifikasiController extends Controller
             $notifikasi->url = $targetUrl;
         }
 
+        if (
+            (string) ($user->role_code ?? '') === 'admin'
+            && is_string($targetUrl)
+            && preg_match('#/admin/pengajuan/\\d+$#', $targetUrl) === 1
+        ) {
+            $targetUrl = $this->resolveAdminNotificationUrl($notifikasi);
+            $notifikasi->url = $targetUrl;
+        }
+
         $notifikasi->update(['is_read' => true]);
 
         if ($targetUrl) {
@@ -121,6 +131,18 @@ class NotifikasiController extends Controller
                 ]);
         }
 
+        if ($roleCode === 'admin') {
+            Notifikasi::query()
+                ->where('user_id', $userId)
+                ->where('url', 'like', '%/admin/pengajuan/%')
+                ->get()
+                ->each(function (Notifikasi $notifikasi) {
+                    $notifikasi->update([
+                        'url' => $this->resolveAdminNotificationUrl($notifikasi),
+                    ]);
+                });
+        }
+
         if ($roleCode === 'kepala_sekolah') {
             Notifikasi::query()
                 ->where('user_id', $userId)
@@ -130,6 +152,24 @@ class NotifikasiController extends Controller
                     'url' => route('kepala_sekolah.pengajuan.index'),
                 ]);
         }
+    }
+
+    private function resolveAdminNotificationUrl(Notifikasi $notifikasi): string
+    {
+        $isi = (string) $notifikasi->isi;
+        $judul = (string) $notifikasi->judul;
+
+        if (
+            str_contains($judul, 'Realisasi')
+            || str_contains($isi, 'Realisasi Diproses')
+            || str_contains($isi, 'Menunggu Verifikasi Teknis')
+            || str_contains($isi, 'Menunggu Verifikasi Keuangan')
+            || str_contains($isi, 'Selesai')
+        ) {
+            return route('admin.realisasi.index');
+        }
+
+        return route('admin.pengajuan.index');
     }
 
     private function collapseDuplicateTrackingThreads(int $userId): void

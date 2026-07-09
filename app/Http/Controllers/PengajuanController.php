@@ -250,7 +250,7 @@ class PengajuanController extends Controller
             ->withQueryString();
 
         return view('shared.pengajuan.index', [
-            'title' => 'Riwayat Pengajuan',
+            'title' => 'Pengajuan Saya',
             'subtitle' => 'Pantau status pengajuan yang pernah kamu buat.',
             'pengajuan' => $pengajuan,
             'filters' => $filters,
@@ -393,6 +393,11 @@ class PengajuanController extends Controller
             'realisasiRoute' => 'admin.realisasi.show',
             'showFilters' => true,
         ]);
+    }
+
+    public function adminMineIndex(Request $request): View
+    {
+        return $this->mineIndexByRole($request, 'admin.pengajuan.show');
     }
 
     public function reviewIndex(Request $request, string $role): View
@@ -1152,9 +1157,7 @@ class PengajuanController extends Controller
         }
 
         return match ($role) {
-            'admin' => $pengajuan->status_pengajuan === Pengajuan::STATUS_DIPROSES
-                ? route('admin.realisasi.index')
-                : route('admin.pengajuan.show', $pengajuan),
+            'admin' => $this->resolveAdminPengajuanMenuUrl($pengajuan),
             'kepala_sarana' => route('kepala_sarana.pengajuan.show', $pengajuan),
             'bendahara' => route('bendahara.pengajuan.show', $pengajuan),
             'kepala_sekolah' => route('kepala_sekolah.pengajuan.show', $pengajuan),
@@ -1309,7 +1312,7 @@ class PengajuanController extends Controller
         }
 
         if ($user->hasRole('admin')) {
-            return route('admin.pengajuan.show', $pengajuan);
+            return $this->resolveAdminPengajuanMenuUrl($pengajuan);
         }
 
         if ($user->hasRole('kepala_sarana')) {
@@ -1331,6 +1334,20 @@ class PengajuanController extends Controller
         }
 
         return null;
+    }
+
+    private function resolveAdminPengajuanMenuUrl(Pengajuan $pengajuan): string
+    {
+        if (in_array($pengajuan->status_pengajuan, [
+            Pengajuan::STATUS_DISETUJUI_KEPSEK,
+            Pengajuan::STATUS_DIPROSES,
+            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
+            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
+        ], true)) {
+            return route('admin.realisasi.index');
+        }
+
+        return route('admin.pengajuan.index');
     }
 
     private function jenisLabel(string $jenis): string

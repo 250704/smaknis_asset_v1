@@ -64,6 +64,23 @@ class AsetController extends Controller
         ]);
     }
 
+    public function show(Aset $aset): View
+    {
+        $aset->load(['kategori', 'ruangan.gedung']);
+
+        $riwayatKondisi = RiwayatKondisiAset::query()
+            ->with(['user', 'validator'])
+            ->where('aset_id', $aset->id)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('kepala_sarana.aset.show', [
+            'aset' => $aset,
+            'riwayatKondisi' => $riwayatKondisi,
+        ]);
+    }
+
     public function histori(Request $request): View
     {
         $filters = [

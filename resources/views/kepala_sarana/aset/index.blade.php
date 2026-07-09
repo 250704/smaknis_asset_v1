@@ -78,50 +78,54 @@
         </form>
     </section>
 
-    <section class="panel mt-5">
-        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
-            <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
+    <section class="mt-5 panel">
+        <div class="overflow-x-auto border rounded-xl border-slate-200 dark:border-white/10">
+            <table class="min-w-full text-sm divide-y divide-slate-200 dark:divide-white/10">
                 <thead class="bg-slate-50 dark:bg-white/[0.04]">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kode</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Sarana</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kategori</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Lokasi</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kondisi</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Status</th>
-                        <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Aksi</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Kode</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Sarana</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Kategori</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Lokasi</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Kondisi</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Status</th>
+                        <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300 whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+                <tbody class="bg-transparent divide-y divide-slate-100 dark:divide-white/5">
                     @forelse ($aset as $item)
                         <tr>
-                            <td class="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-300">{{ $item->kode_aset }}</td>
+                            <td class="px-4 py-3 font-mono text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">{{ $item->kode_aset }}</td>
                             <td class="px-4 py-3">
                                 <p class="font-semibold text-slate-700 dark:text-slate-200">{{ $item->nama_aset }}</p>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Tahun {{ $item->tahun_perolehan }}</p>
                             </td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $item->kategori?->nama_kategori }}</td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
+                            <td class="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">{{ $item->kategori?->nama_kategori }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
                                 {{ $item->ruangan?->nama_ruangan }}<br>
                                 <span class="text-xs text-slate-500 dark:text-slate-400">{{ $item->ruangan?->gedung?->nama_gedung }} - Lt. {{ $item->ruangan?->lantai ?? '-' }}</span>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->kondisi_terkini === 'BAIK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200' }}">
                                     {{ $item->kondisi_terkini }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->status_aset === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
                                     {{ $item->status_aset }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ route('kepala_sarana.scan', ['kode_aset' => $item->kode_aset]) }}" class="btn-secondary">Lihat</a>
+                                <a href="{{ route('kepala_sarana.aset.show', $item) }}"
+                                   class="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold text-white transition bg-blue-500 rounded-lg hover:bg-blue-600 hover:shadow-md"
+                                   title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Belum ada data sarana.</td>
+                            <td colspan="7" class="px-4 py-8 text-sm text-center text-slate-500 dark:text-slate-400">Belum ada data sarana.</td>
                         </tr>
                     @endforelse
                 </tbody>

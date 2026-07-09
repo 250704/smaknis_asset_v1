@@ -26,11 +26,11 @@
         <span>Buat Pengajuan</span>
     </a>
 
-    {{-- Review Pengajuan - Dropdown --}}
+    {{-- Pengajuan - Dropdown --}}
     <div class="side-group" x-data="{ open: @js($reviewOpen) }" :class="open ? 'border-white/15 bg-white/[0.07]' : ''">
         <button type="button" @click="open = !open" :aria-expanded="open.toString()" class="side-nav-link w-full cursor-pointer text-left">
             <i class="fas fa-coins w-4 text-center text-xs"></i>
-            <span class="flex-1">Review Pengajuan</span>
+            <span class="flex-1">Pengajuan</span>
             <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-300 ease-out" :class="open ? 'rotate-180' : ''"></i>
         </button>
         <div

@@ -28,6 +28,7 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->group(function () {
         ->defaults('role', 'kepala_sekolah')
         ->defaults('mode', 'approval')
         ->name('kepala_sekolah.pengajuan.index');
+    Route::get('/kepala_sekolah/pengajuan-semua', [PengajuanController::class, 'adminIndex'])->name('kepala_sekolah.pengajuan.semua');
     Route::get('/kepala_sekolah/pengajuan-saya', [PengajuanController::class, 'kepalaSekolahMineIndex'])->name('kepala_sekolah.pengajuan.mine');
     Route::get('/kepala_sekolah/pengajuan/create', [PengajuanController::class, 'kepalaSekolahCreate'])->name('kepala_sekolah.pengajuan.create');
     Route::post('/kepala_sekolah/pengajuan', [PengajuanController::class, 'kepalaSekolahStore'])->name('kepala_sekolah.pengajuan.store');

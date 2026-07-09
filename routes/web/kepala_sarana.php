@@ -13,6 +13,7 @@ Route::middleware(['auth', 'role:kepala_sarana'])->group(function () {
     Route::view('/kepala_sarana/dashboard', 'kepala_sarana.dashboard')->name('kepala_sarana.dashboard');
     Route::get('/kepala_sarana/aset', [KepalaSaranaAsetController::class, 'index'])->name('kepala_sarana.aset.index');
     Route::get('/kepala_sarana/aset/histori', [KepalaSaranaAsetController::class, 'histori'])->name('kepala_sarana.aset.histori');
+    Route::get('/kepala_sarana/aset/{aset}', [KepalaSaranaAsetController::class, 'show'])->whereNumber('aset')->name('kepala_sarana.aset.show');
     Route::get('/kepala_sarana/scan-qr', [ScanQrController::class, 'index'])
         ->defaults('role', 'kepala_sarana')
         ->name('kepala_sarana.scan');

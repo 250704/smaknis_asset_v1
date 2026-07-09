@@ -239,7 +239,7 @@
                                 <strong>Tip:</strong> Gunakan "Lapor Kerusakan" jika sarana rusak. Pengajuan perawatan/penggantian akan otomatis dibuat setelah validasi Kepala Sarana.
                             @elseif($role === 'kepala_sarana')
                                 <i class="fas fa-clipboard-check mr-1"></i>
-                                <strong>Tip:</strong> Validasi kerusakan dan lakukan approval teknis dari sini.
+                                <strong>Tip:</strong> Lihat detail aset dan histori sarana dari sini.
                             @elseif($role === 'bendahara')
                                 <i class="fas fa-coins mr-1"></i>
                                 <strong>Tip:</strong> Review pengajuan dan approval anggaran dari sini.
@@ -318,14 +318,18 @@
             let usingFallback = false;
             let isSubmitting = false;
             let isDetecting = false;
-            let lastScanAt = 0;
             let lastInvalidCode = '';
             let lastInvalidAt = 0;
             let lastAcceptedCode = '';
             let scanLoopEnabled = false;
             let invalidDialogOpen = false;
+            let scanInFlight = false;
 
             const exactPattern = /^AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}$/;
+            const FALLBACK_SCAN_INTERVAL_MS = 45;
+            const FALLBACK_MAX_WIDTH = 480;
+            const FALLBACK_MIN_WIDTH = 240;
+            const FALLBACK_CROP_RATIO = 0.72;
 
             function setStatus(message, isError = false) {
                 statusBox.textContent = message;
@@ -444,6 +448,81 @@
                 }, 900);
             }
 
+            function decodeCanvasRegion(sourceX, sourceY, sourceWidth, sourceHeight, targetWidth, targetHeight) {
+                if (!context2d || !canvas || !window.jsQR) {
+                    return null;
+                }
+
+                if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                }
+
+                context2d.imageSmoothingEnabled = false;
+                context2d.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
+
+                const imageData = context2d.getImageData(0, 0, canvas.width, canvas.height);
+                return window.jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'attemptBoth'
+                });
+            }
+
+            function handleDecodeResult(result) {
+                if (!result || !result.data) {
+                    return false;
+                }
+
+                const value = normalizeCode(result.data);
+                const extracted = extractAssetCode(value);
+                if (extracted) {
+                    submitCode(extracted);
+                    return true;
+                }
+
+                showInvalidQr(value);
+                return true;
+            }
+
+            function queueNextScan() {
+                if (!scanLoopEnabled) {
+                    return;
+                }
+
+                if (typeof video.requestVideoFrameCallback === 'function') {
+                    scanTimer = video.requestVideoFrameCallback(function () {
+                        void processScanFrame();
+                    });
+                    return;
+                }
+
+                scanTimer = window.setTimeout(function () {
+                    void processScanFrame();
+                }, FALLBACK_SCAN_INTERVAL_MS);
+            }
+
+            async function processScanFrame() {
+                if (!scanLoopEnabled) {
+                    return;
+                }
+
+                if (scanInFlight) {
+                    queueNextScan();
+                    return;
+                }
+
+                scanInFlight = true;
+
+                try {
+                    await detectFrame();
+                } finally {
+                    scanInFlight = false;
+                }
+
+                if (scanLoopEnabled) {
+                    queueNextScan();
+                }
+            }
+
             async function detectFrame() {
                 if (!scanLoopEnabled || !video || video.readyState < 2 || isDetecting) {
                     return;
@@ -472,30 +551,23 @@
                             return;
                         }
 
-                        const maxWidth = 640;
-                        const scale = sourceWidth > maxWidth ? maxWidth / sourceWidth : 1;
-                        const targetWidth = Math.max(320, Math.floor(sourceWidth * scale));
-                        const targetHeight = Math.max(240, Math.floor(sourceHeight * scale));
+                        const cropSize = Math.max(
+                            FALLBACK_MIN_WIDTH,
+                            Math.floor(Math.min(sourceWidth, sourceHeight) * FALLBACK_CROP_RATIO)
+                        );
+                        const cropX = Math.max(0, Math.floor((sourceWidth - cropSize) / 2));
+                        const cropY = Math.max(0, Math.floor((sourceHeight - cropSize) / 2));
+                        const cropTarget = Math.min(FALLBACK_MAX_WIDTH, Math.max(FALLBACK_MIN_WIDTH, cropSize));
 
-                        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-                            canvas.width = targetWidth;
-                            canvas.height = targetHeight;
+                        let result = decodeCanvasRegion(cropX, cropY, cropSize, cropSize, cropTarget, cropTarget);
+                        if (!result) {
+                            const fullTargetWidth = Math.max(FALLBACK_MIN_WIDTH, Math.min(FALLBACK_MAX_WIDTH, sourceWidth));
+                            const fullTargetHeight = Math.max(180, Math.min(360, Math.floor((sourceHeight / sourceWidth) * fullTargetWidth)));
+                            result = decodeCanvasRegion(0, 0, sourceWidth, sourceHeight, fullTargetWidth, fullTargetHeight);
                         }
 
-                        context2d.drawImage(video, 0, 0, targetWidth, targetHeight);
-                        const imageData = context2d.getImageData(0, 0, canvas.width, canvas.height);
-                        const result = window.jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: 'dontInvert'
-                        });
-
-                        if (result && result.data) {
-                            const value = normalizeCode(result.data);
-                            const extracted = extractAssetCode(value);
-                            if (extracted) {
-                                submitCode(extracted);
-                            } else {
-                                showInvalidQr(value);
-                            }
+                        if (handleDecodeResult(result)) {
+                            return;
                         }
                     }
                 } catch (error) {
@@ -508,29 +580,45 @@
             function startLoop() {
                 stopLoop();
                 scanLoopEnabled = true;
-                lastScanAt = 0;
-
-                const loop = function (timestamp) {
-                    if (!scanLoopEnabled) {
-                        return;
-                    }
-
-                    if (timestamp - lastScanAt >= 90) {
-                        lastScanAt = timestamp;
-                        void detectFrame();
-                    }
-
-                    scanTimer = window.requestAnimationFrame(loop);
-                };
-
-                scanTimer = window.requestAnimationFrame(loop);
+                scanInFlight = false;
+                queueNextScan();
             }
 
             function stopLoop() {
                 scanLoopEnabled = false;
                 if (scanTimer) {
-                    window.cancelAnimationFrame(scanTimer);
+                    if (typeof video.cancelVideoFrameCallback === 'function') {
+                        video.cancelVideoFrameCallback(scanTimer);
+                    } else {
+                        window.clearTimeout(scanTimer);
+                    }
                     scanTimer = null;
+                }
+            }
+
+            async function optimizeActiveCamera(activeStream) {
+                const track = activeStream?.getVideoTracks?.()[0];
+                if (!track) {
+                    return;
+                }
+
+                try {
+                    const capabilities = typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+                    const constraints = {};
+
+                    if (capabilities.focusMode && Array.isArray(capabilities.focusMode) && capabilities.focusMode.includes('continuous')) {
+                        constraints.focusMode = 'continuous';
+                    }
+
+                    if (capabilities.zoom && typeof capabilities.zoom.max === 'number') {
+                        constraints.zoom = Math.min(Math.max(capabilities.zoom.min ?? 1, 1.5), capabilities.zoom.max);
+                    }
+
+                    if (Object.keys(constraints).length > 0 && typeof track.applyConstraints === 'function') {
+                        await track.applyConstraints(constraints);
+                    }
+                } catch (error) {
+                    // Kamera tetap bisa dipakai meski optimasi fokus tidak didukung browser.
                 }
             }
 
@@ -538,8 +626,10 @@
                 const primaryConstraints = {
                     video: {
                         facingMode: { ideal: currentFacingMode },
-                        width: { ideal: 960 },
-                        height: { ideal: 720 }
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 30, max: 30 },
+                        focusMode: { ideal: 'continuous' }
                     },
                     audio: false
                 };
@@ -571,6 +661,7 @@
                 usingFallback = false;
                 isSubmitting = false;
                 isDetecting = false;
+                scanInFlight = false;
                 lastInvalidCode = '';
                 lastInvalidAt = 0;
                 lastAcceptedCode = '';
@@ -607,6 +698,7 @@
 
                     video.srcObject = stream;
                     await video.play();
+                    await optimizeActiveCamera(stream);
                     updateButtons(true);
                     if (canScan) {
                         setStatus(usingFallback
@@ -643,10 +735,13 @@
                 return match ? match[0] : null;
             }
 
-            btnStart.addEventListener('click', startCamera);
             btnStop.addEventListener('click', function () {
                 stopCamera();
                 setStatus('Kamera dihentikan.');
+            });
+
+            btnStart.addEventListener('click', function () {
+                void startCamera();
             });
 
             btnSwitch.addEventListener('click', async function () {
@@ -668,6 +763,8 @@
                     stopCamera();
                 }
             });
+
+            updateButtons(false);
         })();
     </script>
 </x-layouts.sbadmin>

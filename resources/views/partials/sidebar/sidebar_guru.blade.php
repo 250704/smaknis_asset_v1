@@ -27,9 +27,9 @@
         <span>Buat Pengajuan</span>
     </a>
 
-    {{-- Riwayat Pengajuan - LANGSUNG --}}
+    {{-- Pengajuan Saya - LANGSUNG --}}
     <a href="{{ route('guru.pengajuan.index') }}" class="side-nav-link {{ request()->routeIs('guru.pengajuan.index') || $feature === 'riwayat-pengajuan' ? 'active' : '' }}">
         <i class="fas fa-history w-4 text-center text-xs"></i>
-        <span>Riwayat Pengajuan</span>
+        <span>Pengajuan Saya</span>
     </a>
 </nav>

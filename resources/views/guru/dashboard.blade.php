@@ -9,11 +9,10 @@
         <div class="mt-4 flex flex-wrap gap-2">
             <a href="{{ route('guru.scan') }}" class="btn-primary">Scan QR</a>
             <a href="{{ route('guru.kerusakan.create') }}" class="btn-danger">Lapor Kerusakan</a>
-            <a href="{{ route('guru.pengajuan.create') }}" class="btn-secondary">Buat Pengadaan</a>
-            <a href="{{ route('guru.pengajuan.index') }}" class="btn-secondary">Riwayat Pengajuan</a>
+            <a href="{{ route('guru.pengajuan.create') }}" class="btn-secondary">Buat Pengajuan</a>
+            <a href="{{ route('guru.pengajuan.index') }}" class="btn-secondary">Pengajuan Saya</a>
             <a href="{{ route('guru.notifikasi.index') }}" class="btn-secondary">Notifikasi</a>
         </div>
         <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Catatan: perawatan/penggantian tidak diajukan manual oleh guru, tetapi otomatis dari hasil validasi laporan kerusakan.</p>
     </div>
 </x-layouts.sbadmin>
-

@@ -167,7 +167,7 @@ class KerusakanController extends Controller
     {
         $validatorUser = $request->user();
         $reportedByKepalaSarana = (bool) ($riwayat->user?->hasRole('kepala_sarana'));
-        $requiredValidatorRole = $reportedByKepalaSarana ? 'kepala_sekolah' : 'kepala_sarana';
+        $requiredValidatorRole = $reportedByKepalaSarana ? 'bendahara' : 'kepala_sarana';
         if (!$validatorUser || !$validatorUser->hasRole($requiredValidatorRole)) {
             abort(403);
         }
@@ -251,8 +251,12 @@ class KerusakanController extends Controller
             ]);
 
             $jenisPengajuan = $validated['rekomendasi_tindakan'];
+            $initialPengajuanStatus = $requiredValidatorRole === 'bendahara'
+                ? Pengajuan::STATUS_DISETUJUI_BENDAHARA
+                : Pengajuan::STATUS_DISETUJUI_KASARANA;
+
             // Buat pengajuan otomatis dari hasil validasi kerusakan.
-            // Status langsung ke antrean bendahara (DISETUJUI_KASARANA) sesuai flow final.
+            // Jika laporan berasal dari Kepala Sarana, alurnya masuk ke Bendahara dulu lalu Kepala Sekolah.
             $pengajuan = Pengajuan::query()->create([
                 'aset_id' => $aset->id,
                 'user_id' => $request->user()->id,
@@ -261,17 +265,24 @@ class KerusakanController extends Controller
                 'deskripsi' => $riwayat->deskripsi,
                 'estimasi_biaya' => $validated['estimasi_biaya'],
                 'target_realisasi' => null,
-                'status_pengajuan' => Pengajuan::STATUS_DISETUJUI_KASARANA,
+                'status_pengajuan' => $initialPengajuanStatus,
             ]);
 
-            // Simpan approval pengajuan hanya jika validator adalah Kepala Sarana.
-            // Jika validator adalah Kepala Sekolah (kasus pelapor Kepala Sarana),
-            // audit validasi tetap tersimpan di riwayat_kondisi_aset.
+            // Simpan jejak approval sesuai validator yang memproses kerusakan.
             if ($requiredValidatorRole === 'kepala_sarana') {
                 ApprovalPengajuan::query()->create([
                     'pengajuan_id' => $pengajuan->id,
                     'approver_id' => $request->user()->id,
                     'role_approval' => ApprovalPengajuan::ROLE_KASARANA,
+                    'status' => ApprovalPengajuan::STATUS_DISETUJUI,
+                    'catatan' => $validated['catatan'] ?? null,
+                    'approved_at' => now(),
+                ]);
+            } else {
+                ApprovalPengajuan::query()->create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'approver_id' => $request->user()->id,
+                    'role_approval' => ApprovalPengajuan::ROLE_BENDAHARA,
                     'status' => ApprovalPengajuan::STATUS_DISETUJUI,
                     'catatan' => $validated['catatan'] ?? null,
                     'approved_at' => now(),
@@ -626,7 +637,7 @@ class KerusakanController extends Controller
     {
         if ($riwayat->status === 'DILAPORKAN') {
             return $riwayat->user && $riwayat->user->hasRole('kepala_sarana')
-                ? ['kepala_sekolah']
+                ? ['bendahara']
                 : ['kepala_sarana'];
         }
 

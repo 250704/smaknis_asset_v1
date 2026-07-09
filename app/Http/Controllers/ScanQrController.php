@@ -25,11 +25,10 @@ class ScanQrController extends Controller
         'usulan-mutasi' => 'Usulan Mutasi',
     ];
 
-    // Actions untuk KEPALA SARANA - Validasi dan Approval
+    // Actions untuk KEPALA SARANA - Detail aset dan histori
     private const ACTIONS_KEPALA_SARANA = [
-        'lapor-kerusakan' => 'Lapor Kerusakan',
-        'validasi-kerusakan' => 'Validasi Kerusakan',
-        'approval-teknis' => 'Approval',
+        'detail-aset' => 'Detail Aset',
+        'histori-aset' => 'Histori Aset',
     ];
 
     // Actions untuk ADMIN - Management
@@ -54,7 +53,7 @@ class ScanQrController extends Controller
     private const KODE_ASET_PATTERN = '/^AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\\d{2}-\\d{4}-\\d{4}$/';
     private const INVALID_QR_MESSAGE = 'QR code tidak valid. Pastikan QR milik sarana yang terdaftar.';
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $role = (string) $request->route('role');
         abort_unless(in_array($role, self::ALLOWED_ROLES, true), 404);
@@ -99,6 +98,7 @@ class ScanQrController extends Controller
                         aset: $aset,
                         note: 'Exact QR match',
                     );
+
                 } else {
                     $this->logScanActivity(
                         request: $request,
@@ -224,26 +224,20 @@ class ScanQrController extends Controller
 
     private function redirectForKepalaSarana(Aset $aset, string $action): RedirectResponse
     {
-        if ($action === 'lapor-kerusakan') {
+        if ($action === 'detail-aset') {
             return redirect()
-                ->route('kepala_sarana.kerusakan.create', ['kode_aset' => $aset->kode_aset])
-                ->with('success', "Silakan laporkan kerusakan aset {$aset->kode_aset}.");
+                ->route('kepala_sarana.aset.show', $aset)
+                ->with('success', "Menampilkan detail aset {$aset->kode_aset}.");
         }
 
-        if ($action === 'validasi-kerusakan') {
+        if ($action === 'histori-aset') {
             return redirect()
-                ->route('kepala_sarana.kerusakan.index', ['q' => $aset->kode_aset])
-                ->with('success', "Silakan validasi kerusakan aset {$aset->kode_aset}.");
-        }
-
-        if ($action === 'approval-teknis') {
-            return redirect()
-                ->route('kepala_sarana.pengajuan.approval', ['q' => $aset->kode_aset])
-                ->with('success', "Silakan approval teknis untuk aset {$aset->kode_aset}.");
+                ->route('kepala_sarana.aset.histori', ['q' => $aset->kode_aset])
+                ->with('success', "Menampilkan histori aset {$aset->kode_aset}.");
         }
 
         return redirect()
-            ->route('kepala_sarana.dashboard')
+            ->route('kepala_sarana.aset.show', $aset)
             ->with('error', 'Aksi tidak dikenali.');
     }
 

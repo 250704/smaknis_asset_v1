@@ -2,6 +2,10 @@
     $feature = request()->route('feature');
     $inventarisOpen = request()->routeIs('admin.aset.*', 'admin.cetak-qr.*') || in_array($feature, ['data-aset', 'tambah-aset', 'cetak-qr'], true);
     $masterOpen = request()->routeIs('admin.master.*', 'admin.users.*') || in_array($feature, ['manajemen-user'], true);
+    $pengajuanOpen = request()->routeIs(
+        'admin.pengajuan.*',
+        'admin.realisasi.*'
+    ) || in_array($feature, ['semua-pengajuan', 'realisasi'], true);
 @endphp
 
 <nav class="space-y-1">
@@ -51,6 +55,27 @@
         </div>
     </div>
 
+    {{-- Pengajuan --}}
+    <div class="side-group" x-data="{ open: @js($pengajuanOpen) }" :class="open ? 'border-white/15 bg-white/[0.07]' : ''">
+        <button type="button" @click="open = !open" :aria-expanded="open.toString()" class="side-nav-link w-full cursor-pointer text-left">
+            <i class="w-4 text-xs text-center fas fa-file-signature"></i>
+            <span class="flex-1">Pengajuan</span>
+            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-300 ease-out" :class="open ? 'rotate-180' : ''"></i>
+        </button>
+        <div
+            x-cloak
+            x-show="open"
+            x-transition.opacity.duration.220ms
+            x-transition.scale.origin.top.duration.220ms
+            class="space-y-1 pb-2 pl-9 pr-2 origin-top"
+        >
+            <a href="{{ route('admin.pengajuan.index') }}" class="side-sub-link {{ request()->routeIs('admin.pengajuan.index', 'admin.pengajuan.show') || $feature === 'semua-pengajuan' ? 'active' : '' }}">Semua Pengajuan</a>
+            <a href="{{ route('admin.pengajuan.mine') }}" class="side-sub-link {{ request()->routeIs('admin.pengajuan.mine') ? 'active' : '' }}">Pengajuan Saya</a>
+            <a href="{{ route('admin.pengajuan.create') }}" class="side-sub-link {{ request()->routeIs('admin.pengajuan.create') ? 'active' : '' }}">Buat Pengajuan</a>
+            <a href="{{ route('admin.realisasi.index') }}" class="side-sub-link {{ request()->routeIs('admin.realisasi.*') || $feature === 'realisasi' ? 'active' : '' }}">Realisasi</a>
+        </div>
+    </div>
+
     {{-- FITUR BARU --}}
     <a href="{{ route('admin.scan') }}" class="side-nav-link {{ request()->routeIs('admin.scan', 'admin.scan.action') ? 'active' : '' }}">
         <i class="w-4 text-xs text-center fas fa-qrcode"></i>
@@ -60,21 +85,6 @@
     <a href="{{ route('admin.kerusakan.create') }}" class="side-nav-link {{ request()->routeIs('admin.kerusakan.create') ? 'active' : '' }}">
         <i class="w-4 text-xs text-center fas fa-exclamation-triangle"></i>
         <span>Lapor Kerusakan</span>
-    </a>
-
-    <a href="{{ route('admin.pengajuan.index') }}" class="side-nav-link {{ request()->routeIs('admin.pengajuan.index', 'admin.pengajuan.show') || $feature === 'semua-pengajuan' ? 'active' : '' }}">
-        <i class="w-4 text-xs text-center fas fa-file-signature"></i>
-        <span>Semua Pengajuan</span>
-    </a>
-
-    <a href="{{ route('admin.pengajuan.create') }}" class="side-nav-link {{ request()->routeIs('admin.pengajuan.create') ? 'active' : '' }}">
-        <i class="w-4 text-xs text-center fas fa-plus-circle"></i>
-        <span>Buat Pengajuan</span>
-    </a>
-
-    <a href="{{ route('admin.realisasi.index') }}" class="side-nav-link {{ request()->routeIs('admin.realisasi.*') || $feature === 'realisasi' ? 'active' : '' }}">
-        <i class="w-4 text-xs text-center fas fa-tools"></i>
-        <span>Realisasi</span>
     </a>
 
     <a href="{{ route('admin.laporan.index') }}" class="side-nav-link {{ request()->routeIs('admin.laporan.index') || $feature === 'pelaporan' ? 'active' : '' }}">

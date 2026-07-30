@@ -18,8 +18,8 @@
                 <p class="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-200">Context dari Scan QR</p>
                 <p class="mt-2 text-sm text-slate-700 dark:text-slate-200">
                     Aksi: <span class="font-semibold">{{ str_replace('-', ' ', strtoupper($scanContext['aksi'] ?: '-')) }}</span><br>
-                    Sarana: <span class="font-semibold">{{ $scanContext['kode_aset'] ?: '-' }}</span> - {{ $scanContext['nama_aset'] ?: '-' }}<br>
-                    ID Sarana: {{ $scanContext['aset_id'] ?: '-' }}
+                    Sarana: <span class="font-semibold">{{ $scanContext['kode_sarana'] ?: '-' }}</span> - {{ $scanContext['nama_sarana'] ?: '-' }}<br>
+                    ID Sarana: {{ $scanContext['sarana_id'] ?: '-' }}
                 </p>
             </div>
         @endif

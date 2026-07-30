@@ -73,11 +73,11 @@
                 </select>
             </div>
             <div>
-                <label class="filter-label" for="status_aset">Status</label>
-                <select id="status_aset" name="status_aset" class="filter-control">
+                <label class="filter-label" for="status_sarana">Status</label>
+                <select id="status_sarana" name="status_sarana" class="filter-control">
                     <option value="">Semua status</option>
                     @foreach ($statusList as $status)
-                        <option value="{{ $status }}" @selected($filters['status_aset'] === $status)>{{ $status }}</option>
+                        <option value="{{ $status }}" @selected($filters['status_sarana'] === $status)>{{ $status }}</option>
                     @endforeach
                 </select>
             </div>
@@ -107,11 +107,11 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                        @forelse ($aset as $item)
+                        @forelse ($sarana as $item)
                             <tr class="bg-white/70 transition hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
-                                <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $item->kode_aset }}</td>
+                                <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $item->kode_sarana }}</td>
                                 <td class="px-4 py-3">
-                                    <p class="font-semibold text-slate-700 dark:text-slate-200">{{ $item->nama_aset }}</p>
+                                    <p class="font-semibold text-slate-700 dark:text-slate-200">{{ $item->nama_sarana }}</p>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Tahun {{ $item->tahun_perolehan }}</p>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">{{ $item->kategori?->nama_kategori }}</td>
@@ -125,8 +125,8 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->status_aset === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
-                                        {{ $item->status_aset }}
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->status_sarana === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
+                                        {{ $item->status_sarana }}
                                     </span>
                                 </td>
                             </tr>
@@ -143,7 +143,7 @@
         </div>
 
         <div class="mt-4">
-            {{ $aset->links() }}
+            {{ $sarana->links() }}
         </div>
     </section>
 </x-layouts.sbadmin>

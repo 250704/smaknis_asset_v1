@@ -7,13 +7,13 @@
         <a href="{{ $scanRoute ?? route('guru.scan') }}" class="btn-secondary">Kembali</a>
     </div>
 
-    @if ($aset)
+    @if ($sarana)
         <div class="panel mb-5 border border-cyan-200 bg-cyan-50/70 dark:border-cyan-400/30 dark:bg-cyan-500/10">
             <h2 class="text-sm font-semibold text-cyan-800 dark:text-cyan-200">Sarana dari hasil scan</h2>
             <div class="mt-2 grid gap-2 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-2">
-                <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode</span><br>{{ $aset->kode_aset }}</div>
-                <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama</span><br>{{ $aset->nama_aset }}</div>
-                <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Lokasi</span><br>{{ $aset->ruangan?->nama_ruangan }} - {{ $aset->ruangan?->gedung?->nama_gedung }}</div>
+                <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode</span><br>{{ $sarana->kode_sarana }}</div>
+                <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama</span><br>{{ $sarana->nama_sarana }}</div>
+                <div><span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Lokasi</span><br>{{ $sarana->ruangan?->nama_ruangan }} - {{ $sarana->ruangan?->gedung?->nama_gedung }}</div>
             </div>
         </div>
     @endif
@@ -65,34 +65,34 @@
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Pilih Sarana yang Dilaporkan</label>
             <select
-                id="aset-select"
-                name="aset_id"
+                id="sarana-select"
+                name="sarana_id"
                 class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                 required
             >
                 <option value="">-- Pilih sarana --</option>
-                @foreach (($asetList ?? collect()) as $asetItem)
+                @foreach (($saranaList ?? collect()) as $saranaItem)
                     <option
-                        value="{{ $asetItem->id }}"
-                        @selected((string) old('aset_id', $aset?->id) === (string) $asetItem->id)
-                        data-kode="{{ $asetItem->kode_aset }}"
-                        data-nama="{{ $asetItem->nama_aset }}"
-                        data-gedung="{{ $asetItem->ruangan?->gedung?->id }}"
-                        data-ruangan="{{ $asetItem->ruangan?->id }}"
-                        data-kategori="{{ $asetItem->kategori?->id }}"
-                        data-lokasi="{{ $asetItem->ruangan?->nama_ruangan }} - {{ $asetItem->ruangan?->gedung?->nama_gedung }}"
+                        value="{{ $saranaItem->id }}"
+                        @selected((string) old('sarana_id', $sarana?->id) === (string) $saranaItem->id)
+                        data-kode="{{ $saranaItem->kode_sarana }}"
+                        data-nama="{{ $saranaItem->nama_sarana }}"
+                        data-gedung="{{ $saranaItem->ruangan?->gedung?->id }}"
+                        data-ruangan="{{ $saranaItem->ruangan?->id }}"
+                        data-kategori="{{ $saranaItem->kategori?->id }}"
+                        data-lokasi="{{ $saranaItem->ruangan?->nama_ruangan }} - {{ $saranaItem->ruangan?->gedung?->nama_gedung }}"
                     >
-                        {{ $asetItem->kode_aset }} - {{ $asetItem->nama_aset }} ({{ $asetItem->ruangan?->nama_ruangan }} - {{ $asetItem->ruangan?->gedung?->nama_gedung }}) - {{ $asetItem->kategori?->nama_kategori }}
+                        {{ $saranaItem->kode_sarana }} - {{ $saranaItem->nama_sarana }} ({{ $saranaItem->ruangan?->nama_ruangan }} - {{ $saranaItem->ruangan?->gedung?->nama_gedung }}) - {{ $saranaItem->kategori?->nama_kategori }}
                     </option>
                 @endforeach
             </select>
-            @error('aset_id')
+            @error('sarana_id')
                 <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
             @enderror
-            <div id="aset-preview" class="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
-                <p><span class="font-semibold text-slate-500 dark:text-slate-400">Kode:</span> <span id="preview-kode">{{ $aset?->kode_aset ?? '-' }}</span></p>
-                <p class="mt-1"><span class="font-semibold text-slate-500 dark:text-slate-400">Nama:</span> <span id="preview-nama">{{ $aset?->nama_aset ?? '-' }}</span></p>
-                <p class="mt-1"><span class="font-semibold text-slate-500 dark:text-slate-400">Lokasi:</span> <span id="preview-lokasi">{{ $aset?->ruangan?->nama_ruangan }} - {{ $aset?->ruangan?->gedung?->nama_gedung }}</span></p>
+            <div id="sarana-preview" class="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+                <p><span class="font-semibold text-slate-500 dark:text-slate-400">Kode:</span> <span id="preview-kode">{{ $sarana?->kode_sarana ?? '-' }}</span></p>
+                <p class="mt-1"><span class="font-semibold text-slate-500 dark:text-slate-400">Nama:</span> <span id="preview-nama">{{ $sarana?->nama_sarana ?? '-' }}</span></p>
+                <p class="mt-1"><span class="font-semibold text-slate-500 dark:text-slate-400">Lokasi:</span> <span id="preview-lokasi">{{ $sarana?->ruangan?->nama_ruangan }} - {{ $sarana?->ruangan?->gedung?->nama_gedung }}</span></p>
             </div>
         </div>
 
@@ -148,7 +148,7 @@
 
     <script>
         (function () {
-            const select = document.getElementById('aset-select');
+            const select = document.getElementById('sarana-select');
             const gedungSelect = document.getElementById('filter-gedung');
             const ruanganSelect = document.getElementById('filter-ruangan');
             const kategoriSelect = document.getElementById('filter-kategori');
@@ -186,7 +186,7 @@
                 }
             }
 
-            function applyAsetFilter() {
+            function applysaranaFilter() {
                 if (!select) return;
                 const selectedGedung = gedungSelect?.value || '';
                 const selectedRuangan = ruanganSelect?.value || '';
@@ -231,7 +231,7 @@
                 if (lokasiEl) lokasiEl.textContent = selected.getAttribute('data-lokasi') || '-';
             }
 
-            function syncFilterFromSelectedAset() {
+            function syncFilterFromSelectedsarana() {
                 if (!select) return;
                 const selected = select.options[select.selectedIndex];
                 if (!selected || !selected.value) {
@@ -248,31 +248,31 @@
                 if (kategoriSelect) {
                     kategoriSelect.value = selected.getAttribute('data-kategori') || '';
                 }
-                applyAsetFilter();
+                applysaranaFilter();
                 select.value = selected.value;
             }
 
             gedungSelect?.addEventListener('change', function () {
                 applyRuanganFilter();
-                applyAsetFilter();
+                applysaranaFilter();
                 updatePreview();
             });
             ruanganSelect?.addEventListener('change', function () {
-                applyAsetFilter();
+                applysaranaFilter();
                 updatePreview();
             });
             kategoriSelect?.addEventListener('change', function () {
-                applyAsetFilter();
+                applysaranaFilter();
                 updatePreview();
             });
             select?.addEventListener('change', function () {
-                syncFilterFromSelectedAset();
+                syncFilterFromSelectedsarana();
                 updatePreview();
             });
 
-            syncFilterFromSelectedAset();
+            syncFilterFromSelectedsarana();
             applyRuanganFilter();
-            applyAsetFilter();
+            applysaranaFilter();
             updatePreview();
         })();
     </script>

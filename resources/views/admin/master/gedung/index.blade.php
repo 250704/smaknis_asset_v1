@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="page-title">Master Gedung</h1>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Daftar data gedung untuk struktur lokasi aset.</p>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Daftar data gedung untuk struktur lokasi sarana.</p>
             </div>
             <button type="button" @click="modalOpen = true" class="btn-primary">
                 <i class="mr-2 text-xs fas fa-plus"></i>

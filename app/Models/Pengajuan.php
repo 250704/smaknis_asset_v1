@@ -20,12 +20,10 @@ class Pengajuan extends Model
     public const STATUS_DISETUJUI_KEPSEK = 'DISETUJUI_KEPSEK';
     public const STATUS_DITOLAK = 'DITOLAK';
     public const STATUS_DIPROSES = 'DIPROSES';
-    public const STATUS_MENUNGGU_VERIFIKASI_TEKNIS = 'MENUNGGU_VERIFIKASI_TEKNIS';
-    public const STATUS_MENUNGGU_VERIFIKASI_KEUANGAN = 'MENUNGGU_VERIFIKASI_KEUANGAN';
     public const STATUS_SELESAI = 'SELESAI';
 
     protected $fillable = [
-        'aset_id',
+        'sarana_id',
         'user_id',
         'judul_pengajuan',
         'jenis_pengajuan',
@@ -44,9 +42,9 @@ class Pengajuan extends Model
         ];
     }
 
-    public function aset(): BelongsTo
+    public function sarana(): BelongsTo
     {
-        return $this->belongsTo(Aset::class);
+        return $this->belongsTo(Sarana::class, 'sarana_id');
     }
 
     public function user(): BelongsTo

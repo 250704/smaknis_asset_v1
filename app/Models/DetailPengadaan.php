@@ -14,7 +14,7 @@ class DetailPengadaan extends Model
 
     protected $fillable = [
         'pengajuan_id',
-        'nama_aset_rencana',
+        'nama_sarana_rencana',
         'kategori_id',
         'ruangan_id',
         'jumlah',
@@ -29,7 +29,7 @@ class DetailPengadaan extends Model
 
     public function kategori(): BelongsTo
     {
-        return $this->belongsTo(KategoriAset::class, 'kategori_id');
+        return $this->belongsTo(KategoriSarana::class, 'kategori_id');
     }
 
     public function ruangan(): BelongsTo

@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Aset;
+use App\Models\Sarana;
 use App\Models\Pengajuan;
 use App\Models\Penggantian;
 use App\Models\Perawatan;
-use App\Models\RiwayatKondisiAset;
+use App\Models\RiwayatKondisiSarana;
 use Illuminate\Support\Facades\Storage;
 
 class StorageCleanupService
@@ -71,11 +71,11 @@ class StorageCleanupService
     {
         $used = [];
 
-        foreach (Aset::withTrashed()->select(['foto_aset'])->cursor() as $asset) {
-            $this->registerPath($used, $asset->foto_aset ?? null);
+        foreach (Sarana::withTrashed()->select(['foto_sarana'])->cursor() as $asset) {
+            $this->registerPath($used, $asset->foto_sarana ?? null);
         }
 
-        foreach (RiwayatKondisiAset::query()->select(['foto_kerusakan'])->cursor() as $riwayat) {
+        foreach (RiwayatKondisiSarana::query()->select(['foto_kerusakan'])->cursor() as $riwayat) {
             $this->registerPath($used, $riwayat->foto_kerusakan ?? null);
         }
 
@@ -84,8 +84,8 @@ class StorageCleanupService
             $this->registerPath($used, $perawatan->foto_bukti ?? null);
         }
 
-        foreach (Penggantian::query()->select(['foto_aset_baru', 'foto_bukti'])->cursor() as $penggantian) {
-            $this->registerPath($used, $penggantian->foto_aset_baru ?? null);
+        foreach (Penggantian::query()->select(['foto_sarana_baru', 'foto_bukti'])->cursor() as $penggantian) {
+            $this->registerPath($used, $penggantian->foto_sarana_baru ?? null);
             $this->registerPath($used, $penggantian->foto_bukti ?? null);
         }
 

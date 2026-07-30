@@ -36,23 +36,23 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->intended(route('admin.dashboard'));
         }
 
         if ($user->hasRole('guru')) {
-            return redirect()->route('guru.dashboard');
+            return redirect()->intended(route('guru.dashboard'));
         }
 
         if ($user->hasRole('kepala_sarana')) {
-            return redirect()->route('kepala_sarana.dashboard');
+            return redirect()->intended(route('kepala_sarana.dashboard'));
         }
 
         if ($user->hasRole('bendahara')) {
-            return redirect()->route('bendahara.dashboard');
+            return redirect()->intended(route('bendahara.dashboard'));
         }
 
         if ($user->hasRole('kepala_sekolah')) {
-            return redirect()->route('kepala_sekolah.dashboard');
+            return redirect()->intended(route('kepala_sekolah.dashboard'));
         }
 
         auth()->logout();

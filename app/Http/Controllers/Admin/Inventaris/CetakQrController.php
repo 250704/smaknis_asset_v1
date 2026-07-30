@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin\Inventaris;
 
 use App\Http\Controllers\Controller;
-use App\Models\Aset;
+use App\Models\Sarana;
 use App\Models\Gedung;
-use App\Models\KategoriAset;
+use App\Models\KategoriSarana;
 use App\Models\Ruangan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,38 +19,38 @@ class CetakQrController extends Controller
             'kategori_id' => $request->query('kategori_id'),
             'gedung_id' => $request->query('gedung_id'),
             'ruangan_id' => $request->query('ruangan_id'),
-            'status_aset' => $request->query('status_aset'),
+            'status_sarana' => $request->query('status_sarana'),
         ];
 
-        $aset = Aset::query()
+        $sarana = Sarana::query()
             ->with(['kategori', 'ruangan.gedung'])
             ->when($filters['q'] !== '', function ($query) use ($filters) {
                 $query->where(function ($q) use ($filters) {
-                    $q->where('kode_aset', 'like', "%{$filters['q']}%")
-                        ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
+                    $q->where('kode_sarana', 'like', "%{$filters['q']}%")
+                        ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
                 });
             })
             ->when($filters['kategori_id'], fn ($query, $kategoriId) => $query->where('kategori_id', $kategoriId))
             ->when($filters['ruangan_id'], fn ($query, $ruanganId) => $query->where('ruangan_id', $ruanganId))
-            ->when($filters['status_aset'], fn ($query, $status) => $query->where('status_aset', $status))
+            ->when($filters['status_sarana'], fn ($query, $status) => $query->where('status_sarana', $status))
             ->when($filters['gedung_id'], function ($query, $gedungId) {
                 $query->whereHas('ruangan', fn ($ruanganQuery) => $ruanganQuery->where('gedung_id', $gedungId));
             })
-            ->orderBy('kode_aset')
+            ->orderBy('kode_sarana')
             ->paginate(24)
             ->withQueryString();
 
         return view('admin.cetak_qr.index', [
-            'aset' => $aset,
+            'sarana' => $sarana,
             'filters' => $filters,
-            'kategoriList' => KategoriAset::query()->orderBy('nama_kategori')->get(),
+            'kategoriList' => KategoriSarana::query()->orderBy('nama_kategori')->get(),
             'gedungList' => Gedung::query()->orderBy('nama_gedung')->get(),
             'ruanganList' => Ruangan::query()
                 ->with('gedung')
                 ->when($filters['gedung_id'], fn ($query, $gedungId) => $query->where('gedung_id', $gedungId))
                 ->orderBy('nama_ruangan')
                 ->get(),
-            'statusList' => Aset::STATUS_LIST,
+            'statusList' => Sarana::STATUS_LIST,
         ]);
     }
 }

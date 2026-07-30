@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\ApprovalPengajuan;
-use App\Models\Aset;
+use App\Models\Sarana;
 use App\Models\Gedung;
-use App\Models\KategoriAset;
+use App\Models\KategoriSarana;
 use App\Models\Notifikasi;
 use App\Models\Pengajuan;
-use App\Models\RiwayatKondisiAset;
+use App\Models\RiwayatKondisiSarana;
 use App\Models\Ruangan;
 use App\Models\User;
 use App\Services\WhatsAppNotificationService;
@@ -32,29 +32,29 @@ class KerusakanController extends Controller
     {
         abort_unless(in_array($role, self::ALLOWED_REPORTER_ROLES, true), 404);
 
-        $kodeAset = trim((string) $request->query('kode_aset', ''));
-        $aset = null;
-        if ($kodeAset !== '') {
-            $aset = Aset::query()
+        $kodeSarana = trim((string) $request->query('kode_sarana', ''));
+        $sarana = null;
+        if ($kodeSarana !== '') {
+            $sarana = Sarana::query()
                 ->with(['ruangan.gedung'])
-                ->where('kode_aset', $kodeAset)
+                ->where('kode_sarana', $kodeSarana)
                 ->first();
         }
 
-        $asetList = Aset::query()
+        $saranaList = Sarana::query()
             ->with(['kategori', 'ruangan.gedung'])
-            ->where('status_aset', 'AKTIF')
-            ->orderBy('kode_aset')
-            ->get();
+            ->where('status_sarana', 'AKTIF')
+            ->orderBy('kode_sarana')
+            ->get(['*']);
 
-        $gedungList = Gedung::query()->orderBy('nama_gedung')->get();
-        $ruanganList = Ruangan::query()->with('gedung')->orderBy('nama_ruangan')->get();
-        $kategoriList = KategoriAset::query()->orderBy('nama_kategori')->get();
+        $gedungList = Gedung::query()->orderBy('nama_gedung')->get(['*']);
+        $ruanganList = Ruangan::query()->with('gedung')->orderBy('nama_ruangan')->get(['*']);
+        $kategoriList = KategoriSarana::query()->orderBy('nama_kategori')->get(['*']);
 
         return view('guru.kerusakan.create', [
-            'kodeAset' => $kodeAset,
-            'aset' => $aset,
-            'asetList' => $asetList,
+            'kodeSarana' => $kodeSarana,
+            'sarana' => $sarana,
+            'saranaList' => $saranaList,
             'gedungList' => $gedungList,
             'ruanganList' => $ruanganList,
             'kategoriList' => $kategoriList,
@@ -69,35 +69,35 @@ class KerusakanController extends Controller
         abort_unless(in_array($role, self::ALLOWED_REPORTER_ROLES, true), 404);
 
         $validated = $request->validate([
-            'aset_id' => ['required', 'integer', 'exists:aset,id'],
+            'sarana_id' => ['required', 'integer', 'exists:sarana,id'],
             'tingkat_kerusakan' => ['required', Rule::in(self::KONDISI_LIST)],
             'deskripsi' => ['required', 'string', 'max:1000'],
             'foto_kerusakan' => ['required', 'image', 'max:4096'],
         ]);
 
-        $aset = Aset::query()->find($validated['aset_id']);
-        if (!$aset) {
+        $sarana = Sarana::query()->find($validated['sarana_id']);
+        if (!$sarana) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors(['aset_id' => 'Aset tidak ditemukan.']);
+                ->withErrors(['sarana_id' => 'Sarana tidak ditemukan.']);
         }
 
-        $alreadyReported = RiwayatKondisiAset::query()
-            ->where('aset_id', $aset->id)
+        $alreadyReported = RiwayatKondisiSarana::query()
+            ->where('sarana_id', $sarana->id)
             ->whereIn('status', self::ACTIVE_STATUS)
             ->exists();
         if ($alreadyReported) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors(['aset_id' => 'Aset ini sudah memiliki laporan aktif yang sedang diproses.']);
+                ->withErrors(['sarana_id' => 'Sarana ini sudah memiliki laporan aktif yang sedang diproses.']);
         }
 
         $path = $this->storeMediaFile($request->file('foto_kerusakan'), 'kerusakan', 'public');
 
-        $riwayat = RiwayatKondisiAset::query()->create([
-            'aset_id' => $aset->id,
+        $riwayat = RiwayatKondisiSarana::query()->create([
+            'sarana_id' => $sarana->id,
             'user_id' => $request->user()->id,
             'tingkat_kerusakan' => $validated['tingkat_kerusakan'],
             'deskripsi' => $validated['deskripsi'],
@@ -128,29 +128,22 @@ class KerusakanController extends Controller
     public function kepalaSaranaIndex(Request $request): View
     {
         $currentUser = $request->user();
-        $forKepalaSekolah = $currentUser && $currentUser->hasRole('kepala_sekolah');
+        abort_unless($currentUser && $currentUser->hasRole('kepala_sarana'), 403);
 
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'status' => (string) $request->query('status', ''),
         ];
 
-        $riwayat = RiwayatKondisiAset::query()
-            ->with(['aset.ruangan.gedung', 'user'])
-            ->when($forKepalaSekolah, function ($query) {
-                $query->where('status', 'DILAPORKAN')
-                    ->whereHas('user', function ($userQuery) {
-                        $userQuery->where('role', 'kepala_sarana')
-                            ->orWhereHas('roleRelation', fn ($roleQuery) => $roleQuery->where('nama_role', 'kepala_sarana'));
-                    });
-            })
+        $riwayat = RiwayatKondisiSarana::query()
+            ->with(['sarana.ruangan.gedung', 'user'])
             ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->whereHas('aset', function ($asetQuery) use ($filters) {
-                    $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                        ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
+                $query->whereHas('sarana', function ($saranaQuery) use ($filters) {
+                    $saranaQuery->where('kode_sarana', 'like', "%{$filters['q']}%")
+                        ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
                 });
             })
-            ->when(in_array($filters['status'], self::STATUS_LIST, true), fn ($query) => $query->where('status', $filters['status']))
+            ->when(in_array($filters['status'], self::STATUS_LIST, true), fn($query) => $query->where('status', $filters['status']))
             ->latest()
             ->paginate(12)
             ->withQueryString();
@@ -163,12 +156,10 @@ class KerusakanController extends Controller
         ]);
     }
 
-    public function validateKerusakan(Request $request, RiwayatKondisiAset $riwayat): RedirectResponse
+    public function validateKerusakan(Request $request, RiwayatKondisiSarana $riwayat): RedirectResponse
     {
         $validatorUser = $request->user();
-        $reportedByKepalaSarana = (bool) ($riwayat->user?->hasRole('kepala_sarana'));
-        $requiredValidatorRole = $reportedByKepalaSarana ? 'bendahara' : 'kepala_sarana';
-        if (!$validatorUser || !$validatorUser->hasRole($requiredValidatorRole)) {
+        if (!$validatorUser || !$validatorUser->hasRole('kepala_sarana')) {
             abort(403);
         }
 
@@ -210,33 +201,31 @@ class KerusakanController extends Controller
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $aset = $riwayat->aset;
-        if (!$aset) {
+        $sarana = $riwayat->sarana;
+        if (!$sarana) {
             return redirect()
                 ->back()
-                ->with('error', 'Aset tidak ditemukan.');
+                ->with('error', 'Sarana tidak ditemukan.');
         }
 
         $existing = Pengajuan::query()
-            ->where('aset_id', $aset->id)
+            ->where('sarana_id', $sarana->id)
             ->whereIn('status_pengajuan', [
                 Pengajuan::STATUS_DIAJUKAN,
                 Pengajuan::STATUS_DISETUJUI_KASARANA,
                 Pengajuan::STATUS_DISETUJUI_BENDAHARA,
                 Pengajuan::STATUS_DISETUJUI_KEPSEK,
                 Pengajuan::STATUS_DIPROSES,
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
             ])
             ->exists();
         if ($existing) {
             return redirect()
                 ->back()
-                ->with('error', 'Sudah ada pengajuan aktif untuk aset ini.');
+                ->with('error', 'Sudah ada pengajuan aktif untuk sarana ini.');
         }
 
         $createdPengajuan = null;
-        DB::transaction(function () use ($request, $riwayat, $aset, $validated, $requiredValidatorRole, &$createdPengajuan) {
+        DB::transaction(function () use ($request, $riwayat, $sarana, $validated, &$createdPengajuan) {
             $riwayat->update([
                 'tingkat_kerusakan' => $validated['tingkat_kerusakan'],
                 'status' => 'DIVALIDASI',
@@ -246,21 +235,18 @@ class KerusakanController extends Controller
                 'catatan_validasi' => $validated['catatan'] ?? null,
             ]);
 
-            $aset->update([
+            $sarana->update([
                 'kondisi_terkini' => $validated['tingkat_kerusakan'],
             ]);
 
             $jenisPengajuan = $validated['rekomendasi_tindakan'];
-            $initialPengajuanStatus = $requiredValidatorRole === 'bendahara'
-                ? Pengajuan::STATUS_DISETUJUI_BENDAHARA
-                : Pengajuan::STATUS_DISETUJUI_KASARANA;
+            $initialPengajuanStatus = Pengajuan::STATUS_DISETUJUI_KASARANA;
 
-            // Buat pengajuan otomatis dari hasil validasi kerusakan.
-            // Jika laporan berasal dari Kepala Sarana, alurnya masuk ke Bendahara dulu lalu Kepala Sekolah.
+            // Buat pengajuan otomatis dari hasil validasi kerusakan oleh Kepala Sarana.
             $pengajuan = Pengajuan::query()->create([
-                'aset_id' => $aset->id,
+                'sarana_id' => $sarana->id,
                 'user_id' => $request->user()->id,
-                'judul_pengajuan' => ($jenisPengajuan === 'PENGGANTIAN' ? 'Penggantian' : 'Perawatan') . " Aset {$aset->kode_aset}",
+                'judul_pengajuan' => ($jenisPengajuan === 'PENGGANTIAN' ? 'Penggantian' : 'Perawatan') . " Sarana {$sarana->kode_sarana}",
                 'jenis_pengajuan' => $jenisPengajuan,
                 'deskripsi' => $riwayat->deskripsi,
                 'estimasi_biaya' => $validated['estimasi_biaya'],
@@ -268,30 +254,18 @@ class KerusakanController extends Controller
                 'status_pengajuan' => $initialPengajuanStatus,
             ]);
 
-            // Simpan jejak approval sesuai validator yang memproses kerusakan.
-            if ($requiredValidatorRole === 'kepala_sarana') {
-                ApprovalPengajuan::query()->create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'approver_id' => $request->user()->id,
-                    'role_approval' => ApprovalPengajuan::ROLE_KASARANA,
-                    'status' => ApprovalPengajuan::STATUS_DISETUJUI,
-                    'catatan' => $validated['catatan'] ?? null,
-                    'approved_at' => now(),
-                ]);
-            } else {
-                ApprovalPengajuan::query()->create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'approver_id' => $request->user()->id,
-                    'role_approval' => ApprovalPengajuan::ROLE_BENDAHARA,
-                    'status' => ApprovalPengajuan::STATUS_DISETUJUI,
-                    'catatan' => $validated['catatan'] ?? null,
-                    'approved_at' => now(),
-                ]);
-            }
+            ApprovalPengajuan::query()->create([
+                'pengajuan_id' => $pengajuan->id,
+                'approver_id' => $request->user()->id,
+                'role_approval' => ApprovalPengajuan::ROLE_KASARANA,
+                'status' => ApprovalPengajuan::STATUS_DISETUJUI,
+                'catatan' => $validated['catatan'] ?? null,
+                'approved_at' => now(),
+            ]);
 
             $createdPengajuan = $pengajuan;
         });
-        $this->cleanupKerusakanTrackingNotifications((string) $aset->kode_aset);
+        $this->cleanupKerusakanTrackingNotifications((string) $sarana->kode_sarana);
         if ($createdPengajuan) {
             $this->broadcastPengajuanTrackingFromKerusakan(
                 $createdPengajuan,
@@ -317,33 +291,31 @@ class KerusakanController extends Controller
             'status' => (string) $request->query('status', 'DITINDAKLANJUTI'),
         ];
 
-        $riwayat = RiwayatKondisiAset::query()
-            ->with(['aset.ruangan.gedung', 'user'])
+        $riwayat = RiwayatKondisiSarana::query()
+            ->with(['sarana.ruangan.gedung', 'user'])
             ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->whereHas('aset', function ($asetQuery) use ($filters) {
-                    $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                        ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
+                $query->whereHas('sarana', function ($saranaQuery) use ($filters) {
+                    $saranaQuery->where('kode_sarana', 'like', "%{$filters['q']}%")
+                        ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
                 });
             })
-            ->when(in_array($filters['status'], self::STATUS_LIST, true), fn ($query) => $query->where('status', $filters['status']))
+            ->when(in_array($filters['status'], self::STATUS_LIST, true), fn($query) => $query->where('status', $filters['status']))
             ->latest()
             ->paginate(12)
             ->withQueryString();
 
-        $asetIds = $riwayat->pluck('aset_id')->filter()->unique()->values()->all();
+        $saranaIds = $riwayat->pluck('sarana_id')->filter()->unique()->values()->all();
         $pengajuanMap = Pengajuan::query()
-            ->whereIn('aset_id', $asetIds)
+            ->whereIn('sarana_id', $saranaIds)
             ->whereIn('status_pengajuan', [
                 Pengajuan::STATUS_DIAJUKAN,
                 Pengajuan::STATUS_DISETUJUI_KASARANA,
                 Pengajuan::STATUS_DISETUJUI_BENDAHARA,
                 Pengajuan::STATUS_DISETUJUI_KEPSEK,
                 Pengajuan::STATUS_DIPROSES,
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
             ])
-            ->get()
-            ->groupBy('aset_id');
+            ->get(['*'])
+            ->groupBy('sarana_id');
 
         return view('kepala_sarana.kerusakan.realisasi', [
             'riwayat' => $riwayat,
@@ -351,199 +323,6 @@ class KerusakanController extends Controller
             'statusList' => self::STATUS_LIST,
             'pengajuanMap' => $pengajuanMap,
         ]);
-    }
-
-    public function kepalaSaranaSemuaProses(Request $request): View
-    {
-        $user = $request->user();
-        if (!$user || !$user->hasRole('kepala_sarana')) {
-            abort(403);
-        }
-
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'status' => strtoupper(trim((string) $request->query('status', ''))),
-            'jenis' => strtoupper(trim((string) $request->query('jenis', ''))),
-        ];
-
-        $latestPengajuanIds = Pengajuan::query()
-            ->selectRaw('MAX(id)')
-            ->whereNotNull('aset_id')
-            ->groupBy('aset_id');
-
-        $latestKerusakanIds = RiwayatKondisiAset::query()
-            ->selectRaw('MAX(id)')
-            ->whereNotNull('aset_id')
-            ->groupBy('aset_id');
-
-        $latestPengajuan = Pengajuan::query()
-            ->with(['aset.ruangan.gedung', 'approvalPengajuan.approver'])
-            ->whereIn('id', $latestPengajuanIds)
-            ->get()
-            ->keyBy('aset_id');
-
-        $latestKerusakan = RiwayatKondisiAset::query()
-            ->with(['aset.ruangan.gedung', 'validator'])
-            ->whereIn('id', $latestKerusakanIds)
-            ->get()
-            ->keyBy('aset_id');
-
-        $asetIds = $latestPengajuan->keys()
-            ->merge($latestKerusakan->keys())
-            ->unique()
-            ->filter()
-            ->values()
-            ->all();
-
-        $asetCollection = Aset::query()
-            ->with(['ruangan.gedung'])
-            ->whereIn('id', $asetIds)
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where(function ($inner) use ($filters) {
-                    $inner->where('kode_aset', 'like', "%{$filters['q']}%")
-                        ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
-                });
-            })
-            ->get();
-
-        $rows = $asetCollection->map(function (Aset $aset) use ($latestPengajuan, $latestKerusakan) {
-            $pengajuan = $latestPengajuan->get($aset->id);
-            $kerusakan = $latestKerusakan->get($aset->id);
-
-            $pengajuanAt = $pengajuan?->updated_at ?? $pengajuan?->created_at;
-            $kerusakanAt = $kerusakan?->updated_at ?? $kerusakan?->created_at;
-
-            $source = null;
-            if ($pengajuanAt && $kerusakanAt) {
-                $source = $pengajuanAt->greaterThanOrEqualTo($kerusakanAt) ? 'PENGAJUAN' : 'KERUSAKAN';
-            } elseif ($pengajuanAt) {
-                $source = 'PENGAJUAN';
-            } elseif ($kerusakanAt) {
-                $source = 'KERUSAKAN';
-            }
-
-            $statusGroup = $this->mapStatusGroup($source, $pengajuan, $kerusakan);
-            $tahap = $this->mapTahapTerakhir($source, $pengajuan, $kerusakan);
-            $jenis = $source === 'PENGAJUAN'
-                ? (string) ($pengajuan?->jenis_pengajuan ?? '-')
-                : 'KERUSAKAN';
-            $latestAt = $source === 'PENGAJUAN' ? $pengajuanAt : $kerusakanAt;
-            $latestApproval = $pengajuan?->approvalPengajuan
-                ?->sortByDesc(fn ($approval) => $approval->approved_at ?? $approval->created_at)
-                ->first();
-
-            $approvalBy = '-';
-            if ($latestApproval) {
-                $approvalBy = ($latestApproval->approver?->display_name ?? '-') . " ({$latestApproval->role_approval})";
-            } elseif ($source === 'KERUSAKAN' && $kerusakan?->validator) {
-                $approvalBy = ($kerusakan->validator->display_name ?? '-') . ' (VALIDASI)';
-            }
-
-            return [
-                'aset_id' => $aset->id,
-                'kode_aset' => $aset->kode_aset,
-                'nama_aset' => $aset->nama_aset,
-                'lokasi' => $aset->ruangan?->nama_ruangan . ' - ' . $aset->ruangan?->gedung?->nama_gedung,
-                'jenis' => $jenis,
-                'status_group' => $statusGroup,
-                'status_label' => $source === 'PENGAJUAN'
-                    ? $this->humanizePengajuanStatus((string) ($pengajuan?->status_pengajuan ?? '-'))
-                    : $this->humanizeKerusakanStatus((string) ($kerusakan?->status ?? '-')),
-                'tahap_terakhir' => $tahap,
-                'approval_terakhir' => $approvalBy,
-                'updated_at' => $latestAt,
-                'detail_url' => $pengajuan
-                    ? route('kepala_sarana.pengajuan.show', $pengajuan)
-                    : route('kepala_sarana.kerusakan.index', ['q' => $aset->kode_aset]),
-            ];
-        });
-
-        $stats = [
-            'menunggu' => $rows->where('status_group', 'MENUNGGU')->count(),
-            'proses' => $rows->where('status_group', 'PROSES')->count(),
-            'selesai' => $rows->where('status_group', 'SELESAI')->count(),
-            'ditolak' => $rows->where('status_group', 'DITOLAK')->count(),
-            'total' => $rows->count(),
-        ];
-
-        $filteredRows = $rows
-            ->when($filters['status'] !== '', fn (Collection $c) => $c->where('status_group', $filters['status']))
-            ->when($filters['jenis'] !== '', fn (Collection $c) => $c->where('jenis', $filters['jenis']))
-            ->sortByDesc(fn (array $item) => $item['updated_at']?->timestamp ?? 0)
-            ->values();
-
-        $perPage = 10;
-        $page = (int) $request->query('page', 1);
-        $total = $filteredRows->count();
-        $items = $filteredRows->forPage($page, $perPage)->values();
-        $monitoring = new LengthAwarePaginator(
-            $items,
-            $total,
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        return view('kepala_sarana.validasi.semua', [
-            'monitoring' => $monitoring,
-            'filters' => $filters,
-            'stats' => $stats,
-        ]);
-    }
-
-    private function mapStatusGroup(?string $source, ?Pengajuan $pengajuan, ?RiwayatKondisiAset $kerusakan): string
-    {
-        if ($source === 'PENGAJUAN' && $pengajuan) {
-            return match ($pengajuan->status_pengajuan) {
-                Pengajuan::STATUS_DITOLAK => 'DITOLAK',
-                Pengajuan::STATUS_SELESAI => 'SELESAI',
-                Pengajuan::STATUS_DIPROSES => 'PROSES',
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS, Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => 'MENUNGGU',
-                default => 'MENUNGGU',
-            };
-        }
-
-        if ($kerusakan) {
-            return match ($kerusakan->status) {
-                'DITOLAK' => 'DITOLAK',
-                'SELESAI' => 'SELESAI',
-                'DITINDAKLANJUTI' => 'PROSES',
-                default => 'MENUNGGU',
-            };
-        }
-
-        return 'MENUNGGU';
-    }
-
-    private function mapTahapTerakhir(?string $source, ?Pengajuan $pengajuan, ?RiwayatKondisiAset $kerusakan): string
-    {
-        if ($source === 'PENGAJUAN' && $pengajuan) {
-            return match ($pengajuan->status_pengajuan) {
-                Pengajuan::STATUS_DIAJUKAN => 'Menunggu Approval Kepala Sarana',
-                Pengajuan::STATUS_DISETUJUI_KASARANA => 'Menunggu Approval Bendahara',
-                Pengajuan::STATUS_DISETUJUI_BENDAHARA => 'Menunggu Approval Kepala Sekolah',
-                Pengajuan::STATUS_DISETUJUI_KEPSEK => 'Menunggu Realisasi',
-                Pengajuan::STATUS_DIPROSES => "{$pengajuan->jenis_pengajuan} sedang diproses",
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS => 'Menunggu verifikasi teknis kepala sarana',
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => 'Menunggu verifikasi keuangan bendahara',
-                Pengajuan::STATUS_SELESAI => "{$pengajuan->jenis_pengajuan} selesai",
-                Pengajuan::STATUS_DITOLAK => "{$pengajuan->jenis_pengajuan} ditolak",
-                default => (string) $pengajuan->status_pengajuan,
-            };
-        }
-
-        if ($kerusakan) {
-            return match ($kerusakan->status) {
-                'DILAPORKAN' => 'Laporan kerusakan masuk',
-                'DIVALIDASI' => 'Sedang validasi kerusakan',
-                'DITINDAKLANJUTI' => 'Kerusakan ditindaklanjuti',
-                'SELESAI' => 'Kerusakan selesai ditangani',
-                'DITOLAK' => 'Laporan kerusakan ditolak',
-                default => (string) $kerusakan->status,
-            };
-        }
-
-        return '-';
     }
 
     private function humanizePengajuanStatus(string $status): string
@@ -554,8 +333,6 @@ class KerusakanController extends Controller
             Pengajuan::STATUS_DISETUJUI_BENDAHARA => 'Menunggu Approval Kepala Sekolah',
             Pengajuan::STATUS_DISETUJUI_KEPSEK => 'Disetujui Final',
             Pengajuan::STATUS_DIPROSES => 'Realisasi Diproses',
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS => 'Menunggu Verifikasi Teknis',
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => 'Menunggu Verifikasi Keuangan',
             Pengajuan::STATUS_SELESAI => 'Selesai',
             Pengajuan::STATUS_DITOLAK => 'Ditolak',
             default => $status,
@@ -595,15 +372,15 @@ class KerusakanController extends Controller
     }
 
     private function broadcastKerusakanTracking(
-        RiwayatKondisiAset $riwayat,
+        RiwayatKondisiSarana $riwayat,
         string $aktivitas,
         ?string $catatan = null,
         ?int $actorUserId = null
     ): void {
-        $riwayat->loadMissing(['aset', 'user']);
+        $riwayat->loadMissing(['sarana', 'user']);
 
         $judul = 'Tracking Kerusakan';
-        $isi = "{$aktivitas}\nAset: {$riwayat->aset?->kode_aset}\nStatus: {$this->kerusakanStatusLabel((string) $riwayat->status)}";
+        $isi = "{$aktivitas}\nSarana: {$riwayat->sarana?->kode_sarana}\nStatus: {$this->kerusakanStatusLabel((string)$riwayat->status)}";
         if ($catatan !== null && trim($catatan) !== '') {
             $isi .= "\n{$catatan}";
         }
@@ -633,7 +410,7 @@ class KerusakanController extends Controller
         }
     }
 
-    private function resolveNextKerusakanRoles(RiwayatKondisiAset $riwayat): array
+    private function resolveNextKerusakanRoles(RiwayatKondisiSarana $riwayat): array
     {
         if ($riwayat->status === 'DILAPORKAN') {
             return $riwayat->user && $riwayat->user->hasRole('kepala_sarana')
@@ -644,16 +421,16 @@ class KerusakanController extends Controller
         return [];
     }
 
-    private function resolveKerusakanUrlByRole(string $role, RiwayatKondisiAset $riwayat): ?string
+    private function resolveKerusakanUrlByRole(string $role, RiwayatKondisiSarana $riwayat): ?string
     {
-        $kodeAset = $riwayat->aset?->kode_aset;
+        $kodeSarana = $riwayat->sarana?->kode_sarana;
 
         return match ($role) {
-            'admin' => route('admin.kerusakan.create', $kodeAset ? ['kode_aset' => $kodeAset] : []),
-            'kepala_sarana' => route('kepala_sarana.kerusakan.index', $kodeAset ? ['q' => $kodeAset] : []),
+            'admin' => route('admin.kerusakan.create', $kodeSarana ? ['kode_sarana' => $kodeSarana] : []),
+            'kepala_sarana' => route('kepala_sarana.pengajuan.approval', $kodeSarana ? ['q' => $kodeSarana] : []),
             // Untuk bendahara, notifikasi kerusakan harus mengarah ke antrean kerja anggaran.
             'bendahara' => route('bendahara.pengajuan.approval'),
-            'kepala_sekolah' => route('kepala_sekolah.kerusakan.index', $kodeAset ? ['q' => $kodeAset] : []),
+            'kepala_sekolah' => route('kepala_sekolah.kerusakan.index', $kodeSarana ? ['q' => $kodeSarana] : []),
             default => null,
         };
     }
@@ -668,64 +445,45 @@ class KerusakanController extends Controller
         $status = $this->pengajuanStatusLabel((string) $pengajuan->status_pengajuan);
         $isi = "Pengajuan dibuat dari validasi kerusakan oleh {$validatorName}.\n" .
             "Judul: {$pengajuan->judul_pengajuan}\n" .
-            "Jenis: {$this->jenisLabel((string) $pengajuan->jenis_pengajuan)}\n" .
+            "Jenis: {$this->jenisLabel((string)$pengajuan->jenis_pengajuan)}\n" .
             "Status: {$status}";
 
         if (trim($catatan) !== '') {
             $isi .= "\nCatatan: {$catatan}";
         }
 
-        $actorId = $actorUserId ?? (auth()->id() ? (int) auth()->id() : null);
-        $excludeUserIds = $actorId ? [$actorId] : [];
-
-        $targetRoles = $this->resolveNextPengajuanRoles($pengajuan);
-        foreach ($targetRoles as $role) {
-            $this->notifyRole(
-                $role,
+        $recipients = $this->resolvePengajuanAudienceUsers($pengajuan);
+        foreach ($recipients as $recipient) {
+            $userId = (int) $recipient->id;
+            $this->notifyUsers(
+                [$userId],
                 $judul,
                 $isi,
-                $this->resolvePengajuanUrlByRole($role, $pengajuan),
-                $excludeUserIds
-            );
-        }
-
-        if ($targetRoles === []) {
-            $this->notifyUser(
-                $pengajuan->user,
-                $judul,
-                $isi,
-                $this->resolvePengajuanUrlForUser($pengajuan->user, $pengajuan),
-                $excludeUserIds
+                $this->resolvePengajuanUrlForUser($recipient, $pengajuan),
+                []
             );
         }
     }
 
-    private function resolveNextPengajuanRoles(Pengajuan $pengajuan): array
+    private function resolvePengajuanAudienceUsers(Pengajuan $pengajuan)
     {
-        return match ((string) $pengajuan->status_pengajuan) {
-            Pengajuan::STATUS_DIAJUKAN => ['kepala_sarana'],
-            Pengajuan::STATUS_DISETUJUI_KASARANA => ['bendahara'],
-            Pengajuan::STATUS_DISETUJUI_BENDAHARA => ['kepala_sekolah'],
-            Pengajuan::STATUS_DISETUJUI_KEPSEK, Pengajuan::STATUS_DIPROSES => ['admin'],
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS => ['kepala_sarana'],
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => ['bendahara'],
-            default => [],
-        };
-    }
+        $roleNames = ['guru', 'admin', 'kepala_sarana', 'bendahara', 'kepala_sekolah'];
 
-    private function resolvePengajuanUrlByRole(string $role, Pengajuan $pengajuan): ?string
-    {
-        if ($role === 'kepala_sekolah' && $pengajuan->status_pengajuan === Pengajuan::STATUS_DISETUJUI_BENDAHARA) {
-            return route('kepala_sekolah.pengajuan.index');
-        }
-
-        return match ($role) {
-            'admin' => route('admin.pengajuan.show', $pengajuan),
-            'kepala_sarana' => route('kepala_sarana.pengajuan.show', $pengajuan),
-            'bendahara' => route('bendahara.pengajuan.approval'),
-            'kepala_sekolah' => route('kepala_sekolah.pengajuan.show', $pengajuan),
-            default => null,
-        };
+        return User::query()
+            ->where(function ($query) use ($roleNames) {
+                $query->whereIn('role', $roleNames)
+                    ->orWhereHas('roleRelation', fn($roleQuery) => $roleQuery->whereIn('nama_role', $roleNames));
+            })
+            ->where(function ($query) {
+                $query->whereNull('status_akun')->orWhere('status_akun', '!=', 'NONAKTIF');
+            })
+            ->get(['*'])
+            ->push($pengajuan->user)
+            ->filter(fn($user) => $user instanceof User)
+            ->unique(function ($user) {
+                return (int) $user->id;
+            })
+            ->values();
     }
 
     private function resolvePengajuanUrlForUser(?User $user, Pengajuan $pengajuan): ?string
@@ -757,15 +515,15 @@ class KerusakanController extends Controller
         return null;
     }
 
-    private function cleanupKerusakanTrackingNotifications(string $kodeAset): void
+    private function cleanupKerusakanTrackingNotifications(string $kodeSarana): void
     {
-        if (trim($kodeAset) === '') {
+        if (trim($kodeSarana) === '') {
             return;
         }
 
         Notifikasi::query()
             ->where('judul', 'like', '%Tracking Kerusakan%')
-            ->where('isi', 'like', "%{$kodeAset}%")
+            ->where('isi', 'like', "%{$kodeSarana}%")
             ->delete();
     }
 
@@ -773,7 +531,7 @@ class KerusakanController extends Controller
     {
         $userIds = User::query()
             ->where(function ($query) use ($role) {
-                $query->whereHas('roleRelation', fn ($roleQuery) => $roleQuery->where('nama_role', $role))
+                $query->whereHas('roleRelation', fn($roleQuery) => $roleQuery->where('nama_role', $role))
                     ->orWhere('role', $role);
             })
             ->where(function ($query) {
@@ -865,7 +623,7 @@ class KerusakanController extends Controller
                 }
             }
 
-            if (preg_match('/AST-[A-Z0-9-]+/i', $isi, $matches) === 1) {
+            if (preg_match('/(?:AST|SRN)-[A-Z0-9-]+/i', $isi, $matches) === 1) {
                 return ['type' => 'pengajuan', 'key' => strtoupper((string) $matches[0])];
             }
 
@@ -873,11 +631,11 @@ class KerusakanController extends Controller
         }
 
         if (str_contains($judul, 'Tracking Kerusakan')) {
-            if (preg_match('/Aset:\\s*([A-Z0-9-]+)/i', $isi, $matches) === 1) {
+            if (preg_match('/Sarana:\\s*([A-Z0-9-]+)/i', $isi, $matches) === 1) {
                 return ['type' => 'kerusakan', 'key' => strtoupper((string) $matches[1])];
             }
 
-            if (preg_match('/AST-[A-Z0-9-]+/i', $isi, $matches) === 1) {
+            if (preg_match('/(?:AST|SRN)-[A-Z0-9-]+/i', $isi, $matches) === 1) {
                 return ['type' => 'kerusakan', 'key' => strtoupper((string) $matches[0])];
             }
         }

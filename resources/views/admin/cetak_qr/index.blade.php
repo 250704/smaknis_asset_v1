@@ -1,12 +1,12 @@
 <x-layouts.sbadmin>
     @php
-        $totalAset = method_exists($aset, 'total') ? $aset->total() : $aset->count();
+        $totalsarana = method_exists($sarana, 'total') ? $sarana->total() : $sarana->count();
         $activeFilterCount = collect([
             $filters['q'] ?? null,
             $filters['gedung_id'] ?? null,
             $filters['ruangan_id'] ?? null,
             $filters['kategori_id'] ?? null,
-            $filters['status_aset'] ?? null,
+            $filters['status_sarana'] ?? null,
         ])->filter(static fn($value) => filled($value))->count();
     @endphp
 
@@ -16,14 +16,14 @@
         {{-- <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola dan cetak label QR untuk sarana sekolah</p> --}}
             <div class="mt-3 flex flex-wrap items-center gap-2">
                 <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200">
-                    {{ number_format($totalAset) }} sarana ditemukan
+                    {{ number_format($totalsarana) }} sarana ditemukan
                 </span>
                 <span id="selected-count-header" class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200">
                     0 sarana terpilih
                 </span>
             </div>
         </div>
-        <a href="{{ route('admin.aset.index') }}" class="btn-secondary">Data Sarana</a>
+        <a href="{{ route('admin.sarana.index') }}" class="btn-secondary">Data Sarana</a>
     </div>
 
     <section class="panel">
@@ -71,11 +71,11 @@
             </div>
 
             <div>
-                <label class="filter-label" for="status_aset">Status</label>
-                <select id="status_aset" name="status_aset" class="filter-control">
+                <label class="filter-label" for="status_sarana">Status</label>
+                <select id="status_sarana" name="status_sarana" class="filter-control">
                     <option value="">Semua status</option>
                     @foreach ($statusList as $status)
-                        <option value="{{ $status }}" @selected((string) $filters['status_aset'] === (string) $status)>{{ $status }}</option>
+                        <option value="{{ $status }}" @selected((string) $filters['status_sarana'] === (string) $status)>{{ $status }}</option>
                     @endforeach
                 </select>
             </div>
@@ -92,7 +92,7 @@
     </section>
 
     <section class="mt-5 pb-24">
-        @if ($aset->isEmpty())
+        @if ($sarana->isEmpty())
             <div class="panel text-sm text-slate-500 dark:text-slate-400">
                 Belum ada data sarana untuk dicetak.
             </div>
@@ -129,22 +129,22 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                                    @foreach ($aset as $item)
+                                    @foreach ($sarana as $item)
                                         <tr
                                             class="qr-row bg-white/70 transition hover:bg-blue-50/70 dark:bg-transparent dark:hover:bg-cyan-500/10"
-                                            data-kode="{{ $item->kode_aset }}"
-                                            data-nama="{{ $item->nama_aset }}"
+                                            data-kode="{{ $item->kode_sarana }}"
+                                            data-nama="{{ $item->nama_sarana }}"
                                             data-lokasi="{{ $item->ruangan?->nama_ruangan }} - {{ $item->ruangan?->gedung?->nama_gedung }}"
                                         >
                                             <td class="px-4 py-3">
                                                 <input type="checkbox" class="qr-select h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/40">
                                             </td>
-                                            <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $item->kode_aset }}</td>
-                                            <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ $item->nama_aset }}</td>
+                                            <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $item->kode_sarana }}</td>
+                                            <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ $item->nama_sarana }}</td>
                                             <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $item->ruangan?->nama_ruangan }} - {{ $item->ruangan?->gedung?->nama_gedung }}</td>
                                             <td class="px-4 py-3">
-                                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->status_aset === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
-                                                    {{ $item->status_aset }}
+                                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->status_sarana === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
+                                                    {{ $item->status_sarana }}
                                                 </span>
                                             </td>
                                         </tr>
@@ -155,16 +155,16 @@
                     </div>
 
                     <div>
-                        {{ $aset->links() }}
+                        {{ $sarana->links() }}
                     </div>
                 </div>
         @endif
     </section>
 
-    @if (!$aset->isEmpty())
+    @if (!$sarana->isEmpty())
         <div id="sticky-action-bar" class="fixed bottom-4 left-1/2 z-40 hidden w-[calc(100%-1.5rem)] max-w-3xl -translate-x-1/2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <span id="selected-count-sticky" class="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200">0 aset terpilih</span>
+                <span id="selected-count-sticky" class="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200">0 sarana terpilih</span>
                 <div class="flex flex-wrap items-center gap-2">
                     <button type="button" id="btn-print-selected-sticky" class="btn-primary cursor-not-allowed opacity-50" disabled>Cetak Terpilih</button>
                     <button type="button" id="btn-clear-sticky" class="btn-secondary">Clear Pilihan</button>

@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Aset;
+use App\Models\Sarana;
 use App\Models\Pengajuan;
 use App\Models\Perawatan;
 use App\Models\Penggantian;
 use App\Models\DetailPengadaan;
 use App\Models\LogAktivitas;
 use App\Models\Ruangan;
-use App\Models\KategoriAset;
+use App\Models\KategoriSarana;
 use App\Models\Gedung;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +21,10 @@ class DashboardController extends Controller
     public function index()
     {
         $summary = Cache::remember('dashboard_admin_summary_v1', now()->addSeconds(45), function () {
-            $totalAset = Aset::count();
+            $totalSarana = Sarana::count();
             $totalRuangan = Ruangan::count();
             $totalGedung = Gedung::count();
-            $totalKategori = KategoriAset::count();
+            $totalKategori = KategoriSarana::count();
 
             $pengajuanStats = Pengajuan::query()
                 ->selectRaw("
@@ -36,7 +36,7 @@ class DashboardController extends Controller
                 ")
                 ->first();
 
-            $asetKondisiStats = Aset::query()
+            $saranaKondisiStats = Sarana::query()
                 ->selectRaw("
                     SUM(CASE WHEN kondisi_terkini = 'BAIK' THEN 1 ELSE 0 END) as baik,
                     SUM(CASE WHEN kondisi_terkini = 'RINGAN' THEN 1 ELSE 0 END) as rusak_ringan,
@@ -64,14 +64,14 @@ class DashboardController extends Controller
             $totalPerawatan = Perawatan::count();
             $totalPenggantian = Penggantian::count();
             $totalPengadaan = DetailPengadaan::count();
-            $nilaiTotalAset = (float) (Aset::sum('harga_perolehan') ?? 0);
+            $nilaiTotalSarana = (float) (Sarana::sum('harga_perolehan') ?? 0);
             $totalEstimasi = (float) (Pengajuan::whereNotNull('estimasi_biaya')->sum('estimasi_biaya') ?? 0);
             $totalAnggaranDisetujui = (float) (Pengajuan::whereNotNull('anggaran_disetujui')->sum('anggaran_disetujui') ?? 0);
             $totalRealisasi = (float) (Pengajuan::whereNotNull('biaya_realisasi')->sum('biaya_realisasi') ?? 0);
             $pengajuanDenganBiaya = Pengajuan::whereNotNull('estimasi_biaya')->count();
 
             return [
-                'totalAset' => $totalAset,
+                'totalSarana' => $totalSarana,
                 'totalRuangan' => $totalRuangan,
                 'totalGedung' => $totalGedung,
                 'totalKategori' => $totalKategori,
@@ -80,15 +80,15 @@ class DashboardController extends Controller
                 'pengajuanDisetujui' => (int) ($pengajuanStats->disetujui ?? 0),
                 'pengajuanDitolak' => (int) ($pengajuanStats->ditolak ?? 0),
                 'pengajuanSelesai' => (int) ($pengajuanStats->selesai ?? 0),
-                'asetBaik' => (int) ($asetKondisiStats->baik ?? 0),
-                'asetRusakRingan' => (int) ($asetKondisiStats->rusak_ringan ?? 0),
-                'asetRusakBerat' => (int) ($asetKondisiStats->rusak_berat ?? 0),
-                'asetHilang' => (int) ($asetKondisiStats->tidak_layak ?? 0),
+                'saranaBaik' => (int) ($saranaKondisiStats->baik ?? 0),
+                'saranaRusakRingan' => (int) ($saranaKondisiStats->rusak_ringan ?? 0),
+                'saranaRusakBerat' => (int) ($saranaKondisiStats->rusak_berat ?? 0),
+                'saranaHilang' => (int) ($saranaKondisiStats->tidak_layak ?? 0),
                 'pengajuanPerBulan' => $pengajuanPerBulan,
                 'totalPerawatan' => $totalPerawatan,
                 'totalPenggantian' => $totalPenggantian,
                 'totalPengadaan' => $totalPengadaan,
-                'nilaiTotalAset' => $nilaiTotalAset,
+                'nilaiTotalSarana' => $nilaiTotalSarana,
                 'totalEstimasi' => $totalEstimasi,
                 'totalAnggaranDisetujui' => $totalAnggaranDisetujui,
                 'totalRealisasi' => $totalRealisasi,
@@ -96,7 +96,7 @@ class DashboardController extends Controller
             ];
         });
 
-        $totalAset = $summary['totalAset'];
+        $totalSarana = $summary['totalSarana'];
         $totalRuangan = $summary['totalRuangan'];
         $totalGedung = $summary['totalGedung'];
         $totalKategori = $summary['totalKategori'];
@@ -105,22 +105,22 @@ class DashboardController extends Controller
         $pengajuanDisetujui = $summary['pengajuanDisetujui'];
         $pengajuanDitolak = $summary['pengajuanDitolak'];
         $pengajuanSelesai = $summary['pengajuanSelesai'];
-        $asetBaik = $summary['asetBaik'];
-        $asetRusakRingan = $summary['asetRusakRingan'];
-        $asetRusakBerat = $summary['asetRusakBerat'];
-        $asetHilang = $summary['asetHilang'];
+        $saranaBaik = $summary['saranaBaik'];
+        $saranaRusakRingan = $summary['saranaRusakRingan'];
+        $saranaRusakBerat = $summary['saranaRusakBerat'];
+        $saranaHilang = $summary['saranaHilang'];
         $pengajuanPerBulan = $summary['pengajuanPerBulan'];
         $totalPerawatan = $summary['totalPerawatan'];
         $totalPenggantian = $summary['totalPenggantian'];
         $totalPengadaan = $summary['totalPengadaan'];
-        $nilaiTotalAset = $summary['nilaiTotalAset'];
+        $nilaiTotalSarana = $summary['nilaiTotalSarana'];
         $totalEstimasi = $summary['totalEstimasi'];
         $totalAnggaranDisetujui = $summary['totalAnggaranDisetujui'];
         $totalRealisasi = $summary['totalRealisasi'];
         $pengajuanDenganBiaya = $summary['pengajuanDenganBiaya'];
 
-        // Data untuk Grafik - Aset per Kategori
-        $asetPerKategori = Aset::select('kategori_id', DB::raw('count(*) as total'))
+        // Data untuk Grafik - Sarana per Kategori
+        $saranaPerKategori = Sarana::select('kategori_id', DB::raw('count(*) as total'))
             ->with('kategori')
             ->groupBy('kategori_id')
             ->get();
@@ -132,13 +132,13 @@ class DashboardController extends Controller
             ->get();
 
         // Pengajuan Terbaru
-        $pengajuanTerbaru = Pengajuan::with(['user', 'aset'])
+        $pengajuanTerbaru = Pengajuan::with(['user', 'sarana'])
             ->latest()
             ->limit(5)
             ->get();
 
-        // Aset per Ruangan (untuk chart)
-        $asetPerRuangan = Aset::select('ruangan_id', DB::raw('count(*) as total'))
+        // Sarana per Ruangan (untuk chart)
+        $saranaPerRuangan = Sarana::select('ruangan_id', DB::raw('count(*) as total'))
             ->with('ruangan')
             ->groupBy('ruangan_id')
             ->orderByDesc('total')
@@ -146,7 +146,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', compact(
-            'totalAset',
+            'totalSarana',
             'totalRuangan',
             'totalGedung',
             'totalKategori',
@@ -155,19 +155,19 @@ class DashboardController extends Controller
             'pengajuanDisetujui',
             'pengajuanDitolak',
             'pengajuanSelesai',
-            'asetBaik',
-            'asetRusakRingan',
-            'asetRusakBerat',
-            'asetHilang',
-            'asetPerKategori',
+            'saranaBaik',
+            'saranaRusakRingan',
+            'saranaRusakBerat',
+            'saranaHilang',
+            'saranaPerKategori',
             'pengajuanPerBulan',
             'aktivitasTerbaru',
             'pengajuanTerbaru',
             'totalPerawatan',
             'totalPenggantian',
             'totalPengadaan',
-            'nilaiTotalAset',
-            'asetPerRuangan',
+            'nilaiTotalSarana',
+            'saranaPerRuangan',
             'totalEstimasi',
             'totalAnggaranDisetujui',
             'totalRealisasi',

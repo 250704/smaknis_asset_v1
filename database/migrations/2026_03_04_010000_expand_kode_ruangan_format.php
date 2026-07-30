@@ -7,7 +7,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE ruangan MODIFY kode_ruangan VARCHAR(20) NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE ruangan MODIFY kode_ruangan VARCHAR(20) NOT NULL');
+        }
 
         $rows = DB::table('ruangan')
             ->join('gedung', 'gedung.id', '=', 'ruangan.gedung_id')
@@ -34,7 +36,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE ruangan DROP INDEX ruangan_kode_ruangan_unique');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE ruangan DROP INDEX ruangan_kode_ruangan_unique');
+        }
 
         $rows = DB::table('ruangan')
             ->select(['id', 'kode_ruangan'])
@@ -51,8 +55,10 @@ return new class extends Migration
                 ->update(['kode_ruangan' => $short]);
         }
 
-        DB::statement('ALTER TABLE ruangan MODIFY kode_ruangan VARCHAR(3) NOT NULL');
-        DB::statement('ALTER TABLE ruangan ADD UNIQUE ruangan_kode_ruangan_unique (kode_ruangan)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE ruangan MODIFY kode_ruangan VARCHAR(3) NOT NULL');
+            DB::statement('ALTER TABLE ruangan ADD UNIQUE ruangan_kode_ruangan_unique (kode_ruangan)');
+        }
     }
 
     private function extractRuanganShortCode(?string $code): string

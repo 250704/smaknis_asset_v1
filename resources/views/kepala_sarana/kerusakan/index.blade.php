@@ -1,9 +1,6 @@
 <x-layouts.sbadmin>
     @php
-        $isKepalaSekolahContext = request()->routeIs('kepala_sekolah.*');
-        $validateRoute = request()->routeIs('kepala_sekolah.*')
-            ? 'kepala_sekolah.kerusakan.validate'
-            : 'kepala_sarana.kerusakan.validate';
+        $validateRoute = 'kepala_sarana.kerusakan.validate';
         $statusLabelMap = [
             'DILAPORKAN' => 'Dilaporkan',
             'DIVALIDASI' => 'Divalidasi',
@@ -22,34 +19,30 @@
         ];
     @endphp
 
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-            <h1 class="page-title">
-                {{ $isKepalaSekolahContext ? 'Validasi Kerusakan (Kepala Sekolah)' : 'Validasi Kerusakan' }}
-            </h1>
+            <h1 class="page-title">Validasi Kerusakan</h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {{ $isKepalaSekolahContext
-                    ? 'Halaman ini khusus validasi laporan kerusakan yang dilaporkan oleh Kepala Sarana.'
-                    : 'Validasi laporan kerusakan ringan/berat/tidak layak dari seluruh pelapor.' }}
+                Validasi laporan kerusakan dari seluruh pelapor dan tentukan tindak lanjut teknisnya.
             </p>
         </div>
     </div>
 
     @if (session('success'))
-        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+        <div class="px-4 py-3 mb-4 text-sm border rounded-xl border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
             {{ session('success') }}
         </div>
     @endif
 
     @if (session('error'))
-        <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
+        <div class="px-4 py-3 mb-4 text-sm border rounded-xl border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
             {{ session('error') }}
         </div>
     @endif
 
     <section class="panel">
         <form method="GET" class="filter-grid">
-            <div class="{{ $isKepalaSekolahContext ? 'xl:col-span-6' : 'xl:col-span-4' }}">
+            <div class="xl:col-span-4">
                 <label class="filter-label" for="q">Pencarian</label>
                 <input
                     type="text"
@@ -60,23 +53,21 @@
                     class="filter-control"
                 >
             </div>
-            @unless ($isKepalaSekolahContext)
-                <div class="xl:col-span-2">
-                    <label class="filter-label" for="status">Status</label>
-                    <select id="status" name="status" class="filter-control">
-                        <option value="">Semua status</option>
-                        @foreach ($statusList as $status)
-                            <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabelMap[$status] ?? $status }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            @endunless
+            <div class="xl:col-span-2">
+                <label class="filter-label" for="status">Status</label>
+                <select id="status" name="status" class="filter-control">
+                    <option value="">Semua status</option>
+                    @foreach ($statusList as $status)
+                        <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabelMap[$status] ?? $status }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="filter-actions">
                 <button type="submit" class="filter-submit">
-                    <i class="fas fa-filter text-xs"></i>Filter
+                    <i class="text-xs fas fa-filter"></i>Filter
                 </button>
                 <a href="{{ url()->current() }}" class="filter-reset">
-                    <i class="fas fa-undo text-xs"></i>Reset
+                    <i class="text-xs fas fa-undo"></i>Reset
                 </a>
             </div>
         </form>
@@ -84,37 +75,34 @@
 
     <section class="mt-5">
         @if ($riwayat->isEmpty())
-            <div class="panel text-sm text-slate-500 dark:text-slate-400">Belum ada laporan kerusakan.</div>
+            <div class="text-sm panel text-slate-500 dark:text-slate-400">Belum ada laporan kerusakan.</div>
         @else
-            <div class="panel overflow-hidden p-0">
+            <div class="p-0 overflow-hidden panel">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
+                    <table class="min-w-full text-sm divide-y divide-slate-200 dark:divide-white/10">
                         <thead class="bg-slate-50 dark:bg-white/[0.04]">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kode</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Sarana</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Pelapor</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Tingkat</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Tanggal</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Aksi</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Kode</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Sarana</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Pelapor</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Tingkat</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Status</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Tanggal</th>
+                                <th class="px-4 py-3 text-xs font-semibold tracking-wide text-left uppercase text-slate-500 dark:text-slate-300">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                             @foreach ($riwayat as $item)
-                                <tr class="bg-white/70 transition hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
+                                <tr class="transition bg-white/70 hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
                                     <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                        {{ $item->aset?->kode_aset ?? '-' }}
+                                        {{ $item->sarana?->kode_sarana ?? '-' }}
                                     </td>
                                     <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
-                                        <p class="font-semibold">{{ $item->aset?->nama_aset }}</p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $item->aset?->ruangan?->nama_ruangan }} - {{ $item->aset?->ruangan?->gedung?->nama_gedung }}</p>
+                                        <p class="font-semibold">{{ $item->sarana?->nama_sarana }}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $item->sarana?->ruangan?->nama_ruangan }} - {{ $item->sarana?->ruangan?->gedung?->nama_gedung }}</p>
                                     </td>
                                     <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
                                         {{ $item->user?->display_name ?? '-' }}
-                                        @if ($isKepalaSekolahContext)
-                                            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Kepala Sarana</p>
-                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
                                         {{ $tingkatLabelMap[$item->tingkat_kerusakan] ?? $item->tingkat_kerusakan }}
@@ -140,12 +128,12 @@
                                             <form method="POST" action="{{ route($validateRoute, $item) }}" class="flex flex-col gap-2">
                                                 @csrf
                                                 <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                                                    <select name="tingkat_kerusakan" class="rounded-lg border-slate-300 bg-white text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
+                                                    <select name="tingkat_kerusakan" class="text-xs bg-white rounded-lg shadow-sm border-slate-300 text-slate-700 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
                                                         @foreach ($kondisiList as $kondisi)
                                                             <option value="{{ $kondisi }}" @selected($item->tingkat_kerusakan === $kondisi)>{{ $kondisi }}</option>
                                                         @endforeach
                                                     </select>
-                                                    <select name="rekomendasi_tindakan" class="rounded-lg border-slate-300 bg-white text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
+                                                    <select name="rekomendasi_tindakan" class="text-xs bg-white rounded-lg shadow-sm border-slate-300 text-slate-700 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40">
                                                         <option value="PERAWATAN" @selected(old('rekomendasi_tindakan', $item->rekomendasi_tindakan ?? 'PERAWATAN') === 'PERAWATAN')>Rekomendasi: Perawatan</option>
                                                         <option value="PENGGANTIAN" @selected(old('rekomendasi_tindakan', $item->rekomendasi_tindakan ?? '') === 'PENGGANTIAN')>Rekomendasi: Penggantian</option>
                                                     </select>
@@ -156,7 +144,7 @@
                                                         min="0"
                                                         value="{{ old('estimasi_biaya') }}"
                                                         placeholder="Estimasi biaya (Rp)"
-                                                        class="rounded-lg border-slate-300 bg-white text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
+                                                        class="text-xs bg-white rounded-lg shadow-sm border-slate-300 text-slate-700 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                                                         required
                                                     >
                                                     <input
@@ -164,7 +152,7 @@
                                                         name="catatan"
                                                         value="{{ old('catatan', $item->catatan_validasi) }}"
                                                         placeholder="Catatan singkat"
-                                                        class="rounded-lg border-slate-300 bg-white text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
+                                                        class="text-xs bg-white rounded-lg shadow-sm border-slate-300 text-slate-700 focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                                                     >
                                                 </div>
                                                 <div class="flex flex-wrap items-center justify-end gap-2">
@@ -188,7 +176,7 @@
                                                         data-confirm-confirm-label="Ya, Validasi"
                                                         data-confirm-variant="success"
                                                     >
-                                                        {{ $isKepalaSekolahContext ? 'Validasi & Ajukan ke Bendahara' : 'Validasi & Ajukan' }}
+                                                        Validasi Teknis & Ajukan
                                                     </button>
                                                 </div>
                                             </form>
@@ -214,7 +202,7 @@
                                             {{ $item->catatan_validasi }}
                                         @endif
                                         @if ($item->foto_kerusakan)
-                                            <a href="{{ asset('storage/' . $item->foto_kerusakan) }}" target="_blank" class="ml-2 inline-flex items-center gap-1 text-cyan-700 hover:underline dark:text-cyan-200">
+                                            <a href="{{ asset('storage/' . $item->foto_kerusakan) }}" target="_blank" class="inline-flex items-center gap-1 ml-2 text-cyan-700 hover:underline dark:text-cyan-200">
                                                 <i class="fas fa-image text-[10px]"></i>
                                                 Lihat Foto
                                             </a>

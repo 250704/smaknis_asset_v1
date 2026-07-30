@@ -19,9 +19,8 @@ class NotifikasiController extends Controller
         if ($user) {
             $this->normalizeLegacyNotificationUrls($user->id, (string) ($user->role_code ?? ''));
             $this->collapseDuplicateTrackingThreads($user->id);
-            // Saat inbox notifikasi dibuka, anggap notifikasi sudah dilihat.
-            $user->notifikasi()->where('is_read', false)->update(['is_read' => true]);
             $this->pruneNotifications($user->id);
+            \Illuminate\Support\Facades\Cache::forget('notif_unread_count:' . $user->id);
         }
 
         $notifikasi = $user
@@ -74,7 +73,27 @@ class NotifikasiController extends Controller
             $notifikasi->url = $targetUrl;
         }
 
+        if (is_string($targetUrl) && preg_match('#/pengajuan/(\d+)#', $targetUrl, $matches) === 1) {
+            $pengajuanId = (int) $matches[1];
+            if (!\App\Models\Pengajuan::query()->where('id', $pengajuanId)->exists()) {
+                $roleCode = (string) ($user->role_code ?? 'guru');
+                $fallbackRoute = match ($roleCode) {
+                    'admin' => route('admin.pengajuan.index'),
+                    'kepala_sarana' => route('kepala_sarana.pengajuan.index'),
+                    'bendahara' => route('bendahara.pengajuan.approval'),
+                    'kepala_sekolah' => route('kepala_sekolah.pengajuan.index'),
+                    default => route('guru.pengajuan.index'),
+                };
+
+                $notifikasi->update(['is_read' => true, 'url' => $fallbackRoute]);
+                \Illuminate\Support\Facades\Cache::forget('notif_unread_count:' . $user->id);
+
+                return redirect($fallbackRoute)->with('info', 'Data pengajuan terkait pada notifikasi ini sudah tidak tersedia atau telah dihapus.');
+            }
+        }
+
         $notifikasi->update(['is_read' => true]);
+        \Illuminate\Support\Facades\Cache::forget('notif_unread_count:' . $user->id);
 
         if ($targetUrl) {
             return redirect($targetUrl);
@@ -88,6 +107,7 @@ class NotifikasiController extends Controller
         $user = $request->user();
         if ($user) {
             $user->notifikasi()->where('is_read', false)->update(['is_read' => true]);
+            \Illuminate\Support\Facades\Cache::forget('notif_unread_count:' . $user->id);
             $this->pruneNotifications($user->id);
         }
 
@@ -116,12 +136,28 @@ class NotifikasiController extends Controller
         Notifikasi::query()
             ->where('user_id', $userId)
             ->where('is_read', true)
-            ->whereNotIn('id', $keepIds)
+            ->whereNotIn('id', $keepIds, 'and')
             ->delete();
     }
 
     private function normalizeLegacyNotificationUrls(int $userId, string $roleCode): void
     {
+        $mutasiUrl = match ($roleCode) {
+            'admin' => route('admin.mutasi.index'),
+            'kepala_sarana' => route('kepala_sarana.mutasi.index'),
+            'bendahara' => route('bendahara.mutasi.index'),
+            'kepala_sekolah' => route('kepala_sekolah.mutasi.index'),
+            default => route('guru.mutasi.index'),
+        };
+
+        Notifikasi::query()
+            ->where('user_id', $userId)
+            ->where('judul', 'like', '%Mutasi%')
+            ->whereNull('url')
+            ->update([
+                'url' => $mutasiUrl,
+            ]);
+
         if ($roleCode === 'bendahara') {
             Notifikasi::query()
                 ->where('user_id', $userId)
@@ -184,7 +220,7 @@ class NotifikasiController extends Controller
             ->get(['id', 'judul', 'isi']);
 
         $latestByThread = [];
-        $pengajuanByAset = [];
+        $pengajuanBySarana = [];
         $deleteIds = [];
 
         foreach ($items as $item) {
@@ -200,18 +236,18 @@ class NotifikasiController extends Controller
 
             $latestByThread[$threadKey] = (int) $item->id;
             if (str_starts_with($threadKey, 'pengajuan:')) {
-                $kodeAset = strtoupper((string) substr($threadKey, strlen('pengajuan:')));
-                if ($kodeAset !== '') {
-                    $pengajuanByAset[$kodeAset] = true;
+                $kodeSarana = strtoupper((string) substr($threadKey, strlen('pengajuan:')));
+                if ($kodeSarana !== '') {
+                    $pengajuanBySarana[$kodeSarana] = true;
                 }
             }
         }
 
-        if ($pengajuanByAset === []) {
+        if ($pengajuanBySarana === []) {
             if ($deleteIds !== []) {
                 Notifikasi::query()
                     ->where('user_id', $userId)
-                    ->whereIn('id', array_values(array_unique($deleteIds)))
+                    ->whereIn('id', array_values(array_unique($deleteIds)), 'and', false)
                     ->delete();
             }
             return;
@@ -223,8 +259,8 @@ class NotifikasiController extends Controller
                 continue;
             }
 
-            $kodeAset = strtoupper((string) substr($threadKey, strlen('kerusakan:')));
-            if ($kodeAset !== '' && isset($pengajuanByAset[$kodeAset])) {
+            $kodeSarana = strtoupper((string) substr($threadKey, strlen('kerusakan:')));
+            if ($kodeSarana !== '' && isset($pengajuanBySarana[$kodeSarana])) {
                 $deleteIds[] = (int) $item->id;
             }
         }
@@ -235,7 +271,7 @@ class NotifikasiController extends Controller
 
         Notifikasi::query()
             ->where('user_id', $userId)
-            ->whereIn('id', array_values(array_unique($deleteIds)))
+            ->whereIn('id', array_values(array_unique($deleteIds)), 'and', false)
             ->delete();
     }
 
@@ -249,9 +285,9 @@ class NotifikasiController extends Controller
         }
 
         if (str_contains($judul, 'Tracking Kerusakan')) {
-            $kodeAset = $this->extractAsetCode($isi);
-            if ($kodeAset !== null) {
-                return 'kerusakan:' . $kodeAset;
+            $kodeSarana = $this->extractSaranaCode($isi);
+            if ($kodeSarana !== null) {
+                return 'kerusakan:' . $kodeSarana;
             }
         }
 
@@ -267,12 +303,12 @@ class NotifikasiController extends Controller
             }
         }
 
-        return $this->extractAsetCode($text);
+        return $this->extractSaranaCode($text);
     }
 
-    private function extractAsetCode(string $text): ?string
+    private function extractSaranaCode(string $text): ?string
     {
-        if (preg_match('/AST-[A-Z0-9-]+/i', $text, $matches) === 1) {
+        if (preg_match('/(?:AST|SRN)-[A-Z0-9-]+/i', $text, $matches) === 1) {
             return strtoupper((string) $matches[0]);
         }
 

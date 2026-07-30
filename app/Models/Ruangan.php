@@ -25,19 +25,19 @@ class Ruangan extends Model
         return $this->belongsTo(Gedung::class);
     }
 
-    public function aset(): HasMany
+    public function sarana(): HasMany
     {
-        return $this->hasMany(Aset::class);
+        return $this->hasMany(Sarana::class, 'ruangan_id');
     }
 
     public function mutasiAsal(): HasMany
     {
-        return $this->hasMany(MutasiAset::class, 'ruangan_asal');
+        return $this->hasMany(MutasiSarana::class, 'ruangan_asal');
     }
 
     public function mutasiTujuan(): HasMany
     {
-        return $this->hasMany(MutasiAset::class, 'ruangan_tujuan');
+        return $this->hasMany(MutasiSarana::class, 'ruangan_tujuan');
     }
 
     public function detailPengadaan(): HasMany

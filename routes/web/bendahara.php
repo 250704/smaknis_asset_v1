@@ -13,7 +13,7 @@ Route::middleware(['auth', 'role:bendahara'])->group(function () {
     Route::get('/bendahara/scan-qr', [ScanQrController::class, 'index'])
         ->defaults('role', 'bendahara')
         ->name('bendahara.scan');
-    Route::get('/bendahara/scan-qr/aksi/{aset}/{action}', [ScanQrController::class, 'quickAction'])
+    Route::get('/bendahara/scan-qr/aksi/{sarana}/{action}', [ScanQrController::class, 'quickAction'])
         ->defaults('role', 'bendahara')
         ->name('bendahara.scan.action');
     Route::get('/bendahara/kerusakan/create', [KerusakanController::class, 'create'])
@@ -35,6 +35,9 @@ Route::middleware(['auth', 'role:bendahara'])->group(function () {
         ->name('bendahara.pengajuan.approval');
     Route::get('/bendahara/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])
         ->defaults('role', 'bendahara')
+        ->missing(function () {
+            return redirect()->route('bendahara.pengajuan.approval')->with('info', 'Data pengajuan tidak ditemukan atau sudah dihapus.');
+        })
         ->name('bendahara.pengajuan.show');
     Route::post('/bendahara/pengajuan/{pengajuan}/approve', [PengajuanController::class, 'approve'])
         ->defaults('role', 'bendahara')
@@ -42,8 +45,10 @@ Route::middleware(['auth', 'role:bendahara'])->group(function () {
     Route::post('/bendahara/pengajuan/{pengajuan}/reject', [PengajuanController::class, 'reject'])
         ->defaults('role', 'bendahara')
         ->name('bendahara.pengajuan.reject');
-    Route::post('/bendahara/pengajuan/{pengajuan}/verifikasi-keuangan', [PengajuanController::class, 'verifikasiKeuangan'])
-        ->name('bendahara.pengajuan.verifikasi-keuangan');
+    Route::get('/bendahara/mutasi', [\App\Http\Controllers\MutasiController::class, 'index'])->name('bendahara.mutasi.index');
+    Route::get('/bendahara/mutasi/create', [\App\Http\Controllers\MutasiController::class, 'create'])->name('bendahara.mutasi.create');
+    Route::post('/bendahara/mutasi', [\App\Http\Controllers\MutasiController::class, 'store'])->name('bendahara.mutasi.store');
+    Route::get('/bendahara/mutasi/{mutasi}', [\App\Http\Controllers\MutasiController::class, 'show'])->name('bendahara.mutasi.show');
     Route::get('/bendahara/notifikasi', [NotifikasiController::class, 'index'])->name('bendahara.notifikasi.index');
     Route::get('/bendahara/laporan', [BlueprintPageController::class, 'laporan'])
         ->defaults('role', 'bendahara')

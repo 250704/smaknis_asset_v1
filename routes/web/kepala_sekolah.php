@@ -13,7 +13,7 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->group(function () {
     Route::get('/kepala_sekolah/scan-qr', [ScanQrController::class, 'index'])
         ->defaults('role', 'kepala_sekolah')
         ->name('kepala_sekolah.scan');
-    Route::get('/kepala_sekolah/scan-qr/aksi/{aset}/{action}', [ScanQrController::class, 'quickAction'])
+    Route::get('/kepala_sekolah/scan-qr/aksi/{sarana}/{action}', [ScanQrController::class, 'quickAction'])
         ->defaults('role', 'kepala_sekolah')
         ->name('kepala_sekolah.scan.action');
     Route::get('/kepala_sekolah/kerusakan/create', [KerusakanController::class, 'create'])
@@ -34,6 +34,9 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->group(function () {
     Route::post('/kepala_sekolah/pengajuan', [PengajuanController::class, 'kepalaSekolahStore'])->name('kepala_sekolah.pengajuan.store');
     Route::get('/kepala_sekolah/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])
         ->defaults('role', 'kepala_sekolah')
+        ->missing(function () {
+            return redirect()->route('kepala_sekolah.pengajuan.index')->with('info', 'Data pengajuan tidak ditemukan atau sudah dihapus.');
+        })
         ->name('kepala_sekolah.pengajuan.show');
     Route::post('/kepala_sekolah/pengajuan/{pengajuan}/approve', [PengajuanController::class, 'approve'])
         ->defaults('role', 'kepala_sekolah')
@@ -41,6 +44,10 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->group(function () {
     Route::post('/kepala_sekolah/pengajuan/{pengajuan}/reject', [PengajuanController::class, 'reject'])
         ->defaults('role', 'kepala_sekolah')
         ->name('kepala_sekolah.pengajuan.reject');
+    Route::get('/kepala_sekolah/mutasi', [\App\Http\Controllers\MutasiController::class, 'index'])->name('kepala_sekolah.mutasi.index');
+    Route::get('/kepala_sekolah/mutasi/create', [\App\Http\Controllers\MutasiController::class, 'create'])->name('kepala_sekolah.mutasi.create');
+    Route::post('/kepala_sekolah/mutasi', [\App\Http\Controllers\MutasiController::class, 'store'])->name('kepala_sekolah.mutasi.store');
+    Route::get('/kepala_sekolah/mutasi/{mutasi}', [\App\Http\Controllers\MutasiController::class, 'show'])->name('kepala_sekolah.mutasi.show');
     Route::get('/kepala_sekolah/notifikasi', [NotifikasiController::class, 'index'])->name('kepala_sekolah.notifikasi.index');
     Route::get('/kepala_sekolah/laporan', [BlueprintPageController::class, 'laporan'])
         ->defaults('role', 'kepala_sekolah')

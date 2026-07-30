@@ -10,8 +10,8 @@
             <a href="{{ route('kepala_sarana.scan') }}" class="btn-secondary">Scan QR</a>
             <a href="{{ route('kepala_sarana.kerusakan.index') }}" class="btn-danger">Validasi Kerusakan</a>
             <a href="{{ route('kepala_sarana.pengajuan.approval') }}" class="btn-primary">Approval</a>
-            <a href="{{ route('kepala_sarana.validasi.semua') }}" class="btn-secondary">Semua Proses</a>
-            <a href="{{ route('kepala_sarana.aset.index') }}" class="btn-secondary">Data Sarana</a>
+            <a href="{{ route('kepala_sarana.pengajuan.index') }}" class="btn-secondary">Semua Pengajuan</a>
+            <a href="{{ route('kepala_sarana.sarana.index') }}" class="btn-secondary">Data Sarana</a>
             <a href="{{ route('kepala_sarana.feature', ['feature' => 'pelaporan']) }}" class="btn-secondary">Pelaporan</a>
         </div>
         <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Urutan status: Menunggu Approval Kepala Sarana -> Menunggu Approval Bendahara -> Menunggu Approval Kepala Sekolah -> Realisasi Diproses.</p>

@@ -55,9 +55,9 @@
                 @forelse ($laporanKerusakan as $item)
                     <tr>
                         <td>{{ $item->created_at?->format('d M Y H:i') }}</td>
-                        <td>{{ $item->aset?->kode_aset ?? '-' }}</td>
-                        <td>{{ $item->aset?->nama_aset ?? '-' }}</td>
-                        <td>{{ $item->aset?->ruangan?->nama_ruangan }} - {{ $item->aset?->ruangan?->gedung?->nama_gedung }}</td>
+                        <td>{{ $item->sarana?->kode_sarana ?? '-' }}</td>
+                        <td>{{ $item->sarana?->nama_sarana ?? '-' }}</td>
+                        <td>{{ $item->sarana?->ruangan?->nama_ruangan }} - {{ $item->sarana?->ruangan?->gedung?->nama_gedung }}</td>
                         <td>{{ $item->tingkat_kerusakan }}</td>
                         <td>{{ $item->status }}</td>
                         <td>{{ $item->user?->display_name ?? '-' }}</td>
@@ -87,8 +87,8 @@
                 @forelse ($laporanPerawatan as $item)
                     <tr>
                         <td>{{ $item->tanggal_perawatan?->format('d M Y') ?? '-' }}</td>
-                        <td>{{ $item->pengajuan?->aset?->kode_aset ?? '-' }}</td>
-                        <td>{{ $item->pengajuan?->aset?->nama_aset ?? '-' }}</td>
+                        <td>{{ $item->pengajuan?->sarana?->kode_sarana ?? '-' }}</td>
+                        <td>{{ $item->pengajuan?->sarana?->nama_sarana ?? '-' }}</td>
                         <td>{{ $item->pengajuan?->user?->display_name ?? '-' }}</td>
                         <td>Rp {{ number_format((float) ($item->biaya_realisasi ?? 0), 0, ',', '.') }}</td>
                         <td>{{ $item->nama_vendor ?? '-' }}</td>
@@ -119,8 +119,8 @@
                 @forelse ($laporanPenggantian as $item)
                     <tr>
                         <td>{{ $item->tanggal_penggantian?->format('d M Y') ?? '-' }}</td>
-                        <td>{{ $item->asetLama?->kode_aset ?? ($item->pengajuan?->aset?->kode_aset ?? '-') }}</td>
-                        <td>{{ $item->asetBaru?->kode_aset ?? '-' }}</td>
+                        <td>{{ $item->saranaLama?->kode_sarana ?? ($item->pengajuan?->sarana?->kode_sarana ?? '-') }}</td>
+                        <td>{{ $item->saranaBaru?->kode_sarana ?? '-' }}</td>
                         <td>{{ $item->pengajuan?->user?->display_name ?? '-' }}</td>
                         <td>Rp {{ number_format((float) ($item->biaya_realisasi ?? 0), 0, ',', '.') }}</td>
                         <td>{{ $item->status_realisasi ?? '-' }}</td>
@@ -151,7 +151,7 @@
                 @forelse ($laporanPengajuan as $item)
                     <tr>
                         <td>{{ $item->created_at?->format('d M Y H:i') }}</td>
-                        <td>{{ $item->aset?->kode_aset ?? '-' }}</td>
+                        <td>{{ $item->sarana?->kode_sarana ?? '-' }}</td>
                         <td>{{ $item->judul_pengajuan }}</td>
                         <td>{{ $item->jenis_pengajuan }}</td>
                         <td>Rp {{ number_format((float) ($item->estimasi_biaya ?? 0), 0, ',', '.') }}</td>
@@ -170,8 +170,8 @@
 
         <h3>Ringkasan KPI</h3>
         <div class="kpi-grid">
-            <div class="card"><div class="label">Total Sarana</div><div class="value">{{ number_format($kpi['total_aset']) }}</div></div>
-            <div class="card"><div class="label">Sarana Perlu Perhatian</div><div class="value">{{ number_format($kpi['aset_rusak']) }}</div></div>
+            <div class="card"><div class="label">Total Sarana</div><div class="value">{{ number_format($kpi['total_sarana']) }}</div></div>
+            <div class="card"><div class="label">Sarana Perlu Perhatian</div><div class="value">{{ number_format($kpi['sarana_rusak']) }}</div></div>
             <div class="card"><div class="label">Total Pengajuan</div><div class="value">{{ number_format($kpi['total_pengajuan']) }}</div></div>
             <div class="card"><div class="label">Pengajuan Menunggu</div><div class="value">{{ number_format($kpi['pengajuan_menunggu']) }}</div></div>
             <div class="card"><div class="label">Total Kerusakan</div><div class="value">{{ number_format($kpi['total_kerusakan']) }}</div></div>

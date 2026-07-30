@@ -1,4 +1,4 @@
-﻿<x-layouts.sbadmin>
+<x-layouts.sbadmin>
     @php
         $statusPengajuanLabels = [
             'DIAJUKAN' => 'Menunggu Approval Kepala Sarana',
@@ -43,7 +43,7 @@
                     <i class="text-sm fas fa-layer-group"></i>
                 </span>
             </div>
-            <p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ number_format($totalAset) }}</p>
+            <p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ number_format($totalSarana) }}</p>
             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $totalRuangan }} ruangan - {{ $totalGedung }} gedung</p>
         </div>
 
@@ -76,7 +76,7 @@
                     <i class="text-sm fas fa-wallet"></i>
                 </span>
             </div>
-            <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">Rp {{ number_format($nilaiTotalAset, 0, ',', '.') }}</p>
+            <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">Rp {{ number_format($nilaiTotalSarana, 0, ',', '.') }}</p>
             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $totalKategori }} kategori sarana</p>
         </div>
     </div>
@@ -131,8 +131,8 @@
             </h2>
             <div class="grid gap-2 mt-4">
                 <a href="{{ route('admin.scan') }}" class="justify-start btn-secondary"><i class="fas fa-qrcode text-slate-500"></i>Scan QR</a>
-                <a href="{{ route('admin.aset.index') }}" class="justify-start btn-secondary"><i class="fas fa-boxes-stacked text-slate-500"></i>Kelola Sarana</a>
-                <a href="{{ route('admin.aset.create') }}" class="justify-start btn-secondary"><i class="fas fa-plus text-slate-500"></i>Tambah Sarana</a>
+                <a href="{{ route('admin.sarana.index') }}" class="justify-start btn-secondary"><i class="fas fa-boxes-stacked text-slate-500"></i>Kelola Sarana</a>
+                <a href="{{ route('admin.sarana.create') }}" class="justify-start btn-secondary"><i class="fas fa-plus text-slate-500"></i>Tambah Sarana</a>
                 <a href="{{ route('admin.pengajuan.index') }}" class="justify-start btn-secondary"><i class="fas fa-file-circle-check text-slate-500"></i>Kelola Pengajuan</a>
                 <a href="{{ route('admin.cetak-qr.index') }}" class="justify-start btn-secondary"><i class="fas fa-print text-slate-500"></i>Cetak QR</a>
             </div>

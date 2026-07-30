@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\LogAktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -75,6 +76,14 @@ class UserManagementController extends Controller
             'status_akun' => $validated['status_akun'],
         ]);
 
+        LogAktivitas::query()->create([
+            'user_id' => auth()->id(),
+            'aktivitas' => 'CREATE_USER',
+            'modul' => 'USER_MANAGEMENT',
+            'deskripsi' => sprintf('Menambahkan user baru: %s (%s) dengan role %s', $validated['nama'], $validated['email'], $validated['role']),
+            'ip_address' => $request->ip(),
+        ]);
+
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'User baru berhasil ditambahkan.');
@@ -120,6 +129,14 @@ class UserManagementController extends Controller
 
         $user->update($payload);
 
+        LogAktivitas::query()->create([
+            'user_id' => auth()->id(),
+            'aktivitas' => 'UPDATE_USER',
+            'modul' => 'USER_MANAGEMENT',
+            'deskripsi' => sprintf('Memperbarui data user: %s (%s), role: %s, status: %s', $user->name, $user->email, $validated['role'], $validated['status_akun']),
+            'ip_address' => $request->ip(),
+        ]);
+
         return redirect()
             ->back()
             ->with('success', 'Data user berhasil diperbarui.');
@@ -135,6 +152,14 @@ class UserManagementController extends Controller
         }
 
         $user->delete();
+
+        LogAktivitas::query()->create([
+            'user_id' => auth()->id(),
+            'aktivitas' => 'DELETE_USER',
+            'modul' => 'USER_MANAGEMENT',
+            'deskripsi' => sprintf('Menghapus user: %s (%s)', $user->name, $user->email),
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()
             ->route('admin.users.index')

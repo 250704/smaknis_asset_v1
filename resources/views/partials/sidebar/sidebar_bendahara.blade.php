@@ -1,6 +1,6 @@
 @php
     $feature = request()->route('feature');
-    $reviewOpen = request()->routeIs('bendahara.pengajuan.*') || in_array($feature, ['semua-review', 'approval-anggaran'], true);
+    $reviewOpen = request()->routeIs('bendahara.pengajuan.*', 'bendahara.mutasi.*') || in_array($feature, ['semua-review', 'approval-anggaran', 'mutasi-sarana'], true);
 @endphp
 
 <nav class="space-y-1">
@@ -43,6 +43,7 @@
             <a href="{{ route('bendahara.pengajuan.approval') }}" class="side-sub-link {{ request()->routeIs('bendahara.pengajuan.approval') || $feature === 'approval-anggaran' ? 'active' : '' }}">Approval Anggaran</a>
             <a href="{{ route('bendahara.pengajuan.mine') }}" class="side-sub-link {{ request()->routeIs('bendahara.pengajuan.mine') ? 'active' : '' }}">Pengajuan Saya</a>
             <a href="{{ route('bendahara.pengajuan.index') }}" class="side-sub-link {{ request()->routeIs('bendahara.pengajuan.index') || $feature === 'semua-review' ? 'active' : '' }}">Semua Pengajuan</a>
+            <a href="{{ route('bendahara.mutasi.index') }}" class="side-sub-link {{ request()->routeIs('bendahara.mutasi.*') ? 'active' : '' }}">Mutasi Sarana</a>
         </div>
     </div>
 

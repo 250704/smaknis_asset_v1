@@ -12,18 +12,19 @@
         $scanRoute = route($role . '.scan');
     @endphp
 
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    @if (!$sarana)
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
             <h1 class="page-title">Scan QR Action Hub</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Input hasil scan QR, lihat detail sarana, lalu pilih aksi proses.</p>
         </div>
-        <span class="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-200">
+        <span class="inline-flex px-3 py-1 text-xs font-semibold tracking-wide uppercase border rounded-full border-cyan-400/30 bg-cyan-400/10 text-cyan-700 dark:text-cyan-200">
             {{ $roleLabel }}
         </span>
     </div>
+    @endif
 
     @if (session('success'))
-        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+        <div class="px-4 py-3 mb-4 text-sm border rounded-xl border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200">
             {{ session('success') }}
         </div>
     @endif
@@ -33,65 +34,52 @@
         $shouldOpenInvalidQrPopup = $scanError === $invalidQrMessage;
     @endphp
 
-    <section class="panel">
-        <form id="qr-scan-form" method="GET" action="{{ $scanRoute }}" class="filter-grid">
-            <div>
-                <label for="kode_aset" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Hasil QR / Kode Sarana</label>
-                <input
-                    id="kode_aset"
-                    name="kode_aset"
-                    type="text"
-                    value="{{ $kodeAset }}"
-                    placeholder="Contoh: AST-GDA-LAB-L02-2026-0001"
-                    class="w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
-                    inputmode="text"
-                    enterkeyhint="search"
-                    autocapitalize="characters"
-                    spellcheck="false"
-                    maxlength="50"
-                    oninput="this.value = this.value.toUpperCase().replace(/\s+/g, '')"
-                    autofocus
-                >
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Bisa tempel dari scanner barcode atau ketik manual. Hanya huruf, angka, dan tanda "-".</p>
-            </div>
-            <div class="filter-actions">
-                <button type="submit" class="btn-primary">Cari Sarana</button>
-                <a href="{{ $scanRoute }}" class="btn-secondary">Reset</a>
-            </div>
-        </form>
-
-        @if ($scanError && !$shouldOpenInvalidQrPopup)
-            <div class="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-400/30 dark:bg-rose-500/10 dark:text-rose-200">
+    @if ($scanError && !$shouldOpenInvalidQrPopup)
+        <div class="flex items-center justify-between px-4 py-3 mb-4 text-sm border rounded-xl border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-400/30 dark:bg-rose-500/10 dark:text-rose-200 shadow-sm">
+            <span class="flex items-center gap-1.5">
+                <i class="fas fa-exclamation-triangle"></i>
                 {{ $scanError }}
-            </div>
-        @elseif ($kodeAset !== '' && $isExactFormat)
-            <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+            </span>
+            <a href="{{ $scanRoute }}" class="px-2.5 py-1 text-[10px] font-bold bg-white text-rose-700 border border-rose-200 hover:bg-rose-100 rounded-lg transition-colors">
+                Reset
+            </a>
+        </div>
+    @elseif (!$sarana && $kodeSarana !== '' && $isExactFormat)
+        <div class="flex items-center justify-between px-4 py-2.5 mb-4 text-xs font-bold border rounded-xl border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200 shadow-sm">
+            <span class="flex items-center gap-1.5">
+                <i class="fas fa-check-circle"></i>
                 Format QR valid.
-            </div>
-        @endif
+            </span>
+            <a href="{{ $scanRoute }}" class="px-2.5 py-1 text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:bg-slate-800 dark:text-emerald-300 dark:border-emerald-500/20 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                Cari / Scan Lainnya
+            </a>
+        </div>
+    @endif
 
-    </section>
+    <form id="qr-scan-form" method="GET" action="{{ $scanRoute }}" class="hidden">
+        <input id="kode_sarana" name="kode_sarana" type="text" value="{{ $kodeSarana }}">
+    </form>
 
-    @if ($kodeAset === '')
+    @if ($kodeSarana === '')
         <section class="panel" id="qr-camera-panel">
         <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Scan Langsung Kamera</h2>
+            <h2 class="text-sm font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Scan Langsung Kamera</h2>
             <div class="flex flex-wrap gap-2">
                 <button type="button" id="btn-start-camera" class="btn-primary">Start Kamera</button>
-                <button type="button" id="btn-switch-camera" class="btn-secondary hidden">Ganti Kamera</button>
-                <button type="button" id="btn-stop-camera" class="btn-secondary hidden">Stop Kamera</button>
+                <button type="button" id="btn-switch-camera" class="hidden btn-secondary">Ganti Kamera</button>
+                <button type="button" id="btn-stop-camera" class="hidden btn-secondary">Stop Kamera</button>
             </div>
         </div>
 
-        <div class="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900/50">
+        <div class="mt-3 overflow-hidden border rounded-xl border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900/50">
             <div class="relative">
                 <video id="qr-video" class="h-[280px] w-full bg-slate-950 object-cover sm:h-[360px]" autoplay muted playsinline></video>
-                <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-<div id="scan-frame" class="relative h-36 w-36 rounded-lg border border-cyan-300/70 shadow-[0_0_0_9999px_rgba(2,6,23,.4)] transition-all duration-300 sm:h-40 sm:w-40">
-                        <span class="absolute -left-0.5 -top-0.5 h-5 w-5 border-l-2 border-t-2 border-cyan-300"></span>
-                        <span class="absolute -right-0.5 -top-0.5 h-5 w-5 border-r-2 border-t-2 border-cyan-300"></span>
-                        <span class="absolute -bottom-0.5 -left-0.5 h-5 w-5 border-b-2 border-l-2 border-cyan-300"></span>
-                        <span class="absolute -bottom-0.5 -right-0.5 h-5 w-5 border-b-2 border-r-2 border-cyan-300"></span>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div id="scan-frame" class="relative h-36 w-36 rounded-2xl border border-cyan-400/30 shadow-[0_0_0_9999px_rgba(2,6,23,.55)] transition-all duration-300 sm:h-40 sm:w-40">
+                        <span class="absolute -left-1 -top-1 h-6 w-6 border-l-4 border-t-4 border-cyan-400 rounded-tl-md"></span>
+                        <span class="absolute -right-1 -top-1 h-6 w-6 border-r-4 border-t-4 border-cyan-400 rounded-tr-md"></span>
+                        <span class="absolute -bottom-1 -left-1 h-6 w-6 border-b-4 border-l-4 border-cyan-400 rounded-bl-md"></span>
+                        <span class="absolute -bottom-1 -right-1 h-6 w-6 border-b-4 border-r-4 border-cyan-400 rounded-br-md"></span>
                         <div class="scan-line"></div>
                         <div id="scan-success-badge" class="absolute -top-9 left-1/2 hidden -translate-x-1/2 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-semibold text-white shadow-lg">
                             QR Berhasil
@@ -129,53 +117,51 @@
 
         .scan-line {
             position: absolute;
-            left: 0.75rem;
-            right: 0.75rem;
-            height: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(239, 68, 68, 0.95);
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.85);
-            animation: scanLine 2.2s ease-in-out infinite;
+            left: 0.5rem;
+            right: 0.5rem;
+            height: 3px;
+            background: linear-gradient(90deg, transparent 10%, #22d3ee 50%, transparent 90%);
+            box-shadow: 0 0 12px #22d3ee, 0 0 4px #22d3ee;
+            animation: scanLine 2.5s ease-in-out infinite;
         }
 
         @keyframes scanLine {
             0% {
-                top: 18%;
+                top: 15%;
             }
             50% {
-                top: 82%;
+                top: 85%;
             }
             100% {
-                top: 18%;
+                top: 15%;
             }
         }
     </style>
 
-    @if ($kodeAset !== '')
-        <section class="panel mt-5">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Hasil Pencarian</h2>
+    @if ($kodeSarana !== '' && !$sarana)
+        <section class="mt-5 panel">
+            <h2 class="text-sm font-semibold tracking-wide uppercase text-slate-500 dark:text-slate-400">Hasil Pencarian</h2>
             @if ($searchResults->isEmpty() && !$scanError)
                 <p class="mt-3 text-sm text-rose-600 dark:text-rose-300">Sarana dengan kode/kata kunci tersebut tidak ditemukan.</p>
             @elseif ($searchResults->isNotEmpty())
-                <div class="mt-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10">
+                <div class="mt-3 overflow-x-auto border rounded-xl border-slate-200 dark:border-white/10">
+                    <table class="min-w-full text-sm divide-y divide-slate-200 dark:divide-white/10">
                         <thead class="bg-slate-50 dark:bg-white/[0.04]">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Kode</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Nama</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Lokasi</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Aksi</th>
+                                <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Kode</th>
+                                <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Nama</th>
+                                <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Lokasi</th>
+                                <th class="px-4 py-3 font-semibold text-left text-slate-600 dark:text-slate-300">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                             @foreach ($searchResults as $item)
                                 <tr>
-                                    <td class="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-200">{{ $item->kode_aset }}</td>
-                                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ $item->nama_aset }}</td>
+                                    <td class="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-200">{{ $item->kode_sarana }}</td>
+                                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ $item->nama_sarana }}</td>
                                     <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $item->ruangan?->nama_ruangan }} - {{ $item->ruangan?->gedung?->nama_gedung }}</td>
                                     <td class="px-4 py-3">
-                                        <a href="{{ $scanRoute . '?kode_aset=' . urlencode($item->kode_aset) }}" class="btn-secondary">Pilih</a>
+                                        <a href="{{ $scanRoute . '?kode_sarana=' . urlencode($item->kode_sarana) }}" class="btn-secondary">Pilih</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -186,117 +172,309 @@
         </section>
     @endif
 
-    @if ($aset)
-        <div class="mt-5 grid gap-5 lg:grid-cols-12">
-            <section class="panel lg:col-span-7">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Detail Sarana Terscan</h2>
-                <dl class="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kode Sarana</dt>
-                        <dd class="font-mono text-sm text-slate-700 dark:text-slate-200">{{ $aset->kode_aset }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Nama Sarana</dt>
-                        <dd class="text-sm text-slate-700 dark:text-slate-200">{{ $aset->nama_aset }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kategori</dt>
-                        <dd class="text-sm text-slate-700 dark:text-slate-200">{{ $aset->kategori?->nama_kategori }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Lokasi</dt>
-                        <dd class="text-sm text-slate-700 dark:text-slate-200">
-                            {{ $aset->ruangan?->nama_ruangan }} [{{ $aset->ruangan?->kode_ruangan ?? '---' }}] -
-                            {{ $aset->ruangan?->gedung?->nama_gedung }} [{{ $aset->ruangan?->gedung?->kode_gedung ?? '---' }}]
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Kondisi</dt>
-                        <dd>
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $aset->kondisi_terkini === 'BAIK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200' }}">
-                                {{ $aset->kondisi_terkini }}
-                            </span>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</dt>
-                        <dd>
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $aset->status_aset === 'AKTIF' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'bg-slate-200 text-slate-700 dark:bg-slate-600/30 dark:text-slate-200' }}">
-                                {{ $aset->status_aset }}
-                            </span>
-                        </dd>
-                    </div>
-                </dl>
+    @if ($sarana)
 
-                <div class="mt-5">
-                    <div class="mb-3 rounded-xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-400/30 dark:bg-cyan-500/10">
-                        <h3 class="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
-                            <i class="fas fa-info-circle mr-2"></i>Aksi Tersedia
-                        </h3>
-                        <p class="mt-1 text-xs text-cyan-700 dark:text-cyan-300">
-                            @if($role === 'guru')
-                                <i class="fas fa-lightbulb mr-1"></i>
-                                <strong>Tip:</strong> Gunakan "Lapor Kerusakan" jika sarana rusak. Pengajuan perawatan/penggantian akan otomatis dibuat setelah validasi Kepala Sarana.
-                            @elseif($role === 'kepala_sarana')
-                                <i class="fas fa-clipboard-check mr-1"></i>
-                                <strong>Tip:</strong> Lihat detail aset dan histori sarana dari sini.
-                            @elseif($role === 'bendahara')
-                                <i class="fas fa-coins mr-1"></i>
-                                <strong>Tip:</strong> Review pengajuan dan approval anggaran dari sini.
-                            @elseif($role === 'kepala_sekolah')
-                                <i class="fas fa-stamp mr-1"></i>
-                                <strong>Tip:</strong> Lakukan approval final dari sini.
-                            @else
-                                <i class="fas fa-tools mr-1"></i>
-                                <strong>Tip:</strong> Kelola mutasi dan lihat histori sarana dari sini.
+        @php
+            $scanActions = [
+                'lapor-kerusakan' => [
+                    'label' => 'Lapor Kerusakan',
+                    'description' => 'Kirim laporan kondisi sarana.',
+                    'icon' => 'fa-triangle-exclamation',
+                    'theme' => 'rose',
+                ],
+                'usulan-mutasi' => [
+                    'label' => 'Usulan Mutasi',
+                    'description' => 'Ajukan perpindahan lokasi sarana.',
+                    'icon' => 'fa-arrows-left-right',
+                    'theme' => 'indigo',
+                ],
+            ];
+        @endphp
+
+        <section class="qr-result-card mt-5 flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+            <header class="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-white/10">
+                <div class="flex min-w-0 items-center gap-3">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
+                        @if ($sarana->foto_sarana)
+                            <img src="{{ asset('storage/' . $sarana->foto_sarana) }}" alt="{{ $sarana->nama_sarana }}" class="h-full w-full object-cover">
+                        @else
+                            <i class="fas fa-box"></i>
+                        @endif
+                    </div>
+                    <div class="min-w-0">
+                        <p class="truncate text-base font-bold text-slate-800 dark:text-white">{{ $sarana->nama_sarana }}</p>
+                        <p class="mt-0.5 font-mono text-[11px] text-slate-400">{{ $sarana->kode_sarana }}</p>
+                    </div>
+                </div>
+                <div class="flex shrink-0 flex-col items-end gap-1">
+                    <span class="rounded-full px-2.5 py-1 text-[10px] font-bold {{ $sarana->kondisi_terkini === 'BAIK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' }}">{{ $sarana->kondisi_terkini }}</span>
+                    <span class="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">{{ $sarana->status_sarana }}</span>
+                </div>
+            </header>
+
+            <div class="flex flex-col gap-5 p-5">
+                <div class="space-y-5">
+                    <div class="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3">
+                        @foreach ([
+                            'Kategori' => $sarana->kategori?->nama_kategori ?? '—',
+                            'Ruangan' => $sarana->ruangan?->nama_ruangan ?? '—',
+                            'Gedung' => $sarana->ruangan?->gedung?->nama_gedung ?? '—',
+                            'Lantai' => $sarana->ruangan?->lantai ? 'Lantai ' . $sarana->ruangan->lantai : '—',
+                            'Tahun Perolehan' => $sarana->tahun_perolehan ?? '—',
+                            'Harga Perolehan' => $sarana->harga_perolehan ? 'Rp ' . number_format((float) $sarana->harga_perolehan, 0, ',', '.') : '—',
+                        ] as $label => $value)
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $label }}</p>
+                                <p class="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $value }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="rounded-xl bg-slate-50 p-4 dark:bg-white/[0.04]">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Kondisi Terakhir</p>
+                        @if ($sarana->riwayatKondisiSarana->isNotEmpty())
+                            @php
+                                $riwayat = $sarana->riwayatKondisiSarana->first();
+                            @endphp
+                            <div class="mt-2 flex items-center justify-between gap-3">
+                                <div class="min-w-0"><p class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $riwayat->tingkat_kerusakan }}</p><p class="truncate text-xs text-slate-500">{{ $riwayat->deskripsi ?: $riwayat->status }}</p></div>
+                                <span class="shrink-0 text-[11px] text-slate-400">{{ $riwayat->created_at?->format('d M Y') }}</span>
+                            </div>
+                        @else
+                            <p class="mt-2 text-sm text-slate-500">Belum ada riwayat kondisi tercatat.</p>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4 dark:border-white/10">
+                    <p class="mb-2.5 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">Aksi Sarana</p>
+                    <div class="flex flex-wrap justify-center gap-2.5">
+                    @foreach ($scanActions as $key => $action)
+                        <a href="{{ route($role . '.scan.action', ['sarana' => $sarana, 'action' => $key]) }}"
+                           class="inline-flex h-10 min-w-[8.75rem] items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition duration-200 hover:-translate-y-0.5 hover:shadow-md {{ $action['theme'] === 'rose' ? 'bg-rose-500 text-white shadow-rose-500/20 hover:bg-rose-600' : ($action['theme'] === 'indigo' ? 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700' : 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-blue-300 dark:ring-white/10 dark:hover:bg-slate-700') }}">
+                            <i class="fas {{ $action['icon'] }} text-xs"></i>
+                            <span>{{ $action['label'] }}</span>
+                        </a>
+                    @endforeach
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="hidden">
+
+        {{-- Sarana Detail Card --}}
+        <div class="mt-5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] overflow-hidden shadow-sm">
+
+            {{-- Foto Sarana --}}
+            @if ($sarana->foto_sarana)
+                <div class="w-full h-48 overflow-hidden">
+                    <img src="{{ asset('storage/' . $sarana->foto_sarana) }}"
+                         alt="{{ $sarana->nama_sarana }}"
+                         class="w-full h-full object-cover">
+                </div>
+            @endif
+
+            {{-- Header strip --}}
+            <div class="flex items-start justify-between gap-3 px-5 pt-5 pb-4 border-b border-slate-100 dark:border-white/5">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400">
+                        <i class="fas fa-box text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $sarana->nama_sarana }}</p>
+                        <p class="mt-0.5 text-[11px] font-mono text-slate-400 dark:text-slate-500 select-all">{{ $sarana->kode_sarana }}</p>
+                    </div>
+                </div>
+                <div class="shrink-0 flex flex-col items-end gap-1.5 pt-0.5">
+                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold
+                        {{ $sarana->kondisi_terkini === 'BAIK'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' }}">
+                        {{ $sarana->kondisi_terkini }}
+                    </span>
+                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold
+                        {{ $sarana->status_sarana === 'AKTIF'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
+                            : 'bg-slate-200 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300' }}">
+                        {{ $sarana->status_sarana }}
+                    </span>
+                </div>
+            </div>
+
+            {{-- Grid Informasi --}}
+            <div class="px-5 py-4">
+                <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                    <div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Kategori</p>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $sarana->kategori?->nama_kategori ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Ruangan</p>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            {{ $sarana->ruangan?->nama_ruangan ?? '—' }}
+                            @if($sarana->ruangan?->kode_ruangan)
+                                <span class="font-normal text-slate-400 dark:text-slate-500">[{{ $sarana->ruangan->kode_ruangan }}]</span>
                             @endif
                         </p>
                     </div>
-                    
-                    <h3 class="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Pilih Aksi:</h3>
-                    <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                        @foreach ($actions as $actionKey => $label)
-                            <a href="{{ route($role . '.scan.action', ['aset' => $aset, 'action' => $actionKey]) }}" class="btn-secondary justify-center text-center hover:scale-105 transition-transform">
-                                <i class="fas fa-arrow-right mr-2 text-xs"></i>
+                    <div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Gedung</p>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $sarana->ruangan?->gedung?->nama_gedung ?? '—' }}</p>
+                    </div>
+                    @if($sarana->ruangan?->lantai)
+                        <div>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Lantai</p>
+                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Lantai {{ $sarana->ruangan->lantai }}</p>
+                        </div>
+                    @endif
+                    <div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Tahun Perolehan</p>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $sarana->tahun_perolehan ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Harga Perolehan</p>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            @if($sarana->harga_perolehan)
+                                Rp {{ number_format((float)$sarana->harga_perolehan, 0, ',', '.') }}
+                            @else
+                                —
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Riwayat Kondisi Singkat --}}
+            @if($sarana->riwayatKondisiSarana->isNotEmpty())
+                <div class="px-5 pb-5 border-t border-slate-100 dark:border-white/5 pt-4">
+                    <p class="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-3">Riwayat Kondisi Terakhir</p>
+                    <div class="space-y-3">
+                        @foreach($sarana->riwayatKondisiSarana->take(3) as $riwayat)
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $riwayat->tingkat_kerusakan }}</span>
+                                        <span class="text-[10px] text-slate-400 shrink-0">{{ $riwayat->created_at?->format('d M Y') }}</span>
+                                    </div>
+                                    @if($riwayat->deskripsi)
+                                        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $riwayat->deskripsi }}</p>
+                                    @endif
+                                    <span class="mt-1 inline-block text-[9px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500">{{ $riwayat->status }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        {{-- Aksi --}}
+        @php
+            $coreActions = [
+                'lapor-kerusakan' => [
+                    'label'      => 'Laporkan Kerusakan',
+                    'desc'       => 'Kirimkan laporan kerusakan sarana ini ke tim sarpras untuk ditindaklanjuti.',
+                    'icon'       => 'fas fa-triangle-exclamation',
+                    'pill'       => 'Pelaporan',
+                    'pill_color' => 'bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400',
+                    'icon_bg'    => 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400',
+                    'border'     => 'border-rose-100 dark:border-rose-500/20 hover:border-rose-300 dark:hover:border-rose-500/40',
+                    'arrow'      => 'text-rose-400',
+                ],
+                'usulan-mutasi' => [
+                    'label'      => 'Usulan Mutasi',
+                    'desc'       => 'Ajukan pemindahan sarana ini ke ruangan atau lokasi lain.',
+                    'icon'       => 'fas fa-arrows-left-right',
+                    'pill'       => 'Mutasi',
+                    'pill_color' => 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400',
+                    'icon_bg'    => 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-400',
+                    'border'     => 'border-indigo-100 dark:border-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/40',
+                    'arrow'      => 'text-indigo-400',
+                ],
+                'histori-sarana' => [
+                    'label'      => 'Histori Sarana',
+                    'desc'       => 'Lihat log riwayat lengkap pengajuan, perawatan, dan mutasi sarana ini.',
+                    'icon'       => 'fas fa-clock-rotate-left',
+                    'pill'       => 'Histori',
+                    'pill_color' => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+                    'icon_bg'    => 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400',
+                    'border'     => 'border-emerald-100 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/40',
+                    'arrow'      => 'text-emerald-400',
+                ],
+                'lihat-histori' => [
+                    'label'      => 'Histori Sarana',
+                    'desc'       => 'Lihat log riwayat lengkap pengajuan, perawatan, dan mutasi sarana ini.',
+                    'icon'       => 'fas fa-clock-rotate-left',
+                    'pill'       => 'Histori',
+                    'pill_color' => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+                    'icon_bg'    => 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400',
+                    'border'     => 'border-emerald-100 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/40',
+                    'arrow'      => 'text-emerald-400',
+                ],
+            ];
+            // Exclude 'detail-sarana' — detail sudah tampil langsung di halaman ini
+            $filteredActions = array_filter($actions, fn($key) => $key !== 'detail-sarana', ARRAY_FILTER_USE_KEY);
+        @endphp
+
+        <div class="mt-5">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-3">Aksi</p>
+            <div class="flex flex-col gap-2.5">
+                @foreach ($coreActions as $actionKey => $meta)
+                    @if (isset($filteredActions[$actionKey]))
+                        <a href="{{ route($role . '.scan.action', ['sarana' => $sarana, 'action' => $actionKey]) }}"
+                           class="group flex items-center gap-4 px-4 py-3.5 rounded-xl border bg-white dark:bg-white/[0.02] transition-all duration-200 hover:shadow-sm hover:-translate-y-px {{ $meta['border'] }}">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $meta['icon_bg'] }} transition-transform duration-150 group-hover:scale-105">
+                                <i class="{{ $meta['icon'] }} text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $meta['label'] }}</span>
+                                    <span class="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $meta['pill_color'] }}">{{ $meta['pill'] }}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ $meta['desc'] }}</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-[10px] shrink-0 {{ $meta['arrow'] }} transition-transform duration-150 group-hover:translate-x-0.5"></i>
+                        </a>
+                    @endif
+                @endforeach
+
+                {{-- Aksi tambahan per role (review-pengajuan, approval-final, dst) --}}
+                @php
+                    $extraActions = array_diff_key($filteredActions, $coreActions);
+                @endphp
+                @if (!empty($extraActions))
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        @foreach ($extraActions as $actionKey => $label)
+                            <a href="{{ route($role . '.scan.action', ['sarana' => $sarana, 'action' => $actionKey]) }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 bg-white dark:bg-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.06] transition-colors">
+                                <i class="fas fa-arrow-right text-[10px]"></i>
                                 {{ $label }}
                             </a>
                         @endforeach
                     </div>
-                </div>
-            </section>
-
-            <section class="panel lg:col-span-5">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Foto Sarana</h2>
-                <div class="mt-4">
-                    @if ($aset->foto_aset)
-                        <img src="{{ asset('storage/' . $aset->foto_aset) }}" alt="Foto sarana" class="h-56 w-full rounded-xl object-cover">
-                    @else
-                        <div class="flex h-56 items-center justify-center rounded-xl border border-dashed border-slate-300 text-sm text-slate-500 dark:border-white/20 dark:text-slate-400">
-                            Belum ada foto sarana
-                        </div>
-                    @endif
-                </div>
-
-                <h3 class="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Riwayat Kondisi Terbaru</h3>
-                <div class="mt-2 space-y-2">
-                    @forelse ($aset->riwayatKondisiAset as $riwayat)
-                        <div class="rounded-lg border border-slate-200 px-3 py-2 dark:border-white/10">
-                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ $riwayat->created_at?->format('d M Y H:i') }}</p>
-                            <p class="text-sm text-slate-700 dark:text-slate-200">{{ $riwayat->tingkat_kerusakan }} - {{ $riwayat->status }}</p>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Belum ada riwayat kondisi.</p>
-                    @endforelse
-                </div>
-            </section>
+                @endif
+            </div>
         </div>
+
+        {{-- Scan Again Link --}}
+        <div class="mt-5 text-center">
+            <a href="{{ $scanRoute }}" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <i class="fas fa-rotate-right text-[10px]"></i>
+                Scan sarana lain
+            </a>
+        </div>
+
+        </div>
+
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script>
         (function () {
             const form = document.getElementById('qr-scan-form');
-            const input = document.getElementById('kode_aset');
+            const input = document.getElementById('kode_sarana');
             const btnStart = document.getElementById('btn-start-camera');
             const btnStop = document.getElementById('btn-stop-camera');
             const btnSwitch = document.getElementById('btn-switch-camera');
@@ -325,7 +503,7 @@
             let invalidDialogOpen = false;
             let scanInFlight = false;
 
-            const exactPattern = /^AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}$/;
+            const exactPattern = /^SRN-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}$/;
             const FALLBACK_SCAN_INTERVAL_MS = 45;
             const FALLBACK_MAX_WIDTH = 480;
             const FALLBACK_MIN_WIDTH = 240;
@@ -380,7 +558,7 @@
                     return upper;
                 }
 
-                const matches = upper.match(/AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/g);
+                const matches = upper.match(/SRN-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/g);
                 if (matches && matches.length > 0) {
                     return matches[0];
                 }
@@ -473,7 +651,7 @@
                 }
 
                 const value = normalizeCode(result.data);
-                const extracted = extractAssetCode(value);
+                const extracted = extractSaranaCode(value);
                 if (extracted) {
                     submitCode(extracted);
                     return true;
@@ -534,7 +712,7 @@
                         const barcodes = await detector.detect(video);
                         if (barcodes && barcodes.length > 0) {
                             const value = normalizeCode(barcodes[0].rawValue || '');
-                            const extracted = extractAssetCode(value);
+                            const extracted = extractSaranaCode(value);
                             if (extracted) {
                                 submitCode(extracted);
                             } else {
@@ -725,13 +903,13 @@
                 updateButtons(false);
             }
 
-            function extractAssetCode(value) {
+            function extractSaranaCode(value) {
                 const raw = String(value || '').toUpperCase();
                 if (exactPattern.test(raw)) {
                     return raw;
                 }
 
-                const match = raw.match(/AST-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/);
+                const match = raw.match(/SRN-[A-Z0-9]{3}-[A-Z0-9]{3}-L\d{2}-\d{4}-\d{4}/);
                 return match ? match[0] : null;
             }
 

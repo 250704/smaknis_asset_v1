@@ -58,13 +58,18 @@
                                         </div>
                                     </div>
 
-                                    <div class="flex shrink-0 items-center">
+                                    <div class="flex shrink-0 items-center gap-2">
                                         @if ($item->url)
                                             <form method="POST" action="{{ route('notifikasi.read', $item) }}">
                                                 @csrf
-                                                <button type="submit" class="btn-primary">Buka</button>
+                                                <button type="submit" class="btn-primary flex items-center gap-1.5">
+                                                    <i class="fas fa-external-link-alt text-xs"></i>
+                                                    <span>Tinjau</span>
+                                                </button>
                                             </form>
-                                        @elseif (!$item->is_read)
+                                        @endif
+
+                                        @if (!$item->is_read)
                                             <form method="POST" action="{{ route('notifikasi.read', $item) }}">
                                                 @csrf
                                                 <button type="submit" class="btn-secondary">Tandai Dibaca</button>

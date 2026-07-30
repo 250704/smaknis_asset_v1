@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Aset;
+use App\Models\Sarana;
 use App\Models\Gedung;
-use App\Models\KategoriAset;
+use App\Models\KategoriSarana;
 use App\Models\Pengajuan;
 use App\Models\Penggantian;
 use App\Models\Perawatan;
-use App\Models\RiwayatKondisiAset;
+use App\Models\RiwayatKondisiSarana;
 use App\Models\Ruangan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,11 +28,11 @@ class BlueprintPageController extends Controller
 {
     protected array $features = [
         'admin' => [
-            'scan-qr' => ['Scan QR', 'Pusat aksi aset melalui QR code.'],
-            'data-aset' => ['Data Aset', 'Kelola dan monitoring data aset per unit.'],
-            'tambah-aset' => ['Tambah Aset', 'Input aset satuan, ruangan, atau massal.'],
-            'mutasi-aset' => ['Mutasi Aset', 'Eksekusi dan histori perpindahan aset.'],
-            'cetak-qr' => ['Cetak QR', 'Generate dan cetak QR code aset.'],
+            'scan-qr' => ['Scan QR', 'Pusat aksi sarana melalui QR code.'],
+            'data-sarana' => ['Data Sarana', 'Kelola dan monitoring data sarana per unit.'],
+            'tambah-sarana' => ['Tambah Sarana', 'Input sarana satuan, ruangan, atau massal.'],
+            'mutasi-sarana' => ['Mutasi Sarana', 'Eksekusi dan histori perpindahan sarana.'],
+            'cetak-qr' => ['Cetak QR', 'Generate dan cetak QR code sarana.'],
             'semua-pengajuan' => ['Semua Pengajuan', 'Monitoring seluruh pengajuan lintas role.'],
             'realisasi' => ['Realisasi', 'Realisasi perawatan, penggantian, dan pengadaan.'],
             'pelaporan' => ['Pelaporan', 'Laporan inventaris, kerusakan, pengajuan, dan realisasi.'],
@@ -40,15 +40,15 @@ class BlueprintPageController extends Controller
             'log-aktivitas' => ['Log Aktivitas', 'Audit trail aktivitas user (admin only).'],
         ],
         'guru' => [
-            'scan-qr' => ['Scan QR', 'Scan aset dan buat pengajuan cepat.'],
+            'scan-qr' => ['Scan QR', 'Scan sarana dan buat pengajuan cepat.'],
             'buat-pengajuan' => ['Buat Pengajuan Manual', 'Form pengajuan perawatan/penggantian/pengadaan.'],
             'riwayat-pengajuan' => ['Riwayat Pengajuan', 'Pantau status pengajuan yang pernah dibuat.'],
             'notifikasi' => ['Notifikasi', 'Informasi approval dan status realisasi.'],
         ],
         'kepala_sarana' => [
-            'scan-qr' => ['Scan QR', 'Validasi kondisi aset di lapangan.'],
-            'data-aset' => ['Data Aset', 'Lihat data aset aktif dan histori ringkas.'],
-            'histori-aset' => ['Histori Aset', 'Riwayat kondisi dan mutasi aset.'],
+            'scan-qr' => ['Scan QR', 'Validasi kondisi sarana di lapangan.'],
+            'data-sarana' => ['Data Sarana', 'Lihat data sarana aktif dan histori ringkas.'],
+            'histori-sarana' => ['Histori Sarana', 'Riwayat kondisi dan mutasi sarana.'],
             'validasi-kerusakan' => ['Validasi Kerusakan', 'Validasi laporan kerusakan teknis (ringan/berat/tidak layak).'],
             'approval-teknis' => ['Approval', 'Approval tahap kepala sarana.'],
             'semua-proses' => ['Semua Proses', 'Ringkasan pengajuan, kerusakan, perawatan, dan penggantian.'],
@@ -56,14 +56,14 @@ class BlueprintPageController extends Controller
             'notifikasi' => ['Notifikasi', 'Informasi pengajuan baru dan tindak lanjut.'],
         ],
         'bendahara' => [
-            'scan-qr' => ['Scan QR', 'Lihat aset terkait pengajuan anggaran.'],
+            'scan-qr' => ['Scan QR', 'Lihat sarana terkait pengajuan anggaran.'],
             'semua-review' => ['Semua Review Pengajuan', 'Review pengajuan dari sisi biaya/anggaran.'],
             'approval-anggaran' => ['Approval Anggaran', 'Approval tahap bendahara.'],
             'pelaporan' => ['Pelaporan Rekap', 'Rekap biaya estimasi dan realisasi.'],
             'notifikasi' => ['Notifikasi', 'Informasi approval dan status terbaru.'],
         ],
         'kepala_sekolah' => [
-            'scan-qr' => ['Scan QR', 'Lihat detail aset sebagai referensi keputusan.'],
+            'scan-qr' => ['Scan QR', 'Lihat detail sarana sebagai referensi keputusan.'],
             'approval-final' => ['Approval Final', 'Persetujuan akhir pengajuan.'],
             'pelaporan' => ['Pelaporan', 'Ringkasan manajerial inventaris dan pengajuan.'],
             'notifikasi' => ['Notifikasi', 'Informasi keputusan dan aktivitas penting.'],
@@ -81,9 +81,9 @@ class BlueprintPageController extends Controller
         $scanContext = null;
         if ($request->query('source') === 'scan-qr') {
             $scanContext = [
-                'aset_id' => (string) $request->query('aset_id', ''),
-                'kode_aset' => (string) $request->query('kode_aset', ''),
-                'nama_aset' => (string) $request->query('nama_aset', ''),
+                'sarana_id' => (string) $request->query('sarana_id', ''),
+                'kode_sarana' => (string) $request->query('kode_sarana', ''),
+                'nama_sarana' => (string) $request->query('nama_sarana', ''),
                 'aksi' => (string) $request->query('aksi', ''),
             ];
         }
@@ -153,24 +153,24 @@ class BlueprintPageController extends Controller
             'ruangan_id' => (int) $request->query('ruangan_id', 0),
             'kategori_id' => (int) $request->query('kategori_id', 0),
             'kondisi_terkini' => strtoupper(trim((string) $request->query('kondisi_terkini', ''))),
-            'status_aset' => strtoupper(trim((string) $request->query('status_aset', ''))),
+            'status_sarana' => strtoupper(trim((string) $request->query('status_sarana', ''))),
             'date_from' => (string) $request->query('date_from', now()->copy()->startOfMonth()->toDateString()),
             'date_to' => (string) $request->query('date_to', now()->copy()->endOfMonth()->toDateString()),
         ];
 
-        $asetQuery = Aset::query()
+        $saranaQuery = Sarana::query()
             ->with(['kategori', 'ruangan.gedung'])
-            ->when($filters['status_aset'] !== '', fn (Builder $q) => $q->where('status_aset', $filters['status_aset']))
-            ->when($filters['kategori_id'] > 0, fn (Builder $q) => $q->where('kategori_id', $filters['kategori_id']))
-            ->when($filters['ruangan_id'] > 0, fn (Builder $q) => $q->where('ruangan_id', $filters['ruangan_id']))
-            ->when($filters['kondisi_terkini'] !== '', fn (Builder $q) => $q->where('kondisi_terkini', $filters['kondisi_terkini']))
-            ->when($filters['gedung_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('ruangan', fn (Builder $r) => $r->where('gedung_id', $filters['gedung_id']));
+            ->when($filters['status_sarana'], fn(Builder $q, $status) => $q->where('status_sarana', $status))
+            ->when($filters['kategori_id'], fn(Builder $q, $id) => $q->where('kategori_id', $id))
+            ->when($filters['ruangan_id'], fn(Builder $q, $id) => $q->where('ruangan_id', $id))
+            ->when($filters['kondisi_terkini'], fn(Builder $q, $kondisi) => $q->where('kondisi_terkini', $kondisi))
+            ->when($filters['gedung_id'], function (Builder $q, $id) {
+                $q->whereHas('ruangan', fn(Builder $r) => $r->where('gedung_id', $id));
             })
-            ->when($filters['q'] !== '', function (Builder $q) use ($filters) {
-                $q->where(function (Builder $inner) use ($filters) {
-                    $inner->where('kode_aset', 'like', "%{$filters['q']}%")
-                        ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
+            ->when($filters['q'], function (Builder $q, $search) {
+                $q->where(function (Builder $inner) use ($search) {
+                    $inner->where('kode_sarana', 'like', "%{$search}%")
+                        ->orWhere('nama_sarana', 'like', "%{$search}%");
                 });
             });
 
@@ -181,13 +181,13 @@ class BlueprintPageController extends Controller
                 'gedungList' => Gedung::query()->orderBy('nama_gedung')->get(),
                 'ruanganList' => Ruangan::query()
                     ->with('gedung')
-                    ->when($filters['gedung_id'] > 0, fn (Builder $q) => $q->where('gedung_id', $filters['gedung_id']))
+                    ->when($filters['gedung_id'] > 0, fn(Builder $q) => $q->where('gedung_id', $filters['gedung_id']))
                     ->orderBy('nama_ruangan')
                     ->get(),
-                'kategoriList' => KategoriAset::query()->orderBy('nama_kategori')->get(),
-                'kondisiList' => Aset::KONDISI_LIST,
-                'statusList' => Aset::STATUS_LIST,
-                'aset' => (clone $asetQuery)->orderBy('kode_aset')->paginate(10)->withQueryString(),
+                'kategoriList' => KategoriSarana::query()->orderBy('nama_kategori')->get(),
+                'kondisiList' => Sarana::KONDISI_LIST,
+                'statusList' => Sarana::STATUS_LIST,
+                'sarana' => (clone $saranaQuery)->orderBy('kode_sarana')->paginate(10)->withQueryString(),
             ];
         }
 
@@ -202,52 +202,52 @@ class BlueprintPageController extends Controller
         }
 
         $pengajuanQuery = Pengajuan::query()
-            ->with(['aset.ruangan.gedung', 'user'])
+            ->with(['sarana.ruangan.gedung', 'user'])
             ->whereBetween('created_at', [$fromDate, $toDate])
             ->when($filters['kategori_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('aset', fn (Builder $aset) => $aset->where('kategori_id', $filters['kategori_id']));
+                $q->whereHas('sarana', fn(Builder $sarana) => $sarana->where('kategori_id', $filters['kategori_id']));
             })
             ->when($filters['ruangan_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('aset', fn (Builder $aset) => $aset->where('ruangan_id', $filters['ruangan_id']));
+                $q->whereHas('sarana', fn(Builder $sarana) => $sarana->where('ruangan_id', $filters['ruangan_id']));
             })
             ->when($filters['gedung_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('aset.ruangan', fn (Builder $ruangan) => $ruangan->where('gedung_id', $filters['gedung_id']));
+                $q->whereHas('sarana.ruangan', fn(Builder $ruangan) => $ruangan->where('gedung_id', $filters['gedung_id']));
             })
             ->when($filters['q'] !== '', function (Builder $q) use ($filters) {
                 $q->where(function (Builder $inner) use ($filters) {
                     $inner->where('judul_pengajuan', 'like', "%{$filters['q']}%")
-                        ->orWhereHas('aset', function (Builder $aset) use ($filters) {
-                            $aset->where('kode_aset', 'like', "%{$filters['q']}%")
-                                ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
+                        ->orWhereHas('sarana', function (Builder $sarana) use ($filters) {
+                            $sarana->where('kode_sarana', 'like', "%{$filters['q']}%")
+                                ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
                         });
                 });
             });
 
-        $kerusakanQuery = RiwayatKondisiAset::query()
-            ->with(['aset.ruangan.gedung', 'user'])
+        $kerusakanQuery = RiwayatKondisiSarana::query()
+            ->with(['sarana.ruangan.gedung', 'user'])
             ->whereBetween('created_at', [$fromDate, $toDate])
             ->when($filters['kategori_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('aset', fn (Builder $aset) => $aset->where('kategori_id', $filters['kategori_id']));
+                $q->whereHas('sarana', fn(Builder $sarana) => $sarana->where('kategori_id', $filters['kategori_id']));
             })
             ->when($filters['ruangan_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('aset', fn (Builder $aset) => $aset->where('ruangan_id', $filters['ruangan_id']));
+                $q->whereHas('sarana', fn(Builder $sarana) => $sarana->where('ruangan_id', $filters['ruangan_id']));
             })
             ->when($filters['gedung_id'] > 0, function (Builder $q) use ($filters) {
-                $q->whereHas('aset.ruangan', fn (Builder $ruangan) => $ruangan->where('gedung_id', $filters['gedung_id']));
+                $q->whereHas('sarana.ruangan', fn(Builder $ruangan) => $ruangan->where('gedung_id', $filters['gedung_id']));
             })
             ->when($filters['q'] !== '', function (Builder $q) use ($filters) {
-                $q->whereHas('aset', function (Builder $aset) use ($filters) {
-                    $aset->where('kode_aset', 'like', "%{$filters['q']}%")
-                        ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
+                $q->whereHas('sarana', function (Builder $sarana) use ($filters) {
+                    $sarana->where('kode_sarana', 'like', "%{$filters['q']}%")
+                        ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
                 });
             });
 
         $summaryCacheKey = 'laporan_summary_v1:' . $role . ':' . md5(json_encode($filters));
-        $summary = Cache::remember($summaryCacheKey, now()->addSeconds(45), function () use ($asetQuery, $pengajuanQuery, $kerusakanQuery, $fromDate, $toDate, $filters) {
-            $totalAset = (clone $asetQuery)->count();
-            $asetAktif = (clone $asetQuery)->where('status_aset', 'AKTIF')->count();
-            $asetNonaktif = (clone $asetQuery)->where('status_aset', 'NONAKTIF')->count();
-            $asetRusak = (clone $asetQuery)->whereIn('kondisi_terkini', ['RINGAN', 'BERAT', 'TIDAK_LAYAK'])->count();
+        $summary = Cache::remember($summaryCacheKey, now()->addSeconds(45), function () use ($saranaQuery, $pengajuanQuery, $kerusakanQuery, $fromDate, $toDate, $filters) {
+            $totalSarana = (clone $saranaQuery)->count();
+            $saranaAktif = (clone $saranaQuery)->where('status_sarana', 'AKTIF')->count();
+            $saranaNonaktif = (clone $saranaQuery)->where('status_sarana', 'NONAKTIF')->count();
+            $saranaRusak = (clone $saranaQuery)->whereIn('kondisi_terkini', ['RINGAN', 'BERAT', 'TIDAK_LAYAK'])->count();
 
             $statusMenunggu = [
                 Pengajuan::STATUS_DIAJUKAN,
@@ -255,8 +255,6 @@ class BlueprintPageController extends Controller
                 Pengajuan::STATUS_DISETUJUI_BENDAHARA,
                 Pengajuan::STATUS_DISETUJUI_KEPSEK,
                 Pengajuan::STATUS_DIPROSES,
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-                Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
             ];
 
             $totalPengajuan = (clone $pengajuanQuery)->count();
@@ -273,14 +271,14 @@ class BlueprintPageController extends Controller
             $realisasiPerawatan = (float) (Perawatan::query()
                 ->whereHas('pengajuan', function (Builder $q) use ($fromDate, $toDate, $filters) {
                     $q->whereBetween('created_at', [$fromDate, $toDate]);
-                    $this->applyPengajuanAsetFilter($q, $filters);
+                    $this->applyPengajuanSaranaFilter($q, $filters);
                 })
                 ->sum('biaya_realisasi') ?? 0);
 
             $realisasiPenggantian = (float) (Penggantian::query()
                 ->whereHas('pengajuan', function (Builder $q) use ($fromDate, $toDate, $filters) {
                     $q->whereBetween('created_at', [$fromDate, $toDate]);
-                    $this->applyPengajuanAsetFilter($q, $filters);
+                    $this->applyPengajuanSaranaFilter($q, $filters);
                 })
                 ->sum('biaya_realisasi') ?? 0);
 
@@ -292,7 +290,7 @@ class BlueprintPageController extends Controller
                 ->groupBy('bulan')
                 ->orderBy('bulan')
                 ->get()
-                ->map(fn ($row) => ['bulan' => (string) $row->bulan, 'total' => (int) $row->total])
+                ->map(fn($row) => ['bulan' => (string) $row->bulan, 'total' => (int) $row->total])
                 ->values()
                 ->all();
 
@@ -301,16 +299,16 @@ class BlueprintPageController extends Controller
                 ->groupBy('bulan')
                 ->orderBy('bulan')
                 ->get()
-                ->map(fn ($row) => ['bulan' => (string) $row->bulan, 'total' => (int) $row->total])
+                ->map(fn($row) => ['bulan' => (string) $row->bulan, 'total' => (int) $row->total])
                 ->values()
                 ->all();
 
             return [
                 'kpi' => [
-                    'total_aset' => $totalAset,
-                    'aset_aktif' => $asetAktif,
-                    'aset_nonaktif' => $asetNonaktif,
-                    'aset_rusak' => $asetRusak,
+                    'total_sarana' => $totalSarana,
+                    'sarana_aktif' => $saranaAktif,
+                    'sarana_nonaktif' => $saranaNonaktif,
+                    'sarana_rusak' => $saranaRusak,
                     'total_pengajuan' => $totalPengajuan,
                     'pengajuan_menunggu' => $pengajuanMenunggu,
                     'pengajuan_selesai' => $pengajuanSelesai,
@@ -331,15 +329,15 @@ class BlueprintPageController extends Controller
             ];
         });
 
-        $trenPengajuan = collect($summary['tren_pengajuan'])->map(fn (array $row) => (object) $row);
-        $trenKerusakan = collect($summary['tren_kerusakan'])->map(fn (array $row) => (object) $row);
+        $trenPengajuan = collect($summary['tren_pengajuan'])->map(fn(array $row) => (object) $row);
+        $trenKerusakan = collect($summary['tren_kerusakan'])->map(fn(array $row) => (object) $row);
 
         $latestPengajuan = (clone $pengajuanQuery)
             ->latest('id')
             ->limit(8)
             ->get();
 
-        $asetPerluPerhatian = (clone $asetQuery)
+        $saranaPerluPerhatian = (clone $saranaQuery)
             ->whereIn('kondisi_terkini', ['RINGAN', 'BERAT', 'TIDAK_LAYAK'])
             ->latest('updated_at')
             ->limit(8)
@@ -360,19 +358,19 @@ class BlueprintPageController extends Controller
                 ->get();
 
             $laporanPerawatan = Perawatan::query()
-                ->with(['pengajuan.aset.ruangan.gedung', 'pengajuan.user'])
+                ->with(['pengajuan.sarana.ruangan.gedung', 'pengajuan.user'])
                 ->whereHas('pengajuan', function (Builder $q) use ($fromDate, $toDate, $filters) {
                     $q->whereBetween('created_at', [$fromDate, $toDate]);
-                    $this->applyPengajuanAsetFilter($q, $filters);
+                    $this->applyPengajuanSaranaFilter($q, $filters);
                 })
                 ->latest('id')
                 ->get();
 
             $laporanPenggantian = Penggantian::query()
-                ->with(['pengajuan.aset.ruangan.gedung', 'pengajuan.user', 'asetLama', 'asetBaru'])
+                ->with(['pengajuan.sarana.ruangan.gedung', 'pengajuan.user', 'saranaLama', 'saranaBaru'])
                 ->whereHas('pengajuan', function (Builder $q) use ($fromDate, $toDate, $filters) {
                     $q->whereBetween('created_at', [$fromDate, $toDate]);
-                    $this->applyPengajuanAsetFilter($q, $filters);
+                    $this->applyPengajuanSaranaFilter($q, $filters);
                 })
                 ->latest('id')
                 ->get();
@@ -381,10 +379,10 @@ class BlueprintPageController extends Controller
         $gedungList = Gedung::query()->orderBy('nama_gedung')->get();
         $ruanganList = Ruangan::query()
             ->with('gedung')
-            ->when($filters['gedung_id'] > 0, fn (Builder $q) => $q->where('gedung_id', $filters['gedung_id']))
+            ->when($filters['gedung_id'] > 0, fn(Builder $q) => $q->where('gedung_id', $filters['gedung_id']))
             ->orderBy('nama_ruangan')
             ->get();
-        $kategoriList = KategoriAset::query()->orderBy('nama_kategori')->get();
+        $kategoriList = KategoriSarana::query()->orderBy('nama_kategori')->get();
 
         return [
             'role' => $role,
@@ -397,7 +395,7 @@ class BlueprintPageController extends Controller
             'trenPengajuan' => $trenPengajuan,
             'trenKerusakan' => $trenKerusakan,
             'latestPengajuan' => $latestPengajuan,
-            'asetPerluPerhatian' => $asetPerluPerhatian,
+            'saranaPerluPerhatian' => $saranaPerluPerhatian,
             'laporanKerusakan' => $laporanKerusakan,
             'laporanPerawatan' => $laporanPerawatan,
             'laporanPenggantian' => $laporanPenggantian,
@@ -423,16 +421,16 @@ class BlueprintPageController extends Controller
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('01 Kerusakan');
         $row = $this->initSheetMeta($sheet, 'Laporan Kerusakan', $payload);
-        $headers = ['Tanggal', 'Kode Aset', 'Nama Aset', 'Lokasi', 'Tingkat', 'Status', 'Pelapor', 'Validator', 'Catatan'];
+        $headers = ['Tanggal', 'Kode Sarana', 'Nama Sarana', 'Lokasi', 'Tingkat', 'Status', 'Pelapor', 'Validator', 'Catatan'];
         $this->writeTableHeader($sheet, $row, $headers);
         $row++;
 
         foreach ($payload['laporanKerusakan'] as $item) {
             $sheet->fromArray([
                 $item->created_at?->format('Y-m-d H:i'),
-                $item->aset?->kode_aset ?? '-',
-                $item->aset?->nama_aset ?? '-',
-                ($item->aset?->ruangan?->nama_ruangan ?? '-') . ' - ' . ($item->aset?->ruangan?->gedung?->nama_gedung ?? '-'),
+                $item->sarana?->kode_sarana ?? '-',
+                $item->sarana?->nama_sarana ?? '-',
+                ($item->sarana?->ruangan?->nama_ruangan ?? '-') . ' - ' . ($item->sarana?->ruangan?->gedung?->nama_gedung ?? '-'),
                 $item->tingkat_kerusakan ?? '-',
                 $item->status ?? '-',
                 $item->user?->display_name ?? '-',
@@ -450,16 +448,16 @@ class BlueprintPageController extends Controller
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('02 Perawatan');
         $row = $this->initSheetMeta($sheet, 'Laporan Perawatan', $payload);
-        $headers = ['Tanggal', 'Kode Aset', 'Nama Aset', 'Lokasi', 'Pengaju', 'Biaya Realisasi', 'Vendor', 'Teknisi', 'Keterangan'];
+        $headers = ['Tanggal', 'Kode Sarana', 'Nama Sarana', 'Lokasi', 'Pengaju', 'Biaya Realisasi', 'Vendor', 'Teknisi', 'Keterangan'];
         $this->writeTableHeader($sheet, $row, $headers);
         $row++;
 
         foreach ($payload['laporanPerawatan'] as $item) {
             $sheet->fromArray([
                 $item->tanggal_perawatan?->format('Y-m-d') ?? '-',
-                $item->pengajuan?->aset?->kode_aset ?? '-',
-                $item->pengajuan?->aset?->nama_aset ?? '-',
-                ($item->pengajuan?->aset?->ruangan?->nama_ruangan ?? '-') . ' - ' . ($item->pengajuan?->aset?->ruangan?->gedung?->nama_gedung ?? '-'),
+                $item->pengajuan?->sarana?->kode_sarana ?? '-',
+                $item->pengajuan?->sarana?->nama_sarana ?? '-',
+                ($item->pengajuan?->sarana?->ruangan?->nama_ruangan ?? '-') . ' - ' . ($item->pengajuan?->sarana?->ruangan?->gedung?->nama_gedung ?? '-'),
                 $item->pengajuan?->user?->display_name ?? '-',
                 (float) ($item->biaya_realisasi ?? 0),
                 $item->nama_vendor ?? '-',
@@ -478,17 +476,17 @@ class BlueprintPageController extends Controller
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('03 Penggantian');
         $row = $this->initSheetMeta($sheet, 'Laporan Penggantian', $payload);
-        $headers = ['Tanggal', 'Kode Aset Lama', 'Nama Aset Lama', 'Kode Aset Baru', 'Nama Aset Baru', 'Pengaju', 'Biaya Realisasi', 'Status Realisasi', 'Vendor'];
+        $headers = ['Tanggal', 'Kode Sarana Lama', 'Nama Sarana Lama', 'Kode Sarana Baru', 'Nama Sarana Baru', 'Pengaju', 'Biaya Realisasi', 'Status Realisasi', 'Vendor'];
         $this->writeTableHeader($sheet, $row, $headers);
         $row++;
 
         foreach ($payload['laporanPenggantian'] as $item) {
             $sheet->fromArray([
                 $item->tanggal_penggantian?->format('Y-m-d') ?? '-',
-                $item->asetLama?->kode_aset ?? ($item->pengajuan?->aset?->kode_aset ?? '-'),
-                $item->asetLama?->nama_aset ?? ($item->pengajuan?->aset?->nama_aset ?? '-'),
-                $item->asetBaru?->kode_aset ?? '-',
-                $item->asetBaru?->nama_aset ?? '-',
+                $item->saranaLama?->kode_sarana ?? ($item->pengajuan?->sarana?->kode_sarana ?? '-'),
+                $item->saranaLama?->nama_sarana ?? ($item->pengajuan?->sarana?->nama_sarana ?? '-'),
+                $item->saranaBaru?->kode_sarana ?? '-',
+                $item->saranaBaru?->nama_sarana ?? '-',
                 $item->pengajuan?->user?->display_name ?? '-',
                 (float) ($item->biaya_realisasi ?? 0),
                 $item->status_realisasi ?? '-',
@@ -506,14 +504,14 @@ class BlueprintPageController extends Controller
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('04 Pengajuan');
         $row = $this->initSheetMeta($sheet, 'Laporan Pengajuan', $payload);
-        $headers = ['Tanggal', 'Kode Aset', 'Judul', 'Jenis', 'Estimasi', 'Status', 'Pengaju'];
+        $headers = ['Tanggal', 'Kode Sarana', 'Judul', 'Jenis', 'Estimasi', 'Status', 'Pengaju'];
         $this->writeTableHeader($sheet, $row, $headers);
         $row++;
 
         foreach ($payload['laporanPengajuan'] as $item) {
             $sheet->fromArray([
                 $item->created_at?->format('Y-m-d H:i'),
-                $item->aset?->kode_aset ?? '-',
+                $item->sarana?->kode_sarana ?? '-',
                 $item->judul_pengajuan ?? '-',
                 $item->jenis_pengajuan ?? '-',
                 (float) ($item->estimasi_biaya ?? 0),
@@ -623,27 +621,27 @@ class BlueprintPageController extends Controller
         }
     }
 
-    private function applyPengajuanAsetFilter(Builder $query, array $filters): void
+    private function applyPengajuanSaranaFilter(Builder $query, array $filters): void
     {
         if (($filters['kategori_id'] ?? 0) > 0) {
-            $query->whereHas('aset', fn (Builder $aset) => $aset->where('kategori_id', (int) $filters['kategori_id']));
+            $query->whereHas('sarana', fn(Builder $sarana) => $sarana->where('kategori_id', (int) $filters['kategori_id']));
         }
 
         if (($filters['ruangan_id'] ?? 0) > 0) {
-            $query->whereHas('aset', fn (Builder $aset) => $aset->where('ruangan_id', (int) $filters['ruangan_id']));
+            $query->whereHas('sarana', fn(Builder $sarana) => $sarana->where('ruangan_id', (int) $filters['ruangan_id']));
         }
 
         if (($filters['gedung_id'] ?? 0) > 0) {
-            $query->whereHas('aset.ruangan', fn (Builder $ruangan) => $ruangan->where('gedung_id', (int) $filters['gedung_id']));
+            $query->whereHas('sarana.ruangan', fn(Builder $ruangan) => $ruangan->where('gedung_id', (int) $filters['gedung_id']));
         }
 
         if (trim((string) ($filters['q'] ?? '')) !== '') {
             $q = trim((string) $filters['q']);
             $query->where(function (Builder $inner) use ($q) {
                 $inner->where('judul_pengajuan', 'like', "%{$q}%")
-                    ->orWhereHas('aset', function (Builder $aset) use ($q) {
-                        $aset->where('kode_aset', 'like', "%{$q}%")
-                            ->orWhere('nama_aset', 'like', "%{$q}%");
+                    ->orWhereHas('sarana', function (Builder $sarana) use ($q) {
+                        $sarana->where('kode_sarana', 'like', "%{$q}%")
+                            ->orWhere('nama_sarana', 'like', "%{$q}%");
                     });
             });
         }

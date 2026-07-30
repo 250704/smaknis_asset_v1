@@ -32,4 +32,10 @@
         <i class="fas fa-history w-4 text-center text-xs"></i>
         <span>Pengajuan Saya</span>
     </a>
+
+    {{-- Mutasi Sarana --}}
+    <a href="{{ route('guru.mutasi.index') }}" class="side-nav-link {{ request()->routeIs('guru.mutasi.*') ? 'active' : '' }}">
+        <i class="fas fa-exchange-alt w-4 text-center text-xs"></i>
+        <span>Mutasi Sarana</span>
+    </a>
 </nav>

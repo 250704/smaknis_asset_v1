@@ -106,10 +106,10 @@ class RuanganController extends Controller
 
     public function destroy(Ruangan $ruangan): RedirectResponse
     {
-        if ($ruangan->aset()->exists()) {
+        if ($ruangan->sarana()->exists()) {
             return redirect()
                 ->route('admin.master.ruangan.index')
-                ->with('error', 'Ruangan tidak bisa dihapus karena masih digunakan pada data aset.');
+                ->with('error', 'Ruangan tidak bisa dihapus karena masih digunakan pada data sarana.');
         }
 
         $ruangan->delete();

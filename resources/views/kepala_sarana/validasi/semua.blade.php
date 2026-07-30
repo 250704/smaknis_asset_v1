@@ -117,9 +117,9 @@
                             };
                         @endphp
                         <tr class="bg-white/70 transition hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
-                            <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $row['kode_aset'] }}</td>
+                            <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{{ $row['kode_sarana'] }}</td>
                             <td class="px-4 py-3">
-                                <p class="font-semibold text-slate-700 dark:text-slate-200">{{ $row['nama_aset'] }}</p>
+                                <p class="font-semibold text-slate-700 dark:text-slate-200">{{ $row['nama_sarana'] }}</p>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ $row['lokasi'] }}</p>
                             </td>
                             <td class="px-4 py-3 text-slate-700 dark:text-slate-200">{{ $row['tahap_terakhir'] }}</td>

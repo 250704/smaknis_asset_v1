@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Aset;
+use App\Models\Sarana;
 use App\Models\ApprovalPengajuan;
 use App\Models\DetailPengadaan;
-use App\Models\KategoriAset;
+use App\Models\KategoriSarana;
 use App\Models\Notifikasi;
 use App\Models\Pengajuan;
 use App\Models\Penggantian;
 use App\Models\Perawatan;
-use App\Models\RiwayatKondisiAset;
+use App\Models\RiwayatKondisiSarana;
 use App\Models\Ruangan;
 use App\Models\User;
 use App\Services\WhatsAppNotificationService;
@@ -23,7 +23,7 @@ use Illuminate\View\View;
 
 class PengajuanController extends Controller
 {
-    private const JENIS_LIST = ['PERAWATAN', 'PENGGANTIAN', 'PENGADAAN'];
+    private const JENIS_LIST = ['PERAWATAN', 'PENGGANTIAN', 'PENGADAAN', 'MUTASI', 'KERUSAKAN'];
 
     private const STATUS_LIST = [
         Pengajuan::STATUS_DIAJUKAN,
@@ -32,8 +32,6 @@ class PengajuanController extends Controller
         Pengajuan::STATUS_DISETUJUI_KEPSEK,
         Pengajuan::STATUS_DITOLAK,
         Pengajuan::STATUS_DIPROSES,
-        Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-        Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
         Pengajuan::STATUS_SELESAI,
     ];
 
@@ -55,9 +53,16 @@ class PengajuanController extends Controller
         ],
     ];
 
-    public function guruCreate(Request $request): View
+    public function guruCreate(Request $request): RedirectResponse
     {
-        return $this->createByRole($request, 'guru');
+        return redirect()->route('guru.kerusakan.create')
+            ->with('info', 'Pengajuan pengadaan barang baru mandiri hanya dapat dilakukan oleh Kepala Sarana, Admin, Bendahara, dan Kepala Sekolah. Silakan laporkan kerusakan atau usulkan mutasi sarana.');
+    }
+
+    public function guruStore(Request $request): RedirectResponse
+    {
+        return redirect()->route('guru.kerusakan.create')
+            ->with('info', 'Pengajuan pengadaan barang baru mandiri hanya dapat dilakukan oleh Kepala Sarana, Admin, Bendahara, dan Kepala Sekolah. Silakan laporkan kerusakan atau usulkan mutasi sarana.');
     }
 
     public function kepalaSaranaCreate(Request $request): View
@@ -77,7 +82,7 @@ class PengajuanController extends Controller
 
     private function createByRole(Request $request, string $role): View
     {
-        $kodeAset = trim((string) $request->query('kode_aset', ''));
+        $kodeSarana = trim((string) $request->query('kode_sarana', ''));
 
         $storeRouteMap = [
             'guru' => 'guru.pengajuan.store',
@@ -104,18 +109,13 @@ class PengajuanController extends Controller
         return view('guru.pengajuan.create', [
             'jenisList' => ['PENGADAAN'],
             'selectedJenis' => 'PENGADAAN',
-            'kodeAset' => $kodeAset,
-            'kategoriList' => KategoriAset::query()->orderBy('nama_kategori')->get(),
+            'kodeSarana' => $kodeSarana,
+            'kategoriList' => KategoriSarana::query()->orderBy('nama_kategori')->get(['*']),
             'ruanganList' => Ruangan::query()->with('gedung')->orderBy('nama_ruangan')->get(),
             'storeRoute' => route($storeRouteMap[$role] ?? 'guru.pengajuan.store'),
             'indexRoute' => route($indexRouteMap[$role] ?? 'guru.pengajuan.index'),
             'scanRoute' => route($scanRouteMap[$role] ?? 'guru.scan'),
         ]);
-    }
-
-    public function guruStore(Request $request): RedirectResponse
-    {
-        return $this->storeManualPengajuan($request, 'guru.pengajuan.index');
     }
 
     public function kepalaSaranaStore(Request $request): RedirectResponse
@@ -145,6 +145,10 @@ class PengajuanController extends Controller
 
     private function storeManualPengajuan(Request $request, string $redirectRoute): RedirectResponse
     {
+        $request->merge([
+            'jenis_pengajuan' => $request->input('jenis_pengajuan', 'PENGADAAN'),
+        ]);
+
         $base = $request->validate([
             'judul_pengajuan' => ['required', 'string', 'max:200'],
             'jenis_pengajuan' => ['required', Rule::in(['PENGADAAN'])],
@@ -159,8 +163,8 @@ class PengajuanController extends Controller
         $items = [];
         $validatedItems = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.nama_aset_rencana' => ['required', 'string', 'max:200'],
-            'items.*.kategori_id' => ['required', 'integer', 'exists:kategori_aset,id'],
+            'items.*.nama_sarana_rencana' => ['required', 'string', 'max:200'],
+            'items.*.kategori_id' => ['required', 'integer', 'exists:kategori_sarana,id'],
             'items.*.ruangan_id' => ['required', 'integer', 'exists:ruangan,id'],
             'items.*.jumlah' => ['required', 'integer', 'min:1'],
             'items.*.spesifikasi' => ['nullable', 'string', 'max:500'],
@@ -188,24 +192,38 @@ class PengajuanController extends Controller
             }
         }
 
-        $pengajuan = DB::transaction(function () use ($request, $base, $jenis, $items, $estimasi, $lampiranPaths) {
+        $isKasarana = $request->user()->hasRole('kepala_sarana');
+        $initialStatus = $isKasarana ? Pengajuan::STATUS_DISETUJUI_KASARANA : Pengajuan::STATUS_DIAJUKAN;
+
+        $pengajuan = DB::transaction(function () use ($request, $base, $jenis, $items, $estimasi, $lampiranPaths, $isKasarana, $initialStatus) {
             $pengajuan = Pengajuan::query()->create([
-                'aset_id' => null,
+                'sarana_id' => null,
                 'user_id' => $request->user()->id,
                 'judul_pengajuan' => $base['judul_pengajuan'],
                 'jenis_pengajuan' => $jenis,
                 'deskripsi' => $base['deskripsi'],
                 'estimasi_biaya' => $estimasi,
                 'target_realisasi' => $base['target_realisasi'] ?? null,
-                'status_pengajuan' => Pengajuan::STATUS_DIAJUKAN,
+                'status_pengajuan' => $initialStatus,
                 'lampiran' => $lampiranPaths !== [] ? $lampiranPaths : null,
             ]);
+
+            if ($isKasarana) {
+                ApprovalPengajuan::query()->create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'approver_id' => $request->user()->id,
+                    'role_approval' => ApprovalPengajuan::ROLE_KASARANA,
+                    'status' => ApprovalPengajuan::STATUS_DISETUJUI,
+                    'catatan' => 'Auto-approved (Dibuat oleh Kepala Sarana)',
+                    'approved_at' => now(),
+                ]);
+            }
 
             if ($jenis === 'PENGADAAN') {
                 foreach ($items as $item) {
                     DetailPengadaan::query()->create([
                         'pengajuan_id' => $pengajuan->id,
-                        'nama_aset_rencana' => $item['nama_aset_rencana'],
+                        'nama_sarana_rencana' => $item['nama_sarana_rencana'],
                         'kategori_id' => $item['kategori_id'],
                         'ruangan_id' => $item['ruangan_id'],
                         'jumlah' => $item['jumlah'],
@@ -218,10 +236,14 @@ class PengajuanController extends Controller
             return $pengajuan;
         });
 
+        $trackingMsg = $isKasarana
+            ? 'Status saat ini: Menunggu approval Bendahara.'
+            : 'Status saat ini: Menunggu approval Kepala Sarana.';
+
         $this->broadcastPengajuanTracking(
             $pengajuan,
             "Pengajuan dibuat oleh {$request->user()->display_name}.",
-            'Status saat ini: Menunggu approval Kepala Sarana.'
+            $trackingMsg
         );
 
         return redirect()
@@ -232,26 +254,14 @@ class PengajuanController extends Controller
     public function guruIndex(Request $request): View
     {
         $filters = $this->buildFilters($request);
+        $userId = $request->user()->id;
 
-        $pengajuan = Pengajuan::query()
-            ->with(['aset', 'user'])
-            ->where('user_id', $request->user()->id)
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where('judul_pengajuan', 'like', "%{$filters['q']}%")
-                    ->orWhereHas('aset', function ($asetQuery) use ($filters) {
-                        $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                            ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
-                    });
-            })
-            ->when($filters['status'], fn($query, $status) => $query->where('status_pengajuan', $status))
-            ->when($filters['jenis'], fn($query, $jenis) => $query->where('jenis_pengajuan', $jenis))
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $merged = $this->fetchMergedList($filters, 'guru', null, $userId);
+        $pengajuan = $merged['paginated'];
 
         return view('shared.pengajuan.index', [
             'title' => 'Pengajuan Saya',
-            'subtitle' => 'Pantau status pengajuan yang pernah kamu buat.',
+            'subtitle' => 'Pantau status pengajuan dan laporan kerusakan kamu.',
             'pengajuan' => $pengajuan,
             'filters' => $filters,
             'statusList' => self::STATUS_LIST,
@@ -282,26 +292,15 @@ class PengajuanController extends Controller
     private function mineIndexByRole(Request $request, string $detailRoute): View
     {
         $filters = $this->buildFilters($request);
+        $userId = $request->user()->id;
+        $role = (string) ($request->user()->role_code ?? 'guru');
 
-        $pengajuan = Pengajuan::query()
-            ->with(['aset', 'user'])
-            ->where('user_id', $request->user()->id)
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where('judul_pengajuan', 'like', "%{$filters['q']}%")
-                    ->orWhereHas('aset', function ($asetQuery) use ($filters) {
-                        $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                            ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
-                    });
-            })
-            ->when($filters['status'], fn($query, $status) => $query->where('status_pengajuan', $status))
-            ->when($filters['jenis'], fn($query, $jenis) => $query->where('jenis_pengajuan', $jenis))
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $merged = $this->fetchMergedList($filters, $role, null, $userId);
+        $pengajuan = $merged['paginated'];
 
         return view('shared.pengajuan.index', [
             'title' => 'Pengajuan Saya',
-            'subtitle' => 'Daftar pengajuan yang kamu buat sendiri.',
+            'subtitle' => 'Daftar pengajuan dan laporan kerusakan kamu.',
             'pengajuan' => $pengajuan,
             'filters' => $filters,
             'statusList' => self::STATUS_LIST,
@@ -317,22 +316,17 @@ class PengajuanController extends Controller
     public function adminIndex(Request $request): View
     {
         $filters = $this->buildFilters($request);
+        $user = $request->user();
+        $roleName = $user?->role ?? 'admin';
+        $detailRoute = match ($roleName) {
+            'kepala_sekolah' => 'kepala_sekolah.pengajuan.show',
+            'kepala_sarana' => 'kepala_sarana.pengajuan.show',
+            'bendahara' => 'bendahara.pengajuan.show',
+            default => 'admin.pengajuan.show',
+        };
 
-        $pengajuan = Pengajuan::query()
-            ->with(['aset', 'user'])
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where('judul_pengajuan', 'like', "%{$filters['q']}%")
-                    ->orWhereHas('aset', function ($asetQuery) use ($filters) {
-                        $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                            ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
-                    })
-                    ->orWhereHas('user', fn($userQuery) => $userQuery->where('nama', 'like', "%{$filters['q']}%"));
-            })
-            ->when($filters['status'], fn($query, $status) => $query->where('status_pengajuan', $status))
-            ->when($filters['jenis'], fn($query, $jenis) => $query->where('jenis_pengajuan', $jenis))
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
+        $merged = $this->fetchMergedList($filters, $roleName, 'all');
+        $pengajuan = $merged['paginated'];
 
         return view('shared.pengajuan.index', [
             'title' => 'Semua Pengajuan',
@@ -345,7 +339,10 @@ class PengajuanController extends Controller
             'approveRoute' => null,
             'rejectRoute' => null,
             'showUser' => true,
-            'detailRoute' => 'admin.pengajuan.show',
+            'detailRoute' => $detailRoute,
+            'role' => $roleName,
+            'laporanKerusakanCount' => 0,
+            'pengajuanCount' => $merged['total'],
         ]);
     }
 
@@ -355,23 +352,23 @@ class PengajuanController extends Controller
         $allowedStatus = [
             Pengajuan::STATUS_DISETUJUI_KEPSEK,
             Pengajuan::STATUS_DIPROSES,
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
         ];
 
         $pengajuan = Pengajuan::query()
-            ->with(['aset', 'user'])
+            ->with(['sarana', 'user'])
             ->whereIn('status_pengajuan', $allowedStatus)
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where('judul_pengajuan', 'like', "%{$filters['q']}%")
-                    ->orWhereHas('aset', function ($asetQuery) use ($filters) {
-                        $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                            ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
-                    })
-                    ->orWhereHas('user', fn($userQuery) => $userQuery->where('nama', 'like', "%{$filters['q']}%"));
-            })
             ->when($filters['status'], fn($query, $status) => $query->where('status_pengajuan', $status))
             ->when($filters['jenis'], fn($query, $jenis) => $query->where('jenis_pengajuan', $jenis))
+            ->when($filters['q'] !== '', function ($query) use ($filters) {
+                $query->where(function ($subQuery) use ($filters) {
+                    $subQuery->where('judul_pengajuan', 'like', "%{$filters['q']}%")
+                        ->orWhereHas('sarana', function ($saranaQuery) use ($filters) {
+                            $saranaQuery->where('kode_sarana', 'like', "%{$filters['q']}%")
+                                ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
+                        })
+                        ->orWhereHas('user', fn($userQuery) => $userQuery->where('nama', 'like', "%{$filters['q']}%"));
+                });
+            })
             ->latest()
             ->paginate(12)
             ->withQueryString();
@@ -407,53 +404,20 @@ class PengajuanController extends Controller
 
         $mode = (string) $request->query('mode', $request->route('mode', 'default'));
         $defaultFilters = $this->defaultReviewFilters($role, $mode);
-        $isBendaharaApproval = $role === 'bendahara' && $mode === 'approval';
-        $isKepalaSaranaApproval = $role === 'kepala_sarana' && $mode === 'approval';
-        $isLockedApprovalQueue = $isBendaharaApproval || $isKepalaSaranaApproval;
-        $filters = $isLockedApprovalQueue
-            ? $defaultFilters
-            : $this->buildFilters($request, $defaultFilters);
-
-        $pengajuan = Pengajuan::query()
-            ->with(['aset', 'user'])
-            ->when($isKepalaSaranaApproval, function ($query) {
-                $query->where('status_pengajuan', Pengajuan::STATUS_DIAJUKAN)
-                    ->whereDoesntHave('approvalPengajuan', function ($approvalQuery) {
-                        $approvalQuery->where('role_approval', ApprovalPengajuan::ROLE_KASARANA);
-                    });
-            })
-            ->when($isBendaharaApproval, function ($query) {
-                $query->where('status_pengajuan', Pengajuan::STATUS_DISETUJUI_KASARANA)
-                    ->whereDoesntHave('approvalPengajuan', function ($approvalQuery) {
-                        $approvalQuery->where('role_approval', ApprovalPengajuan::ROLE_BENDAHARA);
-                    });
-            })
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where('judul_pengajuan', 'like', "%{$filters['q']}%")
-                    ->orWhereHas('aset', function ($asetQuery) use ($filters) {
-                        $asetQuery->where('kode_aset', 'like', "%{$filters['q']}%")
-                            ->orWhere('nama_aset', 'like', "%{$filters['q']}%");
-                    })
-                    ->orWhereHas('user', fn($userQuery) => $userQuery->where('nama', 'like', "%{$filters['q']}%"));
-            })
-            ->when($filters['status'], fn($query, $status) => $query->where('status_pengajuan', $status))
-            ->when($filters['jenis'], fn($query, $jenis) => $query->where('jenis_pengajuan', $jenis))
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
+        $filters = $this->buildFilters($request, $defaultFilters);
 
         $titles = [
-            'kepala_sarana' => $mode === 'validasi' ? 'Validasi Kerusakan' : 'Approval',
-            'bendahara' => $mode === 'all' ? 'Semua Review Pengajuan' : 'Approval Anggaran',
+            'kepala_sarana' => $mode === 'all' ? 'Semua Pengajuan' : 'Approval & Validasi',
+            'bendahara' => $mode === 'all' ? 'Semua Pengajuan' : 'Approval Anggaran',
             'kepala_sekolah' => 'Approval Final',
         ];
 
         $subtitles = [
-            'kepala_sarana' => $mode === 'validasi'
-                ? 'Validasi awal laporan kerusakan sebelum masuk pengajuan.'
-                : 'Daftar pengajuan yang menunggu approval kepala sarana.',
+            'kepala_sarana' => $mode === 'all'
+                ? 'Monitoring seluruh pengajuan dan laporan kerusakan.'
+                : 'Pusat approval pengajuan dan validasi laporan kerusakan sarana.',
             'bendahara' => $mode === 'all'
-                ? 'Daftar baca seluruh pengajuan lintas status.'
+                ? 'Daftar seluruh pengajuan dan laporan kerusakan lintas status.'
                 : 'Review kelayakan biaya dan approval anggaran.',
             'kepala_sekolah' => 'Persetujuan akhir sebelum realisasi.',
         ];
@@ -476,10 +440,18 @@ class PengajuanController extends Controller
             'kepala_sekolah' => 'kepala_sekolah.pengajuan.show',
         };
 
+        // Fetch merged list
+        $merged = $this->fetchMergedList($filters, $role, $mode);
+        $pengajuan = $merged['paginated'];
+
         return view('shared.pengajuan.index', [
             'title' => $titles[$role] ?? 'Review Pengajuan',
             'subtitle' => $subtitles[$role] ?? 'Review pengajuan sesuai peran.',
+            'role' => $role,
             'pengajuan' => $pengajuan,
+            'laporanKerusakan' => null,
+            'laporanKerusakanCount' => 0,
+            'pengajuanCount' => $merged['total'],
             'filters' => $filters,
             'statusList' => self::STATUS_LIST,
             'jenisList' => self::JENIS_LIST,
@@ -488,8 +460,195 @@ class PengajuanController extends Controller
             'rejectRoute' => $rejectRoute,
             'showUser' => true,
             'detailRoute' => $detailRoute,
-            'showFilters' => !$isLockedApprovalQueue,
+            'showFilters' => true,
         ]);
+    }
+
+    private function fetchMergedList(array $filters, ?string $role = null, ?string $mode = null, ?int $onlyUserId = null): array
+    {
+        $isApprovalMode = $mode === 'approval';
+
+        // 1. Fetch Laporan Kerusakan
+        $laporanQuery = RiwayatKondisiSarana::query()
+            ->with(['sarana.ruangan.gedung', 'user']);
+
+        if ($onlyUserId !== null) {
+            $laporanQuery->where('user_id', $onlyUserId);
+        } elseif ($isApprovalMode) {
+            if ($role === 'kepala_sarana') {
+                $laporanQuery->where('status', 'DILAPORKAN');
+            } else {
+                $laporanQuery->whereRaw('1 = 0');
+            }
+        } else {
+            $laporanQuery->whereNotIn('status', ['DIVALIDASI', 'DITINDAKLANJUTI', 'SELESAI']);
+        }
+
+        if ($filters['status']) {
+            if ($filters['status'] === Pengajuan::STATUS_DIAJUKAN) {
+                $laporanQuery->where('status', 'DILAPORKAN');
+            } elseif ($filters['status'] === 'SELESAI') {
+                $laporanQuery->where('status', 'SELESAI');
+            } elseif ($filters['status'] === 'DITOLAK') {
+                $laporanQuery->where('status', 'DITOLAK');
+            } else {
+                $laporanQuery->whereRaw('1 = 0');
+            }
+        }
+
+        if ($filters['q'] !== '') {
+            $q = $filters['q'];
+            $laporanQuery->where(function ($sub) use ($q) {
+                $sub->whereHas('sarana', function ($saranaQuery) use ($q) {
+                    $saranaQuery->where('kode_sarana', 'like', "%{$q}%")
+                        ->orWhere('nama_sarana', 'like', "%{$q}%");
+                })->orWhere('deskripsi', 'like', "%{$q}%");
+            });
+        }
+
+        if (empty($filters['jenis']) || $filters['jenis'] === 'KERUSAKAN') {
+            $laporanList = $laporanQuery->get()->map(function ($item) {
+                $item->tipe_item = 'laporan_kerusakan';
+                return $item;
+            });
+        } else {
+            $laporanList = collect();
+        }
+
+        // 2. Fetch Pengajuan
+        $pengajuanQuery = Pengajuan::query()
+            ->with(['sarana.ruangan.gedung', 'user']);
+
+        if ($onlyUserId !== null) {
+            $pengajuanQuery->where(function ($query) use ($onlyUserId) {
+                $query->where('user_id', $onlyUserId)
+                    ->orWhere(function ($sub) use ($onlyUserId) {
+                        $sub->whereIn('jenis_pengajuan', ['PERAWATAN', 'PENGGANTIAN'])
+                            ->whereIn('sarana_id', function ($saranaSub) use ($onlyUserId) {
+                                $saranaSub->select('sarana_id')
+                                    ->from('riwayat_kondisi_sarana')
+                                    ->where('user_id', $onlyUserId)
+                                    ->whereNotNull('sarana_id');
+                            });
+                    });
+            });
+        } elseif ($isApprovalMode) {
+            if ($role === 'kepala_sarana') {
+                $pengajuanQuery->where('status_pengajuan', Pengajuan::STATUS_DIAJUKAN)
+                    ->whereDoesntHave('approvalPengajuan', function ($approvalQuery) {
+                        $approvalQuery->where('role_approval', ApprovalPengajuan::ROLE_KASARANA);
+                    });
+            } elseif ($role === 'bendahara') {
+                $pengajuanQuery->where('status_pengajuan', Pengajuan::STATUS_DISETUJUI_KASARANA)
+                    ->whereDoesntHave('approvalPengajuan', function ($approvalQuery) {
+                        $approvalQuery->where('role_approval', ApprovalPengajuan::ROLE_BENDAHARA);
+                    });
+            } elseif ($role === 'kepala_sekolah') {
+                $pengajuanQuery->where('status_pengajuan', Pengajuan::STATUS_DISETUJUI_BENDAHARA)
+                    ->whereDoesntHave('approvalPengajuan', function ($approvalQuery) {
+                        $approvalQuery->where('role_approval', ApprovalPengajuan::ROLE_KEPSEK);
+                    });
+            }
+        }
+
+        if ($filters['status']) {
+            $pengajuanQuery->where('status_pengajuan', $filters['status']);
+        }
+
+        if ($filters['jenis'] && !in_array($filters['jenis'], ['KERUSAKAN', 'MUTASI'], true)) {
+            $pengajuanQuery->where('jenis_pengajuan', $filters['jenis']);
+        } elseif (in_array($filters['jenis'], ['KERUSAKAN', 'MUTASI'], true)) {
+            $pengajuanQuery->whereRaw('1 = 0');
+        }
+
+        if ($filters['q'] !== '') {
+            $pengajuanQuery->where(function ($subQuery) use ($filters) {
+                $subQuery->where('judul_pengajuan', 'like', "%{$filters['q']}%")
+                    ->orWhereHas('sarana', function ($saranaQuery) use ($filters) {
+                        $saranaQuery->where('kode_sarana', 'like', "%{$filters['q']}%")
+                            ->orWhere('nama_sarana', 'like', "%{$filters['q']}%");
+                    })
+                    ->orWhereHas('user', fn($userQuery) => $userQuery->where('nama', 'like', "%{$filters['q']}%"));
+            });
+        }
+
+        $pengajuanList = $pengajuanQuery->get()->map(function ($item) {
+            $item->tipe_item = 'pengajuan';
+            return $item;
+        });
+
+        // 3. Fetch Mutasi Sarana
+        $mutasiQuery = \App\Models\MutasiSarana::query()
+            ->with(['sarana.ruangan.gedung', 'userPengaju', 'ruanganAsal', 'ruanganTujuan']);
+
+        if ($onlyUserId !== null) {
+            $mutasiQuery->where('user_pengaju_id', $onlyUserId);
+        } elseif ($isApprovalMode) {
+            if ($role === 'kepala_sarana') {
+                $mutasiQuery->where('status_mutasi', 'DIAJUKAN');
+            } else {
+                $mutasiQuery->whereRaw('1 = 0');
+            }
+        }
+
+        if ($filters['status']) {
+            if ($filters['status'] === Pengajuan::STATUS_DIAJUKAN) {
+                $mutasiQuery->where('status_mutasi', 'DIAJUKAN');
+            } elseif ($filters['status'] === 'SELESAI') {
+                $mutasiQuery->where('status_mutasi', 'DISETUJUI');
+            } elseif ($filters['status'] === 'DITOLAK') {
+                $mutasiQuery->where('status_mutasi', 'DITOLAK');
+            } else {
+                $mutasiQuery->whereRaw('1 = 0');
+            }
+        }
+
+        if (empty($filters['jenis']) || $filters['jenis'] === 'MUTASI') {
+            if ($filters['q'] !== '') {
+                $q = $filters['q'];
+                $mutasiQuery->where(function ($sub) use ($q) {
+                    $sub->whereHas('sarana', function ($saranaQuery) use ($q) {
+                        $saranaQuery->where('kode_sarana', 'like', "%{$q}%")
+                            ->orWhere('nama_sarana', 'like', "%{$q}%");
+                    })->orWhere('keterangan', 'like', "%{$q}%");
+                });
+            }
+
+            $mutasiList = $mutasiQuery->get()->map(function ($item) {
+                $item->tipe_item = 'mutasi_sarana';
+                $item->jenis_pengajuan = 'MUTASI';
+                $item->judul_pengajuan = 'Mutasi: ' . ($item->sarana?->nama_sarana ?? 'Sarana') . ' ke Ruang ' . ($item->ruanganTujuan?->nama_ruangan ?? '-');
+                $item->status_pengajuan = $item->status_mutasi;
+                $item->estimasi_biaya = 0;
+                $item->user = $item->userPengaju;
+                return $item;
+            });
+        } else {
+            $mutasiList = collect();
+        }
+
+        // 4. Merge and Sort (Latest first)
+        $mergedCollection = $laporanList->concat($pengajuanList)->concat($mutasiList);
+        $sortedCollection = $mergedCollection->sortByDesc('created_at');
+
+        // 5. Manual Pagination
+        $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 12;
+        $currentItems = $sortedCollection->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $paginatedItems = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentItems,
+            $sortedCollection->count(),
+            $perPage,
+            $currentPage,
+            ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath()]
+        );
+        $paginatedItems->withQueryString();
+
+        return [
+            'paginated' => $paginatedItems,
+            'total' => $sortedCollection->count(),
+        ];
     }
 
     public function approve(Request $request, Pengajuan $pengajuan, string $role): RedirectResponse
@@ -583,24 +742,43 @@ class PengajuanController extends Controller
     {
         $user = $request->user();
         if ($user?->hasRole('guru') && $pengajuan->user_id !== $user->id) {
-            abort(403);
+            // Allow guru to view pengajuan linked to their kerusakan report
+            $isKerusakanReporter = $pengajuan->sarana_id
+                ? RiwayatKondisiSarana::query()
+                ->where('sarana_id', $pengajuan->sarana_id)
+                ->where('user_id', $user->id)
+                ->exists()
+                : false;
+
+            if (!$isKerusakanReporter) {
+                abort(403);
+            }
         }
 
         $pengajuan->load([
-            'aset.ruangan.gedung',
+            'sarana.ruangan.gedung',
             'user',
             'detailPengadaan.kategori',
             'detailPengadaan.ruangan.gedung',
             'approvalPengajuan.approver',
             'perawatan',
-            'penggantian.asetLama',
-            'penggantian.asetBaru',
+            'penggantian.saranaLama',
+            'penggantian.saranaBaru',
         ]);
+
+        $latestKerusakan = null;
+        if ($pengajuan->sarana_id) {
+            $latestKerusakan = RiwayatKondisiSarana::query()
+                ->where('sarana_id', $pengajuan->sarana_id)
+                ->latest('id')
+                ->first();
+        }
 
         return view('shared.pengajuan.show', [
             'pengajuan' => $pengajuan,
             'isRealisasiPage' => false,
             'backRoute' => null,
+            'latestKerusakan' => $latestKerusakan,
         ]);
     }
 
@@ -612,20 +790,29 @@ class PengajuanController extends Controller
         }
 
         $pengajuan->load([
-            'aset.ruangan.gedung',
+            'sarana.ruangan.gedung',
             'user',
             'detailPengadaan.kategori',
             'detailPengadaan.ruangan.gedung',
             'approvalPengajuan.approver',
             'perawatan',
-            'penggantian.asetLama',
-            'penggantian.asetBaru',
+            'penggantian.saranaLama',
+            'penggantian.saranaBaru',
         ]);
+
+        $latestKerusakan = null;
+        if ($pengajuan->sarana_id) {
+            $latestKerusakan = RiwayatKondisiSarana::query()
+                ->where('sarana_id', $pengajuan->sarana_id)
+                ->latest('id')
+                ->first();
+        }
 
         return view('shared.pengajuan.show', [
             'pengajuan' => $pengajuan,
             'isRealisasiPage' => true,
             'backRoute' => route('admin.realisasi.index'),
+            'latestKerusakan' => $latestKerusakan,
         ]);
     }
 
@@ -687,9 +874,9 @@ class PengajuanController extends Controller
             // === PERUBAHAN: Status langsung SELESAI ===
             $pengajuan->update(['status_pengajuan' => Pengajuan::STATUS_SELESAI]);
 
-            // Update kondisi aset kembali ke BAIK
-            if ($pengajuan->aset_id) {
-                $pengajuan->aset->update([
+            // Update kondisi sarana kembali ke BAIK
+            if ($pengajuan->sarana_id) {
+                $pengajuan->sarana->update([
                     'kondisi_terkini' => 'BAIK',
                 ]);
             }
@@ -698,13 +885,13 @@ class PengajuanController extends Controller
             $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
         });
 
-        $this->cleanupPerawatanMedia($pengajuan->perawatan()->first());
-        $this->cleanupPengajuanLampiran($pengajuan);
+        // $this->cleanupPerawatanMedia($pengajuan->perawatan()->first());
+        // $this->cleanupPengajuanLampiran($pengajuan);
 
         $this->broadcastPengajuanTracking(
             $pengajuan,
             "Realisasi perawatan diselesaikan oleh {$request->user()->display_name}.",
-            "Biaya realisasi: Rp " . number_format((float) $validated['biaya_realisasi'], 0, ',','.') . '.'
+            "Biaya realisasi: Rp " . number_format((float) $validated['biaya_realisasi'], 0, ',', '.') . '.'
         );
 
         return redirect()
@@ -730,36 +917,36 @@ class PengajuanController extends Controller
             'kontak_teknisi' => ['nullable', 'string', 'max:50'],
             'nama_vendor' => ['required', 'string', 'max:200'],
             'kontak_vendor' => ['nullable', 'string', 'max:50'],
-            'kode_aset_baru' => ['nullable', 'string', 'max:50'],
-            'foto_aset_baru' => ['nullable', 'image', 'max:4096'],
+            'kode_sarana_baru' => ['nullable', 'string', 'max:50'],
+            'foto_sarana_baru' => ['nullable', 'image', 'max:4096'],
             'foto_bukti' => ['nullable', 'image', 'max:4096'],
         ];
 
         $validated = $request->validate($rules);
 
-        $asetLamaId = $pengajuan->aset_id;
-        if (!$asetLamaId) {
+        $saranaLamaId = $pengajuan->sarana_id;
+        if (!$saranaLamaId) {
             return redirect()
                 ->back()
-                ->with('error', 'Penggantian membutuhkan aset lama yang terkait.');
+                ->with('error', 'Penggantian membutuhkan sarana lama yang terkait.');
         }
 
-        $asetBaruId = null;
-        if (!empty($validated['kode_aset_baru'])) {
-            $asetBaru = Aset::query()->where('kode_aset', $validated['kode_aset_baru'])->first();
-            if (!$asetBaru) {
+        $saranaBaruId = null;
+        if (!empty($validated['kode_sarana_baru'])) {
+            $saranaBaru = Sarana::query()->where('kode_sarana', $validated['kode_sarana_baru'])->first();
+            if (!$saranaBaru) {
                 return redirect()
                     ->back()
                     ->withInput()
-                    ->withErrors(['kode_aset_baru' => 'Kode aset baru tidak ditemukan.']);
+                    ->withErrors(['kode_sarana_baru' => 'Kode sarana baru tidak ditemukan.']);
             }
-            $asetBaruId = $asetBaru->id;
+            $saranaBaruId = $saranaBaru->id;
         }
 
         $payload = [
             'pengajuan_id' => $pengajuan->id,
-            'aset_lama_id' => $asetLamaId,
-            'aset_baru_id' => $asetBaruId,
+            'sarana_lama_id' => $saranaLamaId,
+            'sarana_baru_id' => $saranaBaruId,
             'tanggal_penggantian' => $validated['tanggal_penggantian'],
             'biaya_realisasi' => $validated['biaya_realisasi'],
             'keterangan' => $validated['keterangan'],
@@ -769,11 +956,11 @@ class PengajuanController extends Controller
             'kontak_vendor' => $validated['kontak_vendor'] ?? null,
         ];
 
-        if ($request->hasFile('foto_aset_baru')) {
-            if ($existing?->foto_aset_baru) {
-                Storage::disk('public')->delete($existing->foto_aset_baru);
+        if ($request->hasFile('foto_sarana_baru')) {
+            if ($existing?->foto_sarana_baru) {
+                Storage::disk('public')->delete($existing->foto_sarana_baru);
             }
-            $payload['foto_aset_baru'] = $this->storeMediaFile($request->file('foto_aset_baru'), 'penggantian', 'public');
+            $payload['foto_sarana_baru'] = $this->storeMediaFile($request->file('foto_sarana_baru'), 'penggantian', 'public');
         }
         if ($request->hasFile('foto_bukti')) {
             if ($existing?->foto_bukti) {
@@ -782,7 +969,7 @@ class PengajuanController extends Controller
             $payload['foto_bukti'] = $this->storeMediaFile($request->file('foto_bukti'), 'penggantian/bukti', 'public');
         }
 
-        DB::transaction(function () use ($pengajuan, $payload, $asetBaruId) {
+        DB::transaction(function () use ($pengajuan, $payload, $saranaBaruId) {
             // Simpan realisasi penggantian
             $pengajuan->penggantian()->updateOrCreate(
                 ['pengajuan_id' => $pengajuan->id],
@@ -792,16 +979,16 @@ class PengajuanController extends Controller
             // === PERUBAHAN: Status langsung SELESAI ===
             $pengajuan->update(['status_pengajuan' => Pengajuan::STATUS_SELESAI]);
 
-            // Update kondisi aset lama
-            if ($pengajuan->aset_id) {
-                $pengajuan->aset->update([
+            // Update kondisi sarana lama
+            if ($pengajuan->sarana_id) {
+                $pengajuan->sarana->update([
                     'kondisi_terkini' => 'BAIK',
                 ]);
             }
 
-            // Jika ada aset baru, update kondisinya
-            if ($asetBaruId) {
-                Aset::query()->where('id', $asetBaruId)->update([
+            // Jika ada sarana baru, update kondisinya
+            if ($saranaBaruId) {
+                Sarana::query()->where('id', $saranaBaruId)->update([
                     'kondisi_terkini' => 'BAIK',
                 ]);
             }
@@ -810,12 +997,12 @@ class PengajuanController extends Controller
             $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
         });
 
-        $this->cleanupPenggantianMedia($pengajuan->penggantian()->first());
-        $this->cleanupPengajuanLampiran($pengajuan);
+        // $this->cleanupPenggantianMedia($pengajuan->penggantian()->first());
+        // $this->cleanupPengajuanLampiran($pengajuan);
 
-        $extra = "Biaya realisasi: Rp " . number_format((float) $validated['biaya_realisasi'], 0, ',','.') . '.';
-        if ($asetBaruId && !empty($validated['kode_aset_baru'])) {
-            $extra .= ' Aset baru: ' . $validated['kode_aset_baru'] . '.';
+        $extra = "Biaya realisasi: Rp " . number_format((float) $validated['biaya_realisasi'], 0, ',', '.') . '.';
+        if ($saranaBaruId && !empty($validated['kode_sarana_baru'])) {
+            $extra .= ' Sarana baru: ' . $validated['kode_sarana_baru'] . '.';
         }
         $this->broadcastPengajuanTracking(
             $pengajuan,
@@ -828,121 +1015,6 @@ class PengajuanController extends Controller
             ->with('success', 'Realisasi penggantian berhasil disimpan. Status pengajuan: SELESAI.');
     }
 
-    public function verifikasiTeknis(Request $request, Pengajuan $pengajuan): RedirectResponse
-    {
-        $user = $request->user();
-        if (!$user || !$user->hasRole('kepala_sarana')) {
-            abort(403);
-        }
-
-        if ($pengajuan->status_pengajuan !== Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS) {
-            return redirect()
-                ->back()
-                ->with('error', 'Pengajuan belum pada tahap verifikasi teknis.');
-        }
-
-        $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        $butuhVerifikasiKeuangan = $this->requiresFinanceVerification($pengajuan);
-        $nextStatus = $butuhVerifikasiKeuangan
-            ? Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN
-            : Pengajuan::STATUS_SELESAI;
-
-        DB::transaction(function () use ($request, $pengajuan, $validated, $nextStatus) {
-            $pengajuan->update(['status_pengajuan' => $nextStatus]);
-
-            ApprovalPengajuan::query()->create([
-                'pengajuan_id' => $pengajuan->id,
-                'approver_id' => $request->user()->id,
-                'role_approval' => ApprovalPengajuan::ROLE_KASARANA_VERIFIKASI,
-                'status' => ApprovalPengajuan::STATUS_DISETUJUI,
-                'catatan' => $validated['catatan'] ?? null,
-                'approved_at' => now(),
-            ]);
-        });
-
-        if ($nextStatus === Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN) {
-            $this->syncRiwayatKerusakanStatus($pengajuan, 'DITINDAKLANJUTI');
-            $this->broadcastPengajuanTracking(
-                $pengajuan,
-                "Verifikasi teknis oleh {$request->user()->display_name}.",
-                'Menunggu verifikasi keuangan.'
-            );
-        } else {
-            // Update kondisi aset kembali ke BAIK jika langsung selesai
-            if ($pengajuan->aset_id) {
-                $pengajuan->aset->update([
-                    'kondisi_terkini' => 'BAIK',
-                ]);
-            }
-
-            $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
-            $this->cleanupPengajuanLampiran($pengajuan);
-            $this->broadcastPengajuanTracking(
-                $pengajuan,
-                "Verifikasi teknis akhir oleh {$request->user()->display_name}.",
-                'Pengajuan selesai.'
-            );
-        }
-
-        return redirect()
-            ->back()
-            ->with('success', $nextStatus === Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN
-                ? 'Verifikasi teknis berhasil. Menunggu verifikasi keuangan.'
-                : 'Verifikasi teknis berhasil. Pengajuan selesai.');
-    }
-
-    public function verifikasiKeuangan(Request $request, Pengajuan $pengajuan): RedirectResponse
-    {
-        $user = $request->user();
-        if (!$user || !$user->hasRole('bendahara')) {
-            abort(403);
-        }
-
-        if ($pengajuan->status_pengajuan !== Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN) {
-            return redirect()
-                ->back()
-                ->with('error', 'Pengajuan belum pada tahap verifikasi keuangan.');
-        }
-
-        $validated = $request->validate([
-            'catatan' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        DB::transaction(function () use ($request, $pengajuan, $validated) {
-            $pengajuan->update(['status_pengajuan' => Pengajuan::STATUS_SELESAI]);
-            ApprovalPengajuan::query()->create([
-                'pengajuan_id' => $pengajuan->id,
-                'approver_id' => $request->user()->id,
-                'role_approval' => ApprovalPengajuan::ROLE_BENDAHARA_VERIFIKASI,
-                'status' => ApprovalPengajuan::STATUS_DISETUJUI,
-                'catatan' => $validated['catatan'] ?? null,
-                'approved_at' => now(),
-            ]);
-
-            // Update kondisi aset kembali ke BAIK setelah pengajuan selesai
-            if ($pengajuan->aset_id) {
-                $pengajuan->aset->update([
-                    'kondisi_terkini' => 'BAIK',
-                ]);
-            }
-        });
-
-        $this->syncRiwayatKerusakanStatus($pengajuan, 'SELESAI');
-        $this->cleanupPengajuanLampiran($pengajuan);
-
-        $this->broadcastPengajuanTracking(
-            $pengajuan,
-            "Verifikasi keuangan oleh {$request->user()->display_name}.",
-            'Pengajuan selesai.'
-        );
-
-        return redirect()
-            ->back()
-            ->with('success', 'Verifikasi keuangan berhasil. Pengajuan selesai.');
-    }
 
     private function buildFilters(Request $request, array $defaults = []): array
     {
@@ -982,7 +1054,7 @@ class PengajuanController extends Controller
     {
         $clean = [];
         foreach ($items as $item) {
-            $nama = trim((string) ($item['nama_aset_rencana'] ?? ''));
+            $nama = trim((string) ($item['nama_sarana_rencana'] ?? ''));
             $kategori = (int) ($item['kategori_id'] ?? 0);
             $ruangan = (int) ($item['ruangan_id'] ?? 0);
             $jumlah = (int) ($item['jumlah'] ?? 0);
@@ -992,7 +1064,7 @@ class PengajuanController extends Controller
             }
 
             $clean[] = [
-                'nama_aset_rencana' => $nama,
+                'nama_sarana_rencana' => $nama,
                 'kategori_id' => $kategori,
                 'ruangan_id' => $ruangan,
                 'jumlah' => $jumlah,
@@ -1018,31 +1090,16 @@ class PengajuanController extends Controller
         return $total > 0 ? $total : null;
     }
 
-    private function requiresFinanceVerification(Pengajuan $pengajuan): bool
-    {
-        $pengajuan->loadMissing(['perawatan', 'penggantian']);
-
-        $biaya = 0.0;
-        if ($pengajuan->jenis_pengajuan === 'PERAWATAN') {
-            $biaya = (float) ($pengajuan->perawatan?->biaya_realisasi ?? 0);
-        } elseif ($pengajuan->jenis_pengajuan === 'PENGGANTIAN') {
-            $biaya = (float) ($pengajuan->penggantian?->biaya_realisasi ?? 0);
-        } elseif ($pengajuan->jenis_pengajuan === 'PENGADAAN') {
-            $biaya = (float) ($pengajuan->estimasi_biaya ?? 0);
-        }
-
-        return $biaya > 0;
-    }
 
     private function syncRiwayatKerusakanStatus(Pengajuan $pengajuan, string $targetStatus): void
     {
-        if (!$pengajuan->aset_id) {
+        if (!$pengajuan->sarana_id) {
             return;
         }
 
-        $riwayat = RiwayatKondisiAset::query()
-            ->where('aset_id', $pengajuan->aset_id)
-            ->whereIn('status', ['DILAPORKAN', 'DIVALIDASI', 'DITINDAKLANJUTI', 'SELESAI'])
+        $riwayat = RiwayatKondisiSarana::query()
+            ->where('sarana_id', $pengajuan->sarana_id)
+            ->whereIn('status', ['DILAPORKAN', 'DIVALIDASI', 'DITINDAKLANJUTI', 'SELESAI'], 'and', false)
             ->where(function ($query) use ($pengajuan) {
                 if (in_array($pengajuan->jenis_pengajuan, ['PERAWATAN', 'PENGGANTIAN'], true)) {
                     $query->whereNull('rekomendasi_tindakan')
@@ -1072,8 +1129,6 @@ class PengajuanController extends Controller
             Pengajuan::STATUS_DISETUJUI_BENDAHARA => 'Menunggu Approval Kepala Sekolah',
             Pengajuan::STATUS_DISETUJUI_KEPSEK => 'Disetujui Final',
             Pengajuan::STATUS_DIPROSES => 'Realisasi Diproses',
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS => 'Menunggu Verifikasi Teknis',
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => 'Menunggu Verifikasi Keuangan',
             Pengajuan::STATUS_DITOLAK => 'Ditolak',
             Pengajuan::STATUS_SELESAI => 'Selesai',
             default => $status,
@@ -1098,71 +1153,64 @@ class PengajuanController extends Controller
         string $aktivitas,
         ?string $catatan = null,
         ?int $actorUserId = null
-    ): void
-    {
+    ): void {
         $status = $this->statusLabel((string) $pengajuan->status_pengajuan);
         $judul = 'Tracking Pengajuan';
-        $isi = "{$aktivitas}\nJudul: {$pengajuan->judul_pengajuan}\nJenis: {$this->jenisLabel((string) $pengajuan->jenis_pengajuan)}\nStatus: {$status}";
+        $isi = "{$aktivitas}\nJudul: {$pengajuan->judul_pengajuan}\nJenis: {$this->jenisLabel((string)$pengajuan->jenis_pengajuan)}\nStatus: {$status}";
 
         if ($catatan !== null && trim($catatan) !== '') {
             $isi .= "\n{$catatan}";
         }
 
-        $actorId = $actorUserId ?? (auth()->id() ? (int) auth()->id() : null);
-        $excludeUserIds = $actorId ? [$actorId] : [];
+        $actorId = $actorUserId ?? (request()->user() ? (int) request()->user()->id : null);
 
-        $targetRoles = $this->resolveNextPengajuanRoles($pengajuan);
-        foreach ($targetRoles as $role) {
-            $this->notifyRole(
-                $role,
+        $this->notifyPengajuanAudience(
+            $pengajuan,
+            $judul,
+            $isi,
+            $actorId
+        );
+    }
+
+    private function notifyPengajuanAudience(
+        Pengajuan $pengajuan,
+        string $judul,
+        string $isi,
+        ?int $actorUserId = null
+    ): void {
+        $recipients = $this->resolvePengajuanAudienceUsers($pengajuan);
+
+        foreach ($recipients as $recipient) {
+            $userId = (int) $recipient->id;
+            $this->notifyUsers(
+                [$userId],
                 $judul,
                 $isi,
-                $this->resolvePengajuanUrlByRole($role, $pengajuan),
-                $excludeUserIds
-            );
-        }
-
-        if ($targetRoles === []) {
-            $this->notifyUser(
-                $pengajuan->user,
-                $judul,
-                $isi,
-                $this->resolvePengajuanUrlForUser($pengajuan->user, $pengajuan),
-                $excludeUserIds
+                $this->resolvePengajuanUrlForUser($recipient, $pengajuan),
+                []
             );
         }
     }
 
-    private function resolveNextPengajuanRoles(Pengajuan $pengajuan): array
+    private function resolvePengajuanAudienceUsers(Pengajuan $pengajuan)
     {
-        return match ((string) $pengajuan->status_pengajuan) {
-            Pengajuan::STATUS_DIAJUKAN => ['kepala_sarana'],
-            Pengajuan::STATUS_DISETUJUI_KASARANA => ['bendahara'],
-            Pengajuan::STATUS_DISETUJUI_BENDAHARA => ['kepala_sekolah'],
-            Pengajuan::STATUS_DISETUJUI_KEPSEK, Pengajuan::STATUS_DIPROSES => ['admin'],
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS => ['kepala_sarana'],
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN => ['bendahara'],
-            default => [],
-        };
-    }
+        $roleNames = ['guru', 'admin', 'kepala_sarana', 'bendahara', 'kepala_sekolah'];
 
-    private function resolvePengajuanUrlByRole(string $role, Pengajuan $pengajuan): ?string
-    {
-        if ($role === 'bendahara' && $pengajuan->status_pengajuan === Pengajuan::STATUS_DISETUJUI_KASARANA) {
-            return route('bendahara.pengajuan.approval');
-        }
-
-        if ($role === 'kepala_sekolah' && $pengajuan->status_pengajuan === Pengajuan::STATUS_DISETUJUI_BENDAHARA) {
-            return route('kepala_sekolah.pengajuan.index');
-        }
-
-        return match ($role) {
-            'admin' => $this->resolveAdminPengajuanMenuUrl($pengajuan),
-            'kepala_sarana' => route('kepala_sarana.pengajuan.show', $pengajuan),
-            'bendahara' => route('bendahara.pengajuan.show', $pengajuan),
-            'kepala_sekolah' => route('kepala_sekolah.pengajuan.show', $pengajuan),
-            default => null,
-        };
+        return User::query()
+            ->where(function ($query) use ($roleNames) {
+                $query->whereIn('role', $roleNames)
+                    ->orWhereHas('roleRelation', fn($roleQuery) => $roleQuery->whereIn('nama_role', $roleNames));
+            })
+            ->where(function ($query) {
+                $query->whereNull('status_akun')->orWhere('status_akun', '!=', 'NONAKTIF');
+            })
+            ->get()
+            ->push($pengajuan->user)
+            ->filter()
+            ->unique(function ($user) {
+                return (int) $user->id;
+            })
+            ->values();
     }
 
     private function notifyRole(string $role, string $judul, string $isi, ?string $url = null, array $excludeUserIds = []): void
@@ -1217,7 +1265,7 @@ class PengajuanController extends Controller
                     $existingQuery->where('url', $url);
                 } else {
                     $existingQuery
-                        ->whereNull('url')
+                        ->whereNull('url', 'and', false)
                         ->where('judul', $judul);
                 }
             }
@@ -1258,7 +1306,7 @@ class PengajuanController extends Controller
             }
         }
 
-        if (preg_match('/AST-[A-Z0-9-]+/i', $isi, $matches) === 1) {
+        if (preg_match('/SAR-[A-Z0-9-]+/i', $isi, $matches) === 1) {
             return strtoupper((string) $matches[0]);
         }
 
@@ -1341,8 +1389,6 @@ class PengajuanController extends Controller
         if (in_array($pengajuan->status_pengajuan, [
             Pengajuan::STATUS_DISETUJUI_KEPSEK,
             Pengajuan::STATUS_DIPROSES,
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_TEKNIS,
-            Pengajuan::STATUS_MENUNGGU_VERIFIKASI_KEUANGAN,
         ], true)) {
             return route('admin.realisasi.index');
         }
@@ -1388,7 +1434,7 @@ class PengajuanController extends Controller
         }
 
         $paths = array_values(array_filter([
-            $penggantian->foto_aset_baru,
+            $penggantian->foto_sarana_baru,
             $penggantian->foto_bukti,
         ]));
 
@@ -1397,7 +1443,7 @@ class PengajuanController extends Controller
         }
 
         $penggantian->update([
-            'foto_aset_baru' => '',
+            'foto_sarana_baru' => '',
             'foto_bukti' => '',
         ]);
     }

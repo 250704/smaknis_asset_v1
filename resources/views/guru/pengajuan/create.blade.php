@@ -204,7 +204,7 @@
                 row.className = 'hover:bg-slate-50 dark:hover:bg-white/[0.02]';
                 row.innerHTML = `
                     <td class="px-3 py-2">
-                        <input type="text" name="items[${index}][nama_aset_rencana]" class="w-40 rounded-lg border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40" placeholder="Nama barang" required>
+                        <input type="text" name="items[${index}][nama_sarana_rencana]" class="w-40 rounded-lg border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40" placeholder="Nama barang" required>
                     </td>
                     <td class="px-3 py-2">
                         <select name="items[${index}][kategori_id]" class="w-40 rounded-lg border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500/30 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40" required>

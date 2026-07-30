@@ -28,6 +28,8 @@ $redirectByRole = function ($user) {
     abort(403, 'AKSES DITOLAK');
 };
 
+use App\Http\Controllers\ScanQrController;
+
 Route::get('/', function () use ($redirectByRole) {
     if (auth()->check()) {
         return $redirectByRole(auth()->user());
@@ -35,6 +37,13 @@ Route::get('/', function () use ($redirectByRole) {
 
     return view('welcome');
 });
+
+Route::get('/scan-qr', [ScanQrController::class, 'publicScan'])->name('scan-qr');
+Route::get('/scan-qr/aksi/{sarana}/{action}', [ScanQrController::class, 'publicQuickAction'])
+    ->middleware('auth')
+    ->name('scan-qr.action');
+Route::middleware('auth')->get('/histori-sarana', [\App\Http\Controllers\KepalaSarana\SaranaController::class, 'histori'])
+    ->name('scan.sarana.histori');
 
 Route::get('/dashboard', fn () => $redirectByRole(auth()->user()))
     ->middleware('auth')

@@ -102,16 +102,16 @@
                         <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                             @foreach ($riwayat as $item)
                                 @php
-                                    $activePengajuan = $pengajuanMap[$item->aset_id] ?? collect();
+                                    $activePengajuan = $pengajuanMap[$item->sarana_id] ?? collect();
                                     $firstPengajuan = $activePengajuan->first();
                                 @endphp
                                 <tr class="bg-white/70 transition hover:bg-blue-50/60 dark:bg-transparent dark:hover:bg-cyan-500/10">
                                     <td class="px-4 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                        {{ $item->aset?->kode_aset ?? '-' }}
+                                        {{ $item->sarana?->kode_sarana ?? '-' }}
                                     </td>
                                     <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
-                                        <p class="font-semibold">{{ $item->aset?->nama_aset }}</p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $item->aset?->ruangan?->nama_ruangan }} - {{ $item->aset?->ruangan?->gedung?->nama_gedung }}</p>
+                                        <p class="font-semibold">{{ $item->sarana?->nama_sarana }}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $item->sarana?->ruangan?->nama_ruangan }} - {{ $item->sarana?->ruangan?->gedung?->nama_gedung }}</p>
                                     </td>
                                     <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $tingkatLabelMap[$item->tingkat_kerusakan] ?? $item->tingkat_kerusakan }}</td>
                                     <td class="px-4 py-3">

@@ -14,9 +14,10 @@ class Penggantian extends Model
 
     protected $fillable = [
         'pengajuan_id',
-        'aset_lama_id',
-        'aset_baru_id',
-        'foto_aset_baru',
+        'sarana_lama_id',
+        'sarana_baru_id',
+        'foto_sarana_lama',
+        'foto_sarana_baru',
         'foto_bukti',
         'biaya_realisasi',
         'status_realisasi',
@@ -40,13 +41,13 @@ class Penggantian extends Model
         return $this->belongsTo(Pengajuan::class);
     }
 
-    public function asetLama(): BelongsTo
+    public function saranaLama(): BelongsTo
     {
-        return $this->belongsTo(Aset::class, 'aset_lama_id');
+        return $this->belongsTo(Sarana::class, 'sarana_lama_id');
     }
 
-    public function asetBaru(): BelongsTo
+    public function saranaBaru(): BelongsTo
     {
-        return $this->belongsTo(Aset::class, 'aset_baru_id');
+        return $this->belongsTo(Sarana::class, 'sarana_baru_id');
     }
 }

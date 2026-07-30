@@ -80,9 +80,9 @@ class User extends Authenticatable
         return $this->hasMany(LogAktivitas::class);
     }
 
-    public function riwayatKondisiAset(): HasMany
+    public function riwayatKondisiSarana(): HasMany
     {
-        return $this->hasMany(RiwayatKondisiAset::class);
+        return $this->hasMany(RiwayatKondisiSarana::class);
     }
 
     public function getDisplayNameAttribute(): string

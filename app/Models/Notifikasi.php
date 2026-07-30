@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class Notifikasi extends Model
 {
@@ -25,6 +26,21 @@ class Notifikasi extends Model
         return [
             'is_read' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Notifikasi $notifikasi) {
+            if ($notifikasi->user_id) {
+                Cache::forget('notif_unread_count:' . $notifikasi->user_id);
+            }
+        });
+
+        static::deleted(function (Notifikasi $notifikasi) {
+            if ($notifikasi->user_id) {
+                Cache::forget('notif_unread_count:' . $notifikasi->user_id);
+            }
+        });
     }
 
     public function user(): BelongsTo

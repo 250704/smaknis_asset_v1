@@ -18,7 +18,7 @@ flowchart LR
   end
 
   subgraph L2[Lane: Sistem]
-    B --> C{XOR: Ada laporan aktif untuk aset?}
+    B --> C{XOR: Ada laporan aktif untuk sarana?}
     C -- Ya --> C1[End Event: Laporan ditolak sistem]
     C -- Tidak --> D[Task: Simpan riwayat status DILAPORKAN]
     D --> E{XOR: Pelapor adalah Kepala Sarana?}
@@ -35,7 +35,7 @@ flowchart LR
 
   subgraph L2b[Lane: Sistem]
     I --> J[Task: Set riwayat DIVALIDASI]
-    J --> K[Task: Update kondisi aset sesuai tingkat kerusakan]
+    J --> K[Task: Update kondisi sarana sesuai tingkat kerusakan]
     K --> L[Task: Auto-create pengajuan]
     L --> M[Task: Set status pengajuan DISETUJUI_KASARANA]
     M --> N{XOR: Validator = Kepala Sarana?}
@@ -76,7 +76,7 @@ flowchart LR
   subgraph L2e[Lane: Sistem]
     AB --> AC[Task: Simpan realisasi]
     AC --> AD[Task: Set status pengajuan SELESAI]
-    AD --> AE[Task: Update kondisi aset BAIK]
+    AD --> AE[Task: Update kondisi sarana BAIK]
     AE --> AF[Task: Sync riwayat kerusakan SELESAI]
     AF --> AG((End Event: Proses selesai))
     H --> AH((End Event: Laporan kerusakan ditolak))
@@ -94,7 +94,7 @@ flowchart LR
     B --> C[Task: Isi data pengajuan]
     C --> D{XOR: Jenis pengajuan}
     D -- PENGADAAN --> E[Task: Isi item pengadaan]
-    D -- PENGGANTIAN --> F[Task: Pilih aset lama]
+    D -- PENGGANTIAN --> F[Task: Pilih sarana lama]
   end
 
   subgraph P2[Lane: Sistem]
@@ -138,7 +138,7 @@ flowchart LR
   C --> E[Task: Simpan data realisasi]
   D --> E
   E --> F[Task: Set status pengajuan SELESAI]
-  F --> G[Task: Update kondisi aset BAIK]
+  F --> G[Task: Update kondisi sarana BAIK]
   G --> H[Task: Sync riwayat kerusakan SELESAI]
   H --> I((End Event))
 ```
@@ -147,10 +147,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  A((Start Event)) --> B[Task: User scan/input kode aset]
-  B --> C{XOR: Kode valid dan aset ditemukan?}
+  A((Start Event)) --> B[Task: User scan/input kode sarana]
+  B --> C{XOR: Kode valid dan sarana ditemukan?}
   C -- Tidak --> D((End Event: Tampilkan error/hasil kosong))
-  C -- Ya --> E[Task: Tampilkan detail aset + action berbasis role]
+  C -- Ya --> E[Task: Tampilkan detail sarana + action berbasis role]
   E --> F{XOR: Role user}
   F -- Guru --> G[Task: Redirect ke Lapor Kerusakan / Usulan Mutasi]
   F -- Kepala Sarana --> H[Task: Redirect ke Validasi Kerusakan / Approval]
@@ -164,21 +164,21 @@ flowchart LR
   K --> L
 ```
 
-## 6) BPMN Inventaris Aset (Admin)
+## 6) BPMN Inventaris Sarana (Admin)
 
 ```mermaid
 flowchart LR
-  A((Start Event)) --> B{XOR: Mode kelola aset}
-  B -- Create Unit --> C[Task: Input 1 aset]
+  A((Start Event)) --> B{XOR: Mode kelola sarana}
+  B -- Create Unit --> C[Task: Input 1 sarana]
   B -- Create Batch --> D[Task: Input per ruangan/per kategori/import]
-  B -- Edit --> E[Task: Ubah data aset]
-  B -- Delete --> F[Task: Hapus aset]
+  B -- Edit --> E[Task: Ubah data sarana]
+  B -- Delete --> F[Task: Hapus sarana]
 
-  C --> G[Task: Generate kode_aset + nama_aset]
+  C --> G[Task: Generate kode_sarana + nama_sarana]
   D --> G
-  G --> H[Task: Simpan aset]
+  G --> H[Task: Simpan sarana]
   E --> I[Task: Simpan perubahan]
-  F --> J{XOR: Aset punya relasi proses?}
+  F --> J{XOR: Sarana punya relasi proses?}
   J -- Ya --> K[Task: Soft delete (arsip)]
   J -- Tidak --> L[Task: Hard delete + hapus foto]
 

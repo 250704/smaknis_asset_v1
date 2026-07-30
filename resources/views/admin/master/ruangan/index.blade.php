@@ -5,7 +5,7 @@
 
     <div class="mb-6">
         <h1 class="page-title">Master Ruangan</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola ruangan berdasarkan gedung sebagai lokasi aset aktif.</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kelola ruangan berdasarkan gedung sebagai lokasi sarana aktif.</p>
     </div>
 
     @if (session('success'))

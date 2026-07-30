@@ -22,7 +22,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased bg-slate-100 text-slate-800 transition-colors dark:bg-slate-950 dark:text-slate-100">
+<body class="font-sans antialiased bg-white text-slate-800 transition-colors dark:bg-slate-950 dark:text-slate-100">
     @php
         $user = auth()->user();
         $roleCode = $user?->role_code;
@@ -83,9 +83,6 @@
         x-init="init()"
         class="app-shell"
     >
-        <div class="soft-dot left-[-120px] top-[-120px] h-72 w-72 bg-cyan-400/25"></div>
-        <div class="soft-dot right-[-120px] top-[80px] h-72 w-72 bg-blue-500/20 [animation-delay:1s]"></div>
-        <div class="soft-dot bottom-[-160px] left-[30%] h-80 w-80 bg-emerald-400/20 [animation-delay:2s]"></div>
 
         @if ($flashMessage)
             @php
@@ -303,7 +300,7 @@
                     || normalizeText(submitter?.value)
                     || 'melanjutkan';
             }
-
+ 
             function resolveConfig(form, submitter) {
                 const actionLabel = getActionLabel(submitter);
                 const method = getFormMethod(form);
@@ -316,11 +313,11 @@
                     || isDeleteMethod
                     || isDangerButton
                     || /hapus|tolak|setujui|validasi|verifikasi|realisasi|import|reset password|update password|simpan perubahan|kirim laporan|kirim pengajuan|selesai/.test(combinedText);
-
+ 
                 if (!needsConfirm || form.dataset.confirm === 'false' || submitter?.dataset.confirm === 'false') {
                     return null;
                 }
-
+ 
                 let variant = submitter?.dataset.confirmVariant || form.dataset.confirmVariant || 'warning';
                 let defaultTitle = 'Konfirmasi Aksi';
                 let defaultMessage = `Apakah Anda yakin ingin ${actionLabel.toLowerCase()}?`;
